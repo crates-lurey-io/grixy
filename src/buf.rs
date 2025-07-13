@@ -28,7 +28,7 @@ pub use ixy::index::{ColMajor, Layout, RowMajor};
 mod array;
 pub use array::ArrayGrid;
 
-pub mod bit;
+pub mod bits;
 
 mod iter;
 
