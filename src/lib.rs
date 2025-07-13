@@ -5,6 +5,8 @@
 pub mod buf;
 pub use buf::GridBuf;
 
+pub(crate) mod internal;
+
 mod error;
 pub use error::GridError;
 
