@@ -28,6 +28,8 @@ pub use ixy::index::{ColMajor, Layout, RowMajor};
 mod array;
 pub use array::ArrayGrid;
 
+pub mod bit;
+
 mod iter;
 
 mod r#mut;
@@ -46,6 +48,7 @@ pub use vec::VecGrid;
 /// # Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+#[derive(Debug, Clone)]
 pub struct GridBuf<T, B, L = RowMajor>
 where
     B: AsRef<[T]>,
