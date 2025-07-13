@@ -29,7 +29,7 @@ pub trait HasBits {}
 
 /// A 2-dimensional grid where every individual bit is treated as either `true` or `false`.
 ///
-/// # Layout
+/// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]

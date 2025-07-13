@@ -5,7 +5,7 @@ use ixy::index::RowMajor;
 ///
 /// This is a convenience type for using slices as the underlying buffer.
 ///
-/// # Layout
+/// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
@@ -14,7 +14,7 @@ pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
 ///
 /// This is a convenience type for using mutable slices as the underlying buffer.
 ///
-/// # Layout
+/// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 pub type SliceMutGrid<'a, T, L = RowMajor> = GridBuf<T, &'a mut [T], L>;

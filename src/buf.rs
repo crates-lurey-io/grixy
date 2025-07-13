@@ -45,7 +45,7 @@ pub use vec::VecGrid;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
 ///
-/// # Layout
+/// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
@@ -68,7 +68,7 @@ where
 {
     /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
     ///
-    /// # Errors
+    /// ## Errors
     ///
     /// Returns an error if the buffer size does not match the expected size.
     pub fn with_buffer(buffer: B, width: usize, height: usize) -> Result<Self, GridError> {
@@ -81,7 +81,7 @@ where
 
     /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
     ///
-    /// # Safety
+    /// ## Safety
     ///
     /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
     pub unsafe fn with_buffer_unchecked(buffer: B, width: usize, height: usize) -> Self {

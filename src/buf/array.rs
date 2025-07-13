@@ -5,7 +5,7 @@ use ixy::index::{Layout, RowMajor};
 ///
 /// This is a convenience type for using arrays as the underlying buffer.
 ///
-/// # Layout
+/// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 pub type ArrayGrid<T, const N: usize, L = RowMajor> = GridBuf<T, [T; N], L>;
@@ -19,7 +19,7 @@ where
     ///
     /// Each element is initialized to the default value of `T`.
     ///
-    /// # Panics
+    /// ## Panics
     ///
     /// Panics if the buffer size does not match the expected size.
     #[must_use]
@@ -34,7 +34,7 @@ where
     ///
     /// Each element is initialized to the provided value.
     ///
-    /// # Panics
+    /// ## Panics
     ///
     /// Panics if the buffer size does not match the expected size.
     #[must_use]
