@@ -1,0 +1,62 @@
+name: Test
+
+on:
+  push:
+    branches: [ "main" ]
+
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          .bin
+          target
+        key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Tools
+      uses: cargo-bins/cargo-binstall@v1.13.0
+
+    - name: Check
+      run: cargo just check
+
+    - name: Test
+      run: cargo just test-all
+
+    - name: Generate Coverage
+      if: matrix.os == 'ubuntu-latest'
+      run: cargo just coverage-gen
+
+    - name: Upload Coverage
+      if: matrix.os == 'ubuntu-latest'
+      uses: codecov/codecov-action@v3
+      with:
+        files: lcov.info
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}

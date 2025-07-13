@@ -1,0 +1,3 @@
+[alias]
+tool = ["run", "--quiet", "--package", "cargo-bin", "--"]
+just = ["run", "--quiet", "--package", "cargo-bin", "--", "just"]

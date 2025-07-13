@@ -1,0 +1,12 @@
+[package]
+name = "cargo-bin"
+edition = "2024"
+license = "MIT"
+
+[lints.clippy]
+pedantic = "deny"
+
+[dependencies]
+cargo-run-bin = { git = "https://github.com/matanlurey/cargo-run-bin.git", rev = "009bfe4423a4d41943126c99f8d62b25a2bcf2db", features = [
+  "cli",
+] }

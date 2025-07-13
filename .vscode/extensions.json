@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "tamasfe.even-better-toml",
+    "bierner.github-markdown-preview",
+    "yzhang.markdown-all-in-one",
+    "1yib.rust-bundle",
+    "nefrob.vscode-just-syntax"
+  ]
+}

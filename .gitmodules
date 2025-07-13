@@ -1,0 +1,3 @@
+[submodule "tools/cargo-bin"]
+	path = tools/cargo-bin
+	url = https://github.com/crates-lurey-io/tools-cargo-bin

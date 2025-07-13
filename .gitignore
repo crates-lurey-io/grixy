@@ -1,0 +1,8 @@
+# cargo-run-bin outputs
+# https://github.com/dustinblackman/cargo-run-bin
+/.bin
+
+# Rust build outputs
+# https://doc.rust-lang.org/cargo/reference/build-cache.html
+/target
+

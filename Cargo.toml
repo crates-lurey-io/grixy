@@ -1,0 +1,27 @@
+[package]
+name = "grixy"
+edition = "2024"
+license = "MIT"
+
+description = "2-dimensional grids"
+repository = "https://github.com/crates-lurey-io/grixy"
+version = "0.0.0-reserved"
+
+[lints.clippy]
+pedantic = "deny"
+
+[workspace]
+members = ["tools/cargo-bin"]
+
+[workspace.metadata.bin]
+cargo-nextest = { version = "0.9.98", locked = true }
+cargo-llvm-cov = { version = "0.6.16", locked = true }
+just = { version = "1.40.0" }
+taplo-cli = { version = "0.10.0", bins = ["taplo"] }
+
+[features]
+default = ["alloc"]
+alloc = []
+
+[dependencies]
+ixy = "0.2.0"
