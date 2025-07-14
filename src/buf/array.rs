@@ -1,4 +1,4 @@
-use ixy::index::{Layout, RowMajor};
+use ixy::index::Layout;
 
 use crate::buf::GridBuf;
 
@@ -9,7 +9,7 @@ use crate::buf::GridBuf;
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
-pub type ArrayGrid<T, const N: usize, L = RowMajor> = GridBuf<T, [T; N], L>;
+pub type ArrayGrid<T, const N: usize, L> = GridBuf<T, [T; N], L>;
 
 impl<T, const N: usize, L> super::GridBuf<T, [T; N], L>
 where
@@ -49,12 +49,14 @@ where
 
 #[cfg(test)]
 mod tests {
+    use ixy::index::RowMajor;
+
     use crate::{buf::ArrayGrid, core::Pos};
 
     #[test]
     fn impl_arr() {
         let data: [u8; 6] = [1, 2, 3, 4, 5, 6];
-        let grid = ArrayGrid::<_, 6>::with_buffer(data, 2, 3).unwrap();
+        let grid = ArrayGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
@@ -62,19 +64,19 @@ mod tests {
 
     #[test]
     fn arr_new() {
-        let grid = ArrayGrid::<_, 6>::new(2, 3);
+        let grid = ArrayGrid::<u8, 6, RowMajor>::new(2, 3);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&0));
     }
 
     #[test]
     fn arr_new_filled() {
-        let grid = ArrayGrid::<_, 6>::new_filled(2, 3, 42);
+        let grid = ArrayGrid::<u8, 6, RowMajor>::new_filled(2, 3, 42);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
     }
 
     #[test]
     #[should_panic(expected = "Buffer size does not match grid dimensions")]
     fn arr_new_panics() {
-        let _grid = ArrayGrid::<u8, 5>::new(2, 3); // This should panic
+        let _grid = ArrayGrid::<u8, 5, RowMajor>::new(2, 3); // This should panic
     }
 }

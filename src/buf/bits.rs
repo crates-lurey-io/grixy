@@ -15,9 +15,9 @@
 //!
 //! Creating an owned `VecGridBits` and accessing an element:
 //! ```
-//! use grixy::{core::Pos, buf::bits::VecBits};
+//! use grixy::{core::{Pos, RowMajor}, buf::bits::VecBits};
 //!
-//! let grid = VecBits::<u8>::new(8, 1);
+//! let grid = VecBits::<u8, RowMajor>::new(8, 1);
 //! assert_eq!(grid.get(Pos::new(3, 0)), Some(false));
 //! ```
 
@@ -39,7 +39,7 @@ extern crate alloc;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
-pub struct GridBits<T, B, L = RowMajor>
+pub struct GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
@@ -50,6 +50,40 @@ where
     height: usize,
     _element: PhantomData<T>,
     _layout: PhantomData<L>,
+}
+
+impl<T, B> GridBits<T, B, RowMajor>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+{
+    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The maximum width that can be used is determined by [`BitOps::MAX_WIDTH`].
+    ///
+    /// The data buffer is expected to be in [`RowMajor`] order.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the buffer size does not match the expected size.
+    pub fn with_buffer_row_major(
+        buffer: B,
+        width: usize,
+        height: usize,
+    ) -> Result<Self, GridError> {
+        Self::with_buffer(buffer, width, height)
+    }
+
+    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The data buffer is expected to be in [`RowMajor`] order.
+    ///
+    /// ## Safety
+    ///
+    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
+    pub unsafe fn with_buffer_row_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
+        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    }
 }
 
 impl<T, B, L> GridBits<T, B, L>
@@ -132,7 +166,7 @@ where
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
-pub type ArrayBits<T, const N: usize, L = RowMajor> = GridBits<T, [T; N], L>;
+pub type ArrayBits<T, const N: usize, L> = GridBits<T, [T; N], L>;
 impl<T, const N: usize, L> GridBits<T, [T; N], L>
 where
     T: BitOps,
@@ -205,7 +239,7 @@ where
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
-pub type SliceBits<'a, T, L = RowMajor> = GridBits<T, &'a [T], L>;
+pub type SliceBits<'a, T, L> = GridBits<T, &'a [T], L>;
 
 /// A 2-dimensional grid implemented by a mutable slice buffer of bytes.
 ///
@@ -214,7 +248,7 @@ pub type SliceBits<'a, T, L = RowMajor> = GridBits<T, &'a [T], L>;
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
-pub type SliceMutBits<'a, T, L = RowMajor> = GridBits<T, &'a mut [T], L>;
+pub type SliceMutBits<'a, T, L> = GridBits<T, &'a mut [T], L>;
 
 /// A 2-dimensional grid implemented by a vector buffer of bytes.
 ///
@@ -224,7 +258,7 @@ pub type SliceMutBits<'a, T, L = RowMajor> = GridBits<T, &'a mut [T], L>;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[cfg(feature = "alloc")]
-pub type VecBits<T, L = RowMajor> = GridBits<T, alloc::vec::Vec<T>, L>;
+pub type VecBits<T, L> = GridBits<T, alloc::vec::Vec<T>, L>;
 
 #[cfg(feature = "alloc")]
 impl<T, L> GridBits<T, alloc::vec::Vec<T>, L>
@@ -260,6 +294,8 @@ where
 mod tests {
     extern crate alloc;
 
+    use ixy::index::RowMajor;
+
     use crate::{
         buf::bits::{ArrayBits, SliceBits, SliceMutBits, VecBits},
         core::Pos,
@@ -268,7 +304,7 @@ mod tests {
     #[test]
     fn impl_arr() {
         let data: [u8; 1] = [0b0000_0001];
-        let grid = ArrayBits::<_, 1>::with_buffer(data, 8, 1).unwrap();
+        let grid = ArrayBits::<_, 1, RowMajor>::with_buffer(data, 8, 1).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(1, 0)), Some(false));
@@ -278,7 +314,7 @@ mod tests {
 
     #[test]
     fn arr_new() {
-        let grid = ArrayBits::<u8, 1>::new(8, 1);
+        let grid = ArrayBits::<u8, 1, RowMajor>::new(8, 1);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
         assert_eq!(grid.get(Pos::new(7, 0)), Some(false));
         assert_eq!(grid.get(Pos::new(8, 0)), None);
@@ -287,7 +323,7 @@ mod tests {
 
     #[test]
     fn arr_new_filled() {
-        let grid = ArrayBits::<u8, 1>::new_filled(8, 1, true);
+        let grid = ArrayBits::<u8, 1, RowMajor>::new_filled(8, 1, true);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(7, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(8, 0)), None);
@@ -297,13 +333,13 @@ mod tests {
     #[test]
     #[should_panic(expected = "Buffer size does not match grid dimensions")]
     fn arr_new_panics() {
-        let _ = ArrayBits::<u8, 1>::new(9, 1);
+        let _ = ArrayBits::<u8, 1, RowMajor>::new(9, 1);
     }
 
     #[test]
     fn impl_slice() {
         let data: [u8; 1] = [0b0000_0001];
-        let grid = SliceBits::<_>::with_buffer(&data, 8, 1).unwrap();
+        let grid = SliceBits::with_buffer_row_major(&data, 8, 1).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(1, 0)), Some(false));
@@ -314,7 +350,7 @@ mod tests {
     #[test]
     fn impl_slice_mut() {
         let mut data: [u8; 1] = [0b0000_0001];
-        let mut grid = SliceMutBits::<_>::with_buffer(&mut data, 8, 1).unwrap();
+        let mut grid = SliceMutBits::with_buffer_row_major(&mut data, 8, 1).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(1, 0)), Some(false));
@@ -331,7 +367,7 @@ mod tests {
 
     #[test]
     fn vec_new() {
-        let grid = VecBits::<u8>::new(8, 1);
+        let grid = VecBits::<u8, RowMajor>::new(8, 1);
         assert_eq!(grid.get(Pos::new(4, 0)), Some(false));
         assert_eq!(grid.get(Pos::new(7, 0)), Some(false));
         assert_eq!(grid.get(Pos::new(8, 0)), None);
@@ -340,7 +376,7 @@ mod tests {
 
     #[test]
     fn vec_new_filled() {
-        let grid = VecBits::<u8>::new_filled(8, 1, true);
+        let grid = VecBits::<u8, RowMajor>::new_filled(8, 1, true);
         assert_eq!(grid.get(Pos::new(4, 0)), Some(true));
     }
 
@@ -351,20 +387,20 @@ mod tests {
         let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
         // width * height = 6
         // but data.len() = 5
-        let _ = unsafe { VecBits::<_>::with_buffer_unchecked(data, 2, 3) };
+        let _ = unsafe { VecBits::<_, RowMajor>::with_buffer_unchecked(data, 2, 3) };
     }
 
     #[test]
     fn out_of_bounds() {
         let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
-        let grid = VecBits::<_>::with_buffer(data, 8, 2);
+        let grid = VecBits::with_buffer_row_major(data, 8, 2);
         assert!(grid.is_err());
     }
 
     #[test]
     fn into_inner() {
         let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
-        let grid = VecBits::<_>::with_buffer(data, 8, 1).unwrap();
+        let grid = VecBits::with_buffer_row_major(data, 8, 1).unwrap();
         let (buffer, width, height) = grid.into_inner();
         assert_eq!(width, 8);
         assert_eq!(height, 1);
@@ -375,7 +411,7 @@ mod tests {
     #[test]
     fn iter() {
         let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
-        let grid = VecBits::<_>::with_buffer(data, 8, 1).unwrap();
+        let grid = VecBits::with_buffer_row_major(data, 8, 1).unwrap();
         let mut iter = grid.iter();
         assert_eq!(iter.next(), Some(true));
         assert_eq!(iter.next(), Some(false));

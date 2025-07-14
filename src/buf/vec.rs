@@ -12,7 +12,34 @@ use ixy::index::RowMajor;
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
 ///
 /// [`Layout`]: `crate::core::Layout`
-pub type VecGrid<T, L = RowMajor> = super::GridBuf<T, Vec<T>, L>;
+pub type VecGrid<T, L> = super::GridBuf<T, Vec<T>, L>;
+
+impl<T> super::GridBuf<T, Vec<T>, RowMajor>
+where
+    T: Copy,
+{
+    /// Creates a new `GridBuf` backed by a `Vec` with the specified width and height.
+    ///
+    /// Each element is initialized to the default value of `T` and is stored in [`RowMajor`] order.
+    #[must_use]
+    pub fn new_row_major(width: usize, height: usize) -> Self
+    where
+        T: Default,
+    {
+        Self::new(width, height)
+    }
+
+    /// Creates a new `GridBuf` backed by a `Vec` with the specified width and height.
+    ///
+    /// Each element is initialized to the provided value and is stored in [`RowMajor`] order.
+    #[must_use]
+    pub fn new_filled_row_major(width: usize, height: usize, value: T) -> Self
+    where
+        T: Copy,
+    {
+        Self::new_filled(width, height, value)
+    }
+}
 
 impl<T, L> super::GridBuf<T, Vec<T>, L>
 where
@@ -53,7 +80,7 @@ mod tests {
     #[test]
     fn impl_vec() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
@@ -61,13 +88,13 @@ mod tests {
 
     #[test]
     fn vec_new() {
-        let grid = VecGrid::<_>::new(10, 5);
+        let grid = VecGrid::new_row_major(10, 5);
         assert_eq!(grid.get(Pos::new(3, 4)), Some(&0));
     }
 
     #[test]
     fn vec_new_filled() {
-        let grid = VecGrid::<_>::new_filled(10, 5, 42);
+        let grid = VecGrid::new_filled_row_major(10, 5, 42);
         assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
     }
 
@@ -77,20 +104,20 @@ mod tests {
     fn with_buffer_unchecked_panics() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5];
         // width * height = 6, but data.len() = 5
-        let _ = unsafe { VecGrid::<_>::with_buffer_unchecked(data, 2, 3) };
+        let _ = unsafe { VecGrid::with_buffer_row_major_unchecked(data, 2, 3) };
     }
 
     #[test]
     fn out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 2);
+        let grid = VecGrid::with_buffer_row_major(data, 2, 2);
         assert!(grid.is_err());
     }
 
     #[test]
     fn into_inner() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
         let (buffer, width, height) = grid.into_inner();
 
         assert_eq!(width, 2);
@@ -102,7 +129,7 @@ mod tests {
     #[test]
     fn iter() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         let mut iter = grid.iter();
         assert_eq!(iter.next(), Some(&1));
@@ -117,7 +144,7 @@ mod tests {
     #[test]
     fn into_iter() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         let mut iter = grid.into_iter();
         assert_eq!(iter.next(), Some(&1));
@@ -132,7 +159,7 @@ mod tests {
     #[test]
     fn iter_mut() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         #[allow(clippy::explicit_iter_loop)]
         for value in grid.iter_mut() {
@@ -146,7 +173,7 @@ mod tests {
     #[test]
     fn into_iter_mut() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         for value in &mut grid {
             *value += 1; // Increment each value
@@ -159,7 +186,7 @@ mod tests {
     #[test]
     fn get_out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         assert_eq!(grid.get(Pos::new(2, 0)), None); // Out of bounds
         assert_eq!(grid.get(Pos::new(0, 3)), None); // Out of bounds
@@ -168,7 +195,7 @@ mod tests {
     #[test]
     fn get_mut_out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
         assert_eq!(grid.get_mut(Pos::new(2, 0)), None); // Out of bounds
         assert_eq!(grid.get_mut(Pos::new(0, 3)), None); // Out of bounds
     }
