@@ -72,3 +72,39 @@ impl BitOps for u64 {
         self as usize
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn u8_to_usize() {
+        let value: u8 = 42;
+        assert_eq!(value.to_usize(), 42);
+    }
+
+    #[test]
+    fn u16_to_usize() {
+        let value: u16 = 42;
+        assert_eq!(value.to_usize(), 42);
+    }
+
+    #[test]
+    fn u32_to_usize() {
+        let value: u32 = 42;
+        assert_eq!(value.to_usize(), 42);
+    }
+
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn u64_to_usize() {
+        let value: u64 = 42;
+        assert_eq!(value.to_usize(), 42);
+    }
+
+    #[test]
+    fn usize_to_usize() {
+        let value: usize = 42;
+        assert_eq!(value.to_usize(), 42);
+    }
+}
