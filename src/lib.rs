@@ -2,8 +2,9 @@
 
 #![no_std]
 
-pub mod buf;
-
-pub mod core;
-
 pub(crate) mod internal;
+
+pub mod buf;
+pub mod core;
+pub mod grid;
+pub mod impls;

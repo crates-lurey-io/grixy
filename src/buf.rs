@@ -21,7 +21,10 @@
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::{core::GridError, core::Layout, core::Pos, core::RowMajor};
+use crate::{
+    core::{GridError, Layout, Pos, RowMajor},
+    grid::{BoundedGrid, GridBase, GridReadUnchecked, GridWriteUnchecked},
+};
 use core::marker::PhantomData;
 
 mod array;
@@ -121,5 +124,76 @@ where
     #[allow(clippy::iter_without_into_iter)]
     pub fn iter(&self) -> core::slice::Iter<'_, T> {
         self.buffer.as_ref().iter()
+    }
+}
+
+impl<T, B, L> GridBase for GridBuf<T, B, L>
+where
+    B: AsRef<[T]>,
+    L: Layout,
+{
+    type Element = T;
+}
+
+unsafe impl<T, B, L> BoundedGrid for GridBuf<T, B, L>
+where
+    B: AsRef<[T]>,
+    L: Layout,
+{
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn height(&self) -> usize {
+        self.height
+    }
+}
+
+impl<T, B, L> GridReadUnchecked for GridBuf<T, B, L>
+where
+    B: AsRef<[T]>,
+    L: Layout,
+{
+    unsafe fn get_unchecked(&self, pos: Pos) -> &T {
+        let index = L::to_1d(pos, self.width).index;
+        unsafe { self.buffer.as_ref().get_unchecked(index) }
+    }
+}
+
+impl<T, B, L> GridWriteUnchecked for GridBuf<T, B, L>
+where
+    B: AsRef<[T]> + AsMut<[T]>,
+    L: Layout,
+{
+    unsafe fn set_unchecked(&mut self, pos: Pos, value: T) {
+        let index = L::to_1d(pos, self.width).index;
+        unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn impl_bounded_grid() {
+        let grid = VecGrid::<u8>::new(5, 4);
+        assert_eq!(grid.width(), 5);
+        assert_eq!(grid.height(), 4);
+    }
+
+    #[test]
+    fn impl_get_unchecked() {
+        let grid = VecGrid::<u8>::new_filled(5, 4, 42);
+        let pos = Pos::new(2, 3);
+        assert_eq!(unsafe { grid.get_unchecked(pos) }, &42);
+    }
+
+    #[test]
+    fn impl_set_unchecked() {
+        let mut grid = VecGrid::<u8>::new(5, 4);
+        let pos = Pos::new(2, 3);
+        unsafe { grid.set_unchecked(pos, 99) };
+        assert_eq!(unsafe { grid.get_unchecked(pos) }, &99);
     }
 }
