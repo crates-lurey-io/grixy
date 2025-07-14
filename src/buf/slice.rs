@@ -8,7 +8,9 @@ use crate::buf::GridBuf;
 ///
 /// ## Layout
 ///
-/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
+///
+/// [`Layout`]: `crate::core::Layout`
 pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
 
 /// A 2-dimensional grid implemented by a mutable slice buffer.
@@ -17,7 +19,9 @@ pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
 ///
 /// ## Layout
 ///
-/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
+///
+/// [`Layout`]: `crate::core::Layout`
 pub type SliceMutGrid<'a, T, L = RowMajor> = GridBuf<T, &'a mut [T], L>;
 
 #[cfg(test)]

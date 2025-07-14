@@ -9,7 +9,9 @@ use ixy::index::RowMajor;
 ///
 /// ## Layout
 ///
-/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
+///
+/// [`Layout`]: `crate::core::Layout`
 pub type VecGrid<T, L = RowMajor> = super::GridBuf<T, Vec<T>, L>;
 
 impl<T, L> super::GridBuf<T, Vec<T>, L>

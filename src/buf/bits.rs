@@ -60,7 +60,7 @@ where
 {
     /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
     ///
-    /// The maximum width that can be used is determined by [`HasBits::MAX_WIDTH`].
+    /// The maximum width that can be used is determined by [`BitOps::MAX_WIDTH`].
     ///
     /// ## Errors
     ///

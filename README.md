@@ -3,6 +3,7 @@
 2-dimensional grids.
 
 [![Test](https://github.com/crates-lurey-io/grixy/actions/workflows/test.yml/badge.svg)](https://github.com/crates-lurey-io/grixy/actions/workflows/test.yml)
+[![Docs](https://github.com/crates-lurey-io/grixy/actions/workflows/docs.yml/badge.svg)](https://github.com/crates-lurey-io/grixy/actions/workflows/docs.yml)
 [![Crates.io Version](https://img.shields.io/crates/v/grixy)](https://crates.io/crates/grixy)
 [![codecov](https://codecov.io/gh/crates-lurey-io/grixy/graph/badge.svg?token=Z3VUWA3WYY)](https://codecov.io/gh/crates-lurey-io/grixy)
 

@@ -36,19 +36,11 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Clean docs folder
-        run: cargo clean --doc
+      - name: Install Tools
+        uses: cargo-bins/cargo-binstall@v1.13.0
 
       - name: Build docs
-        run: cargo doc --no-deps
-        env:
-          RUSTDOCFLAGS: "-D warnings"
-
-      - name: Add redirect
-        run: echo '<meta http-equiv="refresh" content="0;url=grixy/index.html">' > target/doc/index.html
-
-      - name: Remove lock file
-        run: rm target/doc/.lock
+        run: cargo just doc-gen
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

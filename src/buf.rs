@@ -21,9 +21,8 @@
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::{core::GridError, core::Pos};
+use crate::{core::GridError, core::Layout, core::Pos, core::RowMajor};
 use core::marker::PhantomData;
-pub use ixy::index::{ColMajor, Layout, RowMajor};
 
 mod array;
 pub use array::ArrayGrid;
