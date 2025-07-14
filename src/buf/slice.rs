@@ -1,5 +1,3 @@
-use ixy::index::RowMajor;
-
 use crate::buf::GridBuf;
 
 /// A 2-dimensional grid implemented by a slice buffer.
@@ -11,7 +9,7 @@ use crate::buf::GridBuf;
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
 ///
 /// [`Layout`]: `crate::core::Layout`
-pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
+pub type SliceGrid<'a, T, L> = GridBuf<T, &'a [T], L>;
 
 /// A 2-dimensional grid implemented by a mutable slice buffer.
 ///
@@ -22,7 +20,7 @@ pub type SliceGrid<'a, T, L = RowMajor> = GridBuf<T, &'a [T], L>;
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
 ///
 /// [`Layout`]: `crate::core::Layout`
-pub type SliceMutGrid<'a, T, L = RowMajor> = GridBuf<T, &'a mut [T], L>;
+pub type SliceMutGrid<'a, T, L> = GridBuf<T, &'a mut [T], L>;
 
 #[cfg(test)]
 mod tests {
@@ -33,7 +31,7 @@ mod tests {
     #[test]
     fn impl_slice() {
         let data: &[u8] = &[1, 2, 3, 4, 5, 6];
-        let grid = SliceGrid::<_>::with_buffer(data, 2, 3).unwrap();
+        let grid = SliceGrid::with_buffer_row_major(data, 2, 3).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
@@ -42,7 +40,7 @@ mod tests {
     #[test]
     fn impl_slice_mut() {
         let mut data: [u8; 6] = [1, 2, 3, 4, 5, 6];
-        let mut grid = SliceMutGrid::<_>::with_buffer(&mut data, 2, 3).unwrap();
+        let mut grid = SliceMutGrid::with_buffer_row_major(&mut data, 2, 3).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));

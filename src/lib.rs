@@ -15,7 +15,7 @@
 //!    Wall,
 //! }
 //!
-//! let mut grid = VecGrid::<_>::new_filled(10, 10, Tile::Empty);
+//! let mut grid = VecGrid::new_filled_row_major(10, 10, Tile::Empty);
 //! grid.set(Pos::new(5, 5), Tile::Wall).unwrap();
 //! assert_eq!(grid.get(Pos::new(0, 0)), Some(&Tile::Empty));
 //! assert_eq!(grid.get(Pos::new(5, 5)), Some(&Tile::Wall));

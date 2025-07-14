@@ -17,7 +17,7 @@
 //! ```
 //! use grixy::{core::Pos, buf::VecGrid};
 //!
-//! let grid = VecGrid::<_>::new_filled(10, 5, 42);
+//! let grid = VecGrid::new_filled_row_major(10, 5, 42);
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
@@ -37,6 +37,7 @@ mod iter;
 mod r#mut;
 
 mod slice;
+use ixy::index::ColMajor;
 pub use slice::*;
 
 #[cfg(feature = "alloc")]
@@ -61,6 +62,68 @@ where
     height: usize,
     _element: PhantomData<T>,
     _layout: PhantomData<L>,
+}
+
+impl<T, B> GridBuf<T, B, RowMajor>
+where
+    B: AsRef<[T]>,
+{
+    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The data buffer is expected to be in [`RowMajor`] order.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the buffer size does not match the expected size.
+    pub fn with_buffer_row_major(
+        buffer: B,
+        width: usize,
+        height: usize,
+    ) -> Result<Self, GridError> {
+        Self::with_buffer(buffer, width, height)
+    }
+
+    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The data buffer is expected to be in [`RowMajor`] order.
+    ///
+    /// ## Safety
+    ///
+    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
+    pub unsafe fn with_buffer_row_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
+        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    }
+}
+
+impl<T, B> GridBuf<T, B, ColMajor>
+where
+    B: AsRef<[T]>,
+{
+    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The data buffer is expected to be in [`ColMajor`] order.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the buffer size does not match the expected size.
+    pub fn with_buffer_col_major(
+        buffer: B,
+        width: usize,
+        height: usize,
+    ) -> Result<Self, GridError> {
+        Self::with_buffer(buffer, width, height)
+    }
+
+    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    ///
+    /// The data buffer is expected to be in [`ColMajor`] order.
+    ///
+    /// ## Safety
+    ///
+    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
+    pub unsafe fn with_buffer_col_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
+        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    }
 }
 
 impl<T, B, L> GridBuf<T, B, L>
@@ -177,21 +240,21 @@ mod tests {
 
     #[test]
     fn impl_bounded_grid() {
-        let grid = VecGrid::<u8>::new(5, 4);
+        let grid = VecGrid::new_filled_row_major(5, 4, 0);
         assert_eq!(grid.width(), 5);
         assert_eq!(grid.height(), 4);
     }
 
     #[test]
     fn impl_get_unchecked() {
-        let grid = VecGrid::<u8>::new_filled(5, 4, 42);
+        let grid = VecGrid::new_filled_row_major(5, 4, 42);
         let pos = Pos::new(2, 3);
         assert_eq!(unsafe { grid.get_unchecked(pos) }, &42);
     }
 
     #[test]
     fn impl_set_unchecked() {
-        let mut grid = VecGrid::<u8>::new(5, 4);
+        let mut grid = VecGrid::new_row_major(5, 4);
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(unsafe { grid.get_unchecked(pos) }, &99);

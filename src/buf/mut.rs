@@ -27,19 +27,21 @@ where
 
 #[cfg(test)]
 mod tests {
+    use ixy::index::RowMajor;
+
     use crate::buf::ArrayGrid;
 
     use super::*;
 
     #[test]
     fn get_mut_x_out_of_bounds() {
-        let mut grid = ArrayGrid::<u8, 50>::new_filled(10, 5, 42);
+        let mut grid = ArrayGrid::<u8, 50, RowMajor>::new_filled(10, 5, 42);
         assert_eq!(grid.get_mut(Pos::new(10, 4)), None);
     }
 
     #[test]
     fn get_mut_y_out_of_bounds() {
-        let mut grid = ArrayGrid::<u8, 50>::new_filled(10, 5, 42);
+        let mut grid = ArrayGrid::<u8, 50, RowMajor>::new_filled(10, 5, 42);
         assert_eq!(grid.get_mut(Pos::new(9, 5)), None);
     }
 }
