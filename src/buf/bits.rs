@@ -28,7 +28,7 @@ use core::marker::PhantomData;
 use ixy::index::{Layout, RowMajor};
 pub use ops::BitOps;
 
-use crate::{GridError, core::Pos};
+use crate::{core::GridError, core::Pos};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
