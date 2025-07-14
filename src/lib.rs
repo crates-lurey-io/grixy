@@ -24,9 +24,11 @@
 //!
 //! ## Features
 //!
-//! Flag    | Enabled By Default | Description
-//! ------- | ------------------ | -----------
-//! `alloc` | Yes                | Provides additional types that use `alloc::vec`.
+//! ### `alloc`
+//!
+//! _Enabled by default._
+//!
+//! Provides additional (but optional) types that use `alloc::vec`.
 
 #![no_std]
 
