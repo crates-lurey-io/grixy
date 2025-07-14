@@ -1,5 +1,6 @@
-use crate::GridBuf;
 use ixy::index::RowMajor;
+
+use crate::buf::GridBuf;
 
 /// A 2-dimensional grid implemented by a slice buffer.
 ///
@@ -21,8 +22,9 @@ pub type SliceMutGrid<'a, T, L = RowMajor> = GridBuf<T, &'a mut [T], L>;
 
 #[cfg(test)]
 mod tests {
+    use crate::core::Pos;
+
     use super::*;
-    use crate::Pos;
 
     #[test]
     fn impl_slice() {

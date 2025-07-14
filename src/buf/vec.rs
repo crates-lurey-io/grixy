@@ -43,8 +43,9 @@ where
 mod tests {
     extern crate alloc;
 
+    use crate::core::Pos;
+
     use super::*;
-    use crate::Pos;
     use alloc::{vec, vec::Vec};
 
     #[test]

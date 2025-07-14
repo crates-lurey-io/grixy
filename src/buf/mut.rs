@@ -1,4 +1,4 @@
-use crate::{GridBuf, Pos};
+use crate::{buf::GridBuf, core::Pos};
 use ixy::index::Layout;
 
 impl<T, B, L> GridBuf<T, B, L>

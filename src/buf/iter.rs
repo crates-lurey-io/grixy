@@ -1,5 +1,6 @@
-use crate::GridBuf;
 use ixy::index::Layout;
+
+use crate::buf::GridBuf;
 
 impl<'a, T, B, L> IntoIterator for &'a GridBuf<T, B, L>
 where

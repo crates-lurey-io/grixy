@@ -15,13 +15,13 @@
 //!
 //! Creating an owned `VecGrid` and accessing an element:
 //! ```
-//! use grixy::{Pos, buf::VecGrid};
+//! use grixy::{core::Pos, buf::VecGrid};
 //!
 //! let grid = VecGrid::<_>::new_filled(10, 5, 42);
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::{Pos, error::GridError};
+use crate::{core::Pos, error::GridError};
 use core::marker::PhantomData;
 pub use ixy::index::{ColMajor, Layout, RowMajor};
 

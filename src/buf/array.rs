@@ -1,5 +1,6 @@
-use crate::GridBuf;
 use ixy::index::{Layout, RowMajor};
+
+use crate::buf::GridBuf;
 
 /// A 2-dimensional grid implemented by a fixed-size array buffer.
 ///
@@ -48,7 +49,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Pos, buf::ArrayGrid};
+    use crate::{buf::ArrayGrid, core::Pos};
 
     #[test]
     fn impl_arr() {
