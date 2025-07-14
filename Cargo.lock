@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "grixy"
-version = "0.0.0-reserved"
+version = "0.1.0"
 dependencies = [
  "ixy",
 ]
