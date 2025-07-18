@@ -221,6 +221,18 @@ where
         let index = L::to_1d(pos, self.width).index;
         unsafe { self.buffer.as_ref().get_unchecked(index) }
     }
+
+    unsafe fn rect_iter_unchecked(
+        &self,
+        bounds: crate::core::Rect,
+    ) -> impl Iterator<Item = &Self::Element> {
+        let slice = self.buffer.as_ref();
+        let width = self.width;
+        (bounds.top()..bounds.bottom()).flat_map(move |y| {
+            let row_start = L::to_1d(Pos::new(bounds.left(), y), width).index;
+            slice[row_start..row_start + bounds.width()].iter()
+        })
+    }
 }
 
 impl<T, B, L> GridWriteUnchecked for GridBuf<T, B, L>
@@ -236,7 +248,11 @@ where
 
 #[cfg(test)]
 mod tests {
+    extern crate alloc;
+    use crate::core::Rect;
+
     use super::*;
+    use alloc::{vec, vec::Vec};
 
     #[test]
     fn impl_bounded_grid() {
@@ -258,5 +274,52 @@ mod tests {
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(unsafe { grid.get_unchecked(pos) }, &99);
+    }
+
+    #[test]
+    fn with_buffer_col_major() {
+        let buffer = VecGrid::with_buffer_col_major(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3).unwrap();
+        assert_eq!(buffer.width(), 3);
+        assert_eq!(buffer.height(), 3);
+        assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
+        assert_eq!(buffer.get(Pos::new(2, 2)), Some(&9));
+    }
+
+    #[test]
+    fn with_buffer_col_major_unchecked() {
+        let buffer = unsafe {
+            VecGrid::with_buffer_col_major_unchecked(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3)
+        };
+        assert_eq!(buffer.width(), 3);
+        assert_eq!(buffer.height(), 3);
+        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(0, 0)) }, &1);
+        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(2, 2)) }, &9);
+    }
+
+    #[test]
+    fn rect_iter_unchecked() {
+        #[rustfmt::skip]
+        let buffer = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3, 
+            4, 5, 6, 
+            7, 8, 9,
+        ], 3, 3).unwrap();
+
+        assert_eq!(
+            unsafe {
+                buffer
+                    .rect_iter_unchecked(Rect::from_ltwh(1, 1, 2, 1).unwrap())
+                    .collect::<Vec<_>>()
+            },
+            vec![&5, &6]
+        );
+        assert_eq!(
+            unsafe {
+                buffer
+                    .rect_iter_unchecked(Rect::from_ltwh(0, 0, 3, 3).unwrap())
+                    .collect::<Vec<_>>()
+            },
+            vec![&1, &2, &3, &4, &5, &6, &7, &8, &9]
+        );
     }
 }

@@ -423,4 +423,21 @@ mod tests {
         assert_eq!(iter.next(), Some(false));
         assert_eq!(iter.next(), None);
     }
+
+    #[test]
+    fn with_buffer_row_major_unchecked() {
+        let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
+        let grid = unsafe { VecBits::<u8, RowMajor>::with_buffer_row_major_unchecked(data, 8, 1) };
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
+        assert_eq!(grid.get(Pos::new(1, 0)), Some(false));
+        assert_eq!(grid.get(Pos::new(8, 0)), None);
+        assert_eq!(grid.get(Pos::new(0, 1)), None);
+    }
+
+    #[test]
+    fn with_buffer_width_exceeded_err() {
+        let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
+        let grid = VecBits::with_buffer_row_major(data, 8, 2);
+        assert!(grid.is_err());
+    }
 }

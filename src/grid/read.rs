@@ -1,4 +1,4 @@
-use ixy::index::Layout;
+use ixy::index::{Layout, RowMajor};
 
 use crate::{
     core::{Pos, Rect},
@@ -11,6 +11,21 @@ pub trait GridRead: GridBase {
     ///
     /// If the position is out of bounds, it returns `None`.
     fn get(&self, pos: Pos) -> Option<&Self::Element>;
+
+    /// Returns an iterator over elements in a rectangular region of the grid.
+    ///
+    /// Elements are returned in an order agreeable to the grid's internal layout, which defaults to
+    /// [`RowMajor`], but can be overridden. Out-of-bounds elements are skipped, and the bounding
+    /// rectangle is treated as _exclusive_ of the right and bottom edges.
+    ///
+    /// ## Performance
+    ///
+    /// The default implementation uses [`ops::get_rect`] to iterate over the rectangle, involving
+    /// bounds checking for each element. Other implementations may optimize this, for example by
+    /// using a more efficient iteration strategy (for linear reads, reduced bounds checking, etc.).
+    fn rect_iter(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+        RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
+    }
 }
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -24,48 +39,23 @@ pub trait GridReadUnchecked: GridBase {
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn get_unchecked(&self, pos: Pos) -> &Self::Element;
 
-    /// Returns a raw iterator over a subset of elements in a row of the grid, without bounds checking.
+    /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    /// # Safety
+    ///Elements are returned in an order agreeable to the grid's internal layout, which defaults to
+    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
+    /// right and bottom edges.
     ///
-    /// The caller must ensure all positions are in bounds.
-    unsafe fn row_iter_unchecked(
-        &self,
-        start: Pos,
-        length: usize,
-    ) -> impl Iterator<Item = &Self::Element> + '_ {
-        (0..length).map(move |i| {
-            let pos = Pos::new(start.x + i, start.y);
-            unsafe { self.get_unchecked(pos) }
-        })
-    }
-
-    /// Returns a raw iterator over a subset of elements in a column of the grid, without bounds checking.
+    /// ## Safety
     ///
-    /// # Safety
+    /// The caller must ensure that all positions in the rectangle are valid positions in the grid.
     ///
-    /// The caller must ensure all positions are in bounds.
-    unsafe fn col_iter_unchecked(
-        &self,
-        start: Pos,
-        length: usize,
-    ) -> impl Iterator<Item = &Self::Element> + '_ {
-        (0..length).map(move |i| {
-            let pos = Pos::new(start.x, start.y + i);
-            unsafe { self.get_unchecked(pos) }
-        })
-    }
-
-    /// Returns a raw iterator over each element in a rectangular region of the grid, without bounds checking.
+    /// ## Performance
     ///
-    /// # Safety
-    ///
-    /// The caller must ensure all positions in the rectangle are in bounds.
-    unsafe fn rect_iter_unchecked<L: Layout>(
-        &self,
-        bounds: Rect,
-    ) -> impl Iterator<Item = &Self::Element> {
-        L::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
+    /// The default implementation uses [`ops::get_rect_unchecked`] to iterate over the rectangle,
+    /// involving a call to `get_unchecked` for each element. Other implementations may optimize
+    /// this, for example by using a more efficient iteration strategy (for linear reads, etc.).
+    unsafe fn rect_iter_unchecked(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+        RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
 
@@ -78,24 +68,48 @@ impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
             None
         }
     }
+
+    fn rect_iter(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+        // TODO: Add Size.to_rect()
+        let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
+        let rect = bounds.intersect(size);
+        unsafe { self.rect_iter_unchecked(rect) }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     extern crate alloc;
     use super::*;
-    use alloc::{vec, vec::Vec};
-    use ixy::index::RowMajor;
+    use alloc::vec::Vec;
 
-    struct TestGrid {
+    struct CheckedGridTest {
         grid: [[u8; 3]; 3],
     }
 
-    impl GridBase for TestGrid {
+    impl GridBase for CheckedGridTest {
         type Element = u8;
     }
 
-    unsafe impl BoundedGrid for TestGrid {
+    impl GridRead for CheckedGridTest {
+        fn get(&self, pos: Pos) -> Option<&Self::Element> {
+            if pos.x < 3 && pos.y < 3 {
+                Some(&self.grid[pos.y][pos.x])
+            } else {
+                None
+            }
+        }
+    }
+
+    struct UncheckedTestGrid {
+        grid: [[u8; 3]; 3],
+    }
+
+    impl GridBase for UncheckedTestGrid {
+        type Element = u8;
+    }
+
+    unsafe impl BoundedGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
@@ -105,7 +119,7 @@ mod tests {
         }
     }
 
-    impl GridReadUnchecked for TestGrid {
+    impl GridReadUnchecked for UncheckedTestGrid {
         unsafe fn get_unchecked(&self, pos: Pos) -> &Self::Element {
             &self.grid[pos.y][pos.x]
         }
@@ -113,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_get_ok() {
-        let grid = TestGrid {
+        let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         assert_eq!(grid.get(Pos::new(1, 1)), Some(&5));
@@ -121,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_get_out_of_bounds_x() {
-        let grid = TestGrid {
+        let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         assert_eq!(grid.get(Pos::new(3, 1)), None);
@@ -129,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_get_out_of_bounds_y() {
-        let grid = TestGrid {
+        let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         assert_eq!(grid.get(Pos::new(1, 3)), None);
@@ -137,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_get_unchecked_ok() {
-        let grid = TestGrid {
+        let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let val = unsafe { grid.get_unchecked(Pos::new(2, 2)) };
@@ -145,30 +159,86 @@ mod tests {
     }
 
     #[test]
-    fn test_row_iter_unchecked() {
-        let grid = TestGrid {
+    fn rect_iter_completely_in_bounds() {
+        let grid = CheckedGridTest {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
-        let iter: Vec<_> = unsafe { grid.row_iter_unchecked(Pos::new(0, 0), 3).collect() };
-        assert_eq!(iter, vec![&1, &2, &3]);
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(1, 1, 2, 2).unwrap())
+            .collect::<Vec<_>>();
+        #[rustfmt::skip]
+        assert_eq!(cells, &[
+            &5, &6, 
+            &8, &9,
+        ]);
     }
 
     #[test]
-    fn test_col_iter_unchecked() {
-        let grid = TestGrid {
+    fn rect_iter_completely_in_bounds_unchecked_impl() {
+        let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
-        let iter: Vec<_> = unsafe { grid.col_iter_unchecked(Pos::new(2, 0), 3).collect() };
-        assert_eq!(iter, vec![&3, &6, &9]);
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(1, 1, 2, 2).unwrap())
+            .collect::<Vec<_>>();
+        #[rustfmt::skip]
+        assert_eq!(cells, &[
+            &5, &6, 
+            &8, &9,
+        ]);
     }
 
     #[test]
-    fn test_rect_iter_unchecked() {
-        let grid = TestGrid {
+    fn rect_iter_partially_out_of_bounds() {
+        let grid = CheckedGridTest {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
-        let bounds = Rect::from_ltrb(1, 1, 3, 3).unwrap();
-        let iter: Vec<_> = unsafe { grid.rect_iter_unchecked::<RowMajor>(bounds).collect() };
-        assert_eq!(iter, vec![&5, &6, &8, &9]);
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(0, 0, 4, 4).unwrap())
+            .collect::<Vec<_>>();
+        #[rustfmt::skip]
+        assert_eq!(cells, &[
+            &1, &2, &3,
+            &4, &5, &6,
+            &7, &8, &9,
+        ]);
+    }
+
+    #[test]
+    fn rect_iter_partially_out_of_bounds_unchecked_impl() {
+        let grid = UncheckedTestGrid {
+            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+        };
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(0, 0, 4, 4).unwrap())
+            .collect::<Vec<_>>();
+        #[rustfmt::skip]
+        assert_eq!(cells, &[
+            &1, &2, &3,
+            &4, &5, &6,
+            &7, &8, &9,
+        ]);
+    }
+
+    #[test]
+    fn rect_iter_completely_out_of_bounds() {
+        let grid = CheckedGridTest {
+            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+        };
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(3, 3, 2, 2).unwrap())
+            .collect::<Vec<_>>();
+        assert!(cells.is_empty());
+    }
+
+    #[test]
+    fn rect_iter_completely_out_of_bounds_unchecked_impl() {
+        let grid = UncheckedTestGrid {
+            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+        };
+        let cells = grid
+            .rect_iter(Rect::from_ltwh(3, 3, 2, 2).unwrap())
+            .collect::<Vec<_>>();
+        assert!(cells.is_empty());
     }
 }
