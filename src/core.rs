@@ -15,7 +15,7 @@ pub type Rect = ixy::Rect<usize>;
 /// A 2-dimensional size type.
 ///
 /// This is a wrapper around [`ixy::Size`] that uses `usize` for dimensions.
-pub type Size = ixy::Size<usize>;
+pub type Size = ixy::Size;
 
 /// An error type for operations on or creating a `Grid`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

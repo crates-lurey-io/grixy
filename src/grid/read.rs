@@ -166,7 +166,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(1, 1, 2, 2).unwrap())
+            .rect_iter(Rect::from_ltwh(1, 1, 2, 2))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -181,7 +181,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(1, 1, 2, 2).unwrap())
+            .rect_iter(Rect::from_ltwh(1, 1, 2, 2))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -196,7 +196,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(0, 0, 4, 4).unwrap())
+            .rect_iter(Rect::from_ltwh(0, 0, 4, 4))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -212,7 +212,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(0, 0, 4, 4).unwrap())
+            .rect_iter(Rect::from_ltwh(0, 0, 4, 4))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -228,7 +228,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(3, 3, 2, 2).unwrap())
+            .rect_iter(Rect::from_ltwh(3, 3, 2, 2))
             .collect::<Vec<_>>();
         assert!(cells.is_empty());
     }
@@ -239,7 +239,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(3, 3, 2, 2).unwrap())
+            .rect_iter(Rect::from_ltwh(3, 3, 2, 2))
             .collect::<Vec<_>>();
         assert!(cells.is_empty());
     }

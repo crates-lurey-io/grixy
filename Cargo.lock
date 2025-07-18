@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "grixy"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ixy",
 ]
@@ -188,8 +188,9 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "ixy"
-version = "0.2.0"
-source = "git+https://github.com/crates-lurey-io/ixy?rev=c027fb73dcfa8f1fd7ac28cbf7fe1c6eb2effe25#c027fb73dcfa8f1fd7ac28cbf7fe1c6eb2effe25"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b253dd2fc5bbbd42099e40f0c39d7f0c54bc72859c948fde2c51b071d6a80ad"
 
 [[package]]
 name = "libc"
