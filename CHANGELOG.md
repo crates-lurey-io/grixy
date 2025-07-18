@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `GridRead` has default implementations of `{row|col|rect}_iter`.
-- `GridWrite` has default implementations of `set_{row|col|rect}`.
 
 ### Removed
 
