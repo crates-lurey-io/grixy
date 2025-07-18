@@ -11,45 +11,6 @@ pub trait GridRead: GridBase {
     ///
     /// If the position is out of bounds, it returns `None`.
     fn get(&self, pos: Pos) -> Option<&Self::Element>;
-
-    /// Returns an iterator over a subset of elements in a row of the grid.
-    ///
-    /// Positions out of bound are skipped.
-    ///
-    /// ## Implementation
-    ///
-    /// The default implementation invokes `get` for each position in the specified range.
-    fn row_iter(&self, start: Pos, length: usize) -> impl Iterator<Item = &Self::Element> + '_ {
-        (0..length).filter_map(move |i| {
-            let pos = Pos::new(start.x + i, start.y);
-            self.get(pos)
-        })
-    }
-
-    /// Returns an iterator over a subset of elements in a column of the grid.
-    ///
-    /// Positions out of bound are skipped.
-    ///
-    /// ## Implementation
-    ///
-    /// The default implementation invokes `get` for each position in the specified range.
-    fn col_iter(&self, start: Pos, length: usize) -> impl Iterator<Item = &Self::Element> + '_ {
-        (0..length).filter_map(move |i| {
-            let pos = Pos::new(start.x, start.y + i);
-            self.get(pos)
-        })
-    }
-
-    /// Returns an iterator over each element in a rectangular region of the grid.
-    ///
-    /// Positions out of bound are skipped.
-    ///
-    /// ## Implementation
-    ///
-    /// The default implementation invokes `get` for each position in the specified rectangle.
-    fn rect_iter<L: Layout>(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
-        L::iter_pos(bounds).filter_map(move |pos| self.get(pos))
-    }
 }
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -117,37 +78,6 @@ impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
             None
         }
     }
-
-    fn row_iter(&self, start: Pos, length: usize) -> impl Iterator<Item = &Self::Element> + '_ {
-        let start = start.clamp(
-            Pos::ORIGIN,
-            Pos::new(
-                self.width().saturating_sub(1),
-                self.height().saturating_sub(1),
-            ),
-        );
-        let length = length.min(self.width() - start.x);
-        unsafe { self.row_iter_unchecked(start, length) }
-    }
-
-    fn col_iter(&self, start: Pos, length: usize) -> impl Iterator<Item = &Self::Element> + '_ {
-        let start = start.clamp(
-            Pos::ORIGIN,
-            Pos::new(
-                self.width().saturating_sub(1),
-                self.height().saturating_sub(1),
-            ),
-        );
-        let length = length.min(self.height() - start.y);
-        unsafe { self.col_iter_unchecked(start, length) }
-    }
-
-    fn rect_iter<L: Layout>(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
-        // TODO: Add Size.to_rect()
-        let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
-        let bounds = bounds.intersect(size);
-        L::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
-    }
 }
 
 #[cfg(test)]
@@ -203,34 +133,6 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         assert_eq!(grid.get(Pos::new(1, 3)), None);
-    }
-
-    #[test]
-    fn test_row_iter() {
-        let grid = TestGrid {
-            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-        };
-        let iter: Vec<_> = grid.row_iter(Pos::new(0, 1), 3).collect();
-        assert_eq!(iter, vec![&4, &5, &6]);
-    }
-
-    #[test]
-    fn test_col_iter() {
-        let grid = TestGrid {
-            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-        };
-        let iter: Vec<_> = grid.col_iter(Pos::new(1, 0), 3).collect();
-        assert_eq!(iter, vec![&2, &5, &8]);
-    }
-
-    #[test]
-    fn test_rect_iter() {
-        let grid = TestGrid {
-            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-        };
-        let bounds = Rect::from_ltrb(0, 0, 2, 2).unwrap();
-        let iter: Vec<_> = grid.rect_iter::<RowMajor>(bounds).collect();
-        assert_eq!(iter, vec![&1, &2, &4, &5]);
     }
 
     #[test]

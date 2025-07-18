@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- `GridRead` has default implementations of `{row|col|rect}_iter`.
-
 ### Removed
 
 - Removed unused `impls` module.
