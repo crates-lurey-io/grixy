@@ -24,4 +24,4 @@ default = ["alloc"]
 alloc = []
 
 [dependencies]
-ixy = "0.2.0"
+ixy = { git = "https://github.com/crates-lurey-io/ixy", rev = "c027fb73dcfa8f1fd7ac28cbf7fe1c6eb2effe25" }
