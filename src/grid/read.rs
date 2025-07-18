@@ -20,9 +20,10 @@ pub trait GridRead: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`ops::get_rect`] to iterate over the rectangle, involving
-    /// bounds checking for each element. Other implementations may optimize this, for example by
-    /// using a more efficient iteration strategy (for linear reads, reduced bounds checking, etc.).
+    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// involving bounds checking for each element. Other implementations may optimize this, for
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
+    /// checking, etc.).
     fn rect_iter(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
         RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
     }
@@ -51,9 +52,10 @@ pub trait GridReadUnchecked: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`ops::get_rect_unchecked`] to iterate over the rectangle,
-    /// involving a call to `get_unchecked` for each element. Other implementations may optimize
-    /// this, for example by using a more efficient iteration strategy (for linear reads, etc.).
+    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
+    /// implementations may optimize this, for example by using a more efficient iteration strategy
+    /// (for linear reads, etc.).
     unsafe fn rect_iter_unchecked(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
         RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
