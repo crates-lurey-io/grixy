@@ -44,4 +44,11 @@ mod tests {
         let mut grid = ArrayGrid::<u8, 50, RowMajor>::new_filled(10, 5, 42);
         assert_eq!(grid.get_mut(Pos::new(9, 5)), None);
     }
+
+    #[test]
+    fn get_mut() {
+        let mut grid = ArrayGrid::<u8, 50, RowMajor>::new_filled(10, 5, 42);
+        assert_eq!(grid.get_mut(Pos::new(0, 0)), Some(&mut 42));
+        assert_eq!(grid.get_mut(Pos::new(9, 4)), Some(&mut 42));
+    }
 }

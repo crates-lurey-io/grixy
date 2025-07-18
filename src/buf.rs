@@ -221,6 +221,18 @@ where
         let index = L::to_1d(pos, self.width).index;
         unsafe { self.buffer.as_ref().get_unchecked(index) }
     }
+
+    unsafe fn rect_iter_unchecked(
+        &self,
+        bounds: crate::core::Rect,
+    ) -> impl Iterator<Item = &Self::Element> {
+        let slice = self.buffer.as_ref();
+        let width = self.width;
+        (bounds.top()..bounds.bottom()).flat_map(move |y| {
+            let row_start = L::to_1d(Pos::new(bounds.left(), y), width).index;
+            slice[row_start..row_start + bounds.width()].iter()
+        })
+    }
 }
 
 impl<T, B, L> GridWriteUnchecked for GridBuf<T, B, L>
@@ -232,11 +244,46 @@ where
         let index = L::to_1d(pos, self.width).index;
         unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
     }
+
+    unsafe fn fill_rect_iter_unchecked(
+        &mut self,
+        bounds: crate::core::Rect,
+        iter: impl IntoIterator<Item = Self::Element>,
+    ) {
+        let slice = self.buffer.as_mut();
+        let width = self.width;
+        let mut iter = iter.into_iter();
+        for y in bounds.top()..bounds.bottom() {
+            let x_xtart = L::to_1d(Pos::new(bounds.left(), y), width).index;
+            let x_end = x_xtart + bounds.width();
+            slice[x_xtart..x_end]
+                .iter_mut()
+                .zip(&mut iter)
+                .for_each(|(cell, value)| *cell = value);
+        }
+    }
+
+    unsafe fn fill_rect_solid_unchecked(&mut self, bounds: crate::core::Rect, value: Self::Element)
+    where
+        Self::Element: Copy,
+    {
+        let slice = self.buffer.as_mut();
+        let width = self.width;
+        for y in bounds.top()..bounds.bottom() {
+            let x_start = L::to_1d(Pos::new(bounds.left(), y), width).index;
+            let x_end = x_start + bounds.width();
+            slice[x_start..x_end].fill(value);
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    extern crate alloc;
+    use crate::core::Rect;
+
     use super::*;
+    use alloc::{vec, vec::Vec};
 
     #[test]
     fn impl_bounded_grid() {
@@ -258,5 +305,80 @@ mod tests {
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(unsafe { grid.get_unchecked(pos) }, &99);
+    }
+
+    #[test]
+    fn with_buffer_col_major() {
+        let buffer = VecGrid::with_buffer_col_major(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3).unwrap();
+        assert_eq!(buffer.width(), 3);
+        assert_eq!(buffer.height(), 3);
+        assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
+        assert_eq!(buffer.get(Pos::new(2, 2)), Some(&9));
+    }
+
+    #[test]
+    fn with_buffer_col_major_unchecked() {
+        let buffer = unsafe {
+            VecGrid::with_buffer_col_major_unchecked(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3)
+        };
+        assert_eq!(buffer.width(), 3);
+        assert_eq!(buffer.height(), 3);
+        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(0, 0)) }, &1);
+        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(2, 2)) }, &9);
+    }
+
+    #[test]
+    fn rect_iter_unchecked() {
+        #[rustfmt::skip]
+        let buffer = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3, 
+            4, 5, 6, 
+            7, 8, 9,
+        ], 3, 3).unwrap();
+
+        assert_eq!(
+            unsafe {
+                buffer
+                    .rect_iter_unchecked(Rect::from_ltwh(1, 1, 2, 1))
+                    .collect::<Vec<_>>()
+            },
+            vec![&5, &6]
+        );
+        assert_eq!(
+            unsafe {
+                buffer
+                    .rect_iter_unchecked(Rect::from_ltwh(0, 0, 3, 3))
+                    .collect::<Vec<_>>()
+            },
+            vec![&1, &2, &3, &4, &5, &6, &7, &8, &9]
+        );
+    }
+
+    #[test]
+    fn fill_rect_iter_unchecked() {
+        let mut grid = VecGrid::new_row_major(3, 3);
+        unsafe {
+            grid.fill_rect_iter_unchecked(Rect::from_ltwh(0, 0, 2, 2), vec![1, 2, 3, 4]);
+        }
+        #[rustfmt::skip]
+        assert_eq!(grid.buffer.as_ref() as &[i32], &[
+            1, 2, 0,
+            3, 4, 0,
+            0, 0, 0,
+        ]);
+    }
+
+    #[test]
+    fn fill_rect_solid_unchecked() {
+        let mut grid = VecGrid::new_row_major(3, 3);
+        unsafe {
+            grid.fill_rect_solid_unchecked(Rect::from_ltwh(0, 0, 2, 2), 42);
+        }
+        #[rustfmt::skip]
+        assert_eq!(grid.buffer.as_ref() as &[i32], &[
+            42, 42, 0,
+            42, 42, 0,
+            0, 0, 0,
+        ]);
     }
 }
