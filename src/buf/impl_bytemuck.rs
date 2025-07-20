@@ -6,10 +6,6 @@ where
     B: AsRef<[T]>,
     L: Layout,
 {
-    /// Returns a view of the grid's internal buffer as a slice of bytes.
-    ///
-    /// This is a zero-cost operation. It is only available when the grid's
-    /// element type `T` is Plain Old Data (`Pod`).
     pub fn as_bytes(&self) -> &[u8] {
         bytemuck::cast_slice(self.buffer.as_ref())
     }
