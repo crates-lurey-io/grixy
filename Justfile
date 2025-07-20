@@ -39,7 +39,7 @@ doc-check:
 
 doc-gen:
     cargo clean --doc
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+    RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
     echo '<meta http-equiv="refresh" content="0;url=grixy/index.html">' > target/doc/index.html
     rm target/doc/.lock
 
