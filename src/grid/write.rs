@@ -1,5 +1,7 @@
+use ixy::index::Layout as _;
+
 use crate::{
-    core::{GridError, Layout, Pos, Rect, RowMajor},
+    core::{GridError, Pos, Rect, RowMajor},
     grid::{BoundedGrid, GridBase},
 };
 
@@ -45,7 +47,7 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
     /// checking, etc.).
-    fn fill_rect_iter(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+    fn fill_rect_from(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         RowMajor::iter_pos(bounds)
             .zip(iter)
             .for_each(|(pos, value)| {
@@ -186,7 +188,7 @@ impl<T: GridWriteUnchecked + BoundedGrid> GridWrite for T {
         unsafe { self.fill_rect_unchecked(rect, f) }
     }
 
-    fn fill_rect_iter(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+    fn fill_rect_from(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         // TODO: Size.to_rect()
         let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
         let rect = bounds.intersect(size);
@@ -313,7 +315,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_complete() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_iter(bounds, vec![42; 9]);
+        grid.fill_rect_from(bounds, vec![42; 9]);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 
@@ -321,7 +323,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 2).unwrap();
-        grid.fill_rect_iter(bounds, vec![42, 99]);
+        grid.fill_rect_from(bounds, vec![42, 99]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -335,7 +337,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds_with_extra() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 1).unwrap();
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -349,7 +351,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(1, 1, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -363,7 +365,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(3, 3, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -418,7 +420,7 @@ mod tests {
     fn impl_checked_fill_rect_iter() {
         let mut grid = TestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_iter(bounds, vec![42; 9]);
+        grid.fill_rect_from(bounds, vec![42; 9]);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 

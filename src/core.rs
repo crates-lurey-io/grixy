@@ -1,6 +1,6 @@
 //! Core types used in the Grixy crate.
 
-pub use ixy::index::{ColMajor, Layout, RowMajor};
+pub use ixy::index::{ColMajor, RowMajor};
 
 /// A 2-dimensional position type.
 ///

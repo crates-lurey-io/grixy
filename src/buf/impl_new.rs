@@ -1,8 +1,10 @@
 use core::marker::PhantomData;
 
+use ixy::index::Layout;
+
 use crate::{
     buf::GridBuf,
-    core::{ColMajor, GridError, Layout, RowMajor},
+    core::{ColMajor, GridError, RowMajor},
 };
 
 impl<T, B, L> GridBuf<T, B, L>

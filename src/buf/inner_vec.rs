@@ -11,7 +11,7 @@ use ixy::index::RowMajor;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`][].
 ///
-/// [`Layout`]: `crate::core::Layout`
+/// [`Layout`]: `ixy::index::Layout`
 pub type VecGrid<T, L> = super::GridBuf<T, Vec<T>, L>;
 
 impl<T> super::GridBuf<T, Vec<T>, RowMajor>

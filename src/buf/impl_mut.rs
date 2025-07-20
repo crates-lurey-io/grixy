@@ -11,7 +11,7 @@ where
     /// If the position is out of bounds, returns `None`.
     pub fn get_mut(&mut self, pos: Pos) -> Option<&mut T> {
         if pos.x < self.width && pos.y < self.height {
-            Some(&mut self.buffer.as_mut()[L::to_1d(pos, self.width).index])
+            Some(&mut self.buffer.as_mut()[L::to_1d(pos, self.width)])
         } else {
             None
         }

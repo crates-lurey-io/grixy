@@ -1,4 +1,6 @@
-use crate::{buf::GridBuf, core::Layout};
+use ixy::index::Layout;
+
+use crate::buf::GridBuf;
 
 impl<T, B, L> GridBuf<T, B, L>
 where

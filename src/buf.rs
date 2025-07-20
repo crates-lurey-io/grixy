@@ -23,7 +23,7 @@
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::core::{Layout, Pos, RowMajor};
+use crate::core::{Pos, RowMajor};
 use core::marker::PhantomData;
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
@@ -41,6 +41,7 @@ pub use inner_vec::VecGrid;
 
 mod inner_slice;
 pub use inner_slice::{SliceGrid, SliceMutGrid};
+use ixy::index::Layout;
 
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
@@ -92,7 +93,7 @@ where
     /// If the position is out of bounds, returns `None`.
     pub fn get(&self, pos: Pos) -> Option<&T> {
         if pos.x < self.width && pos.y < self.height {
-            Some(&self.buffer.as_ref()[L::to_1d(pos, self.width).index])
+            Some(&self.buffer.as_ref()[L::to_1d(pos, self.width)])
         } else {
             None
         }
@@ -163,7 +164,7 @@ mod tests {
         assert_eq!(
             unsafe {
                 buffer
-                    .rect_iter_unchecked(Rect::from_ltwh(1, 1, 2, 1))
+                    .iter_rect_unchecked(Rect::from_ltwh(1, 1, 2, 1))
                     .collect::<Vec<_>>()
             },
             vec![&5, &6]
@@ -171,7 +172,7 @@ mod tests {
         assert_eq!(
             unsafe {
                 buffer
-                    .rect_iter_unchecked(Rect::from_ltwh(0, 0, 3, 3))
+                    .iter_rect_unchecked(Rect::from_ltwh(0, 0, 3, 3))
                     .collect::<Vec<_>>()
             },
             vec![&1, &2, &3, &4, &5, &6, &7, &8, &9]

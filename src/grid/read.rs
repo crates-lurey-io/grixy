@@ -24,7 +24,7 @@ pub trait GridRead: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn rect_iter(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
         RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
     }
 }
@@ -56,7 +56,7 @@ pub trait GridReadUnchecked: GridBase {
     /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
-    unsafe fn rect_iter_unchecked(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
         RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
@@ -71,11 +71,11 @@ impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
         }
     }
 
-    fn rect_iter(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
         // TODO: Add Size.to_rect()
         let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
         let rect = bounds.intersect(size);
-        unsafe { self.rect_iter_unchecked(rect) }
+        unsafe { self.iter_rect_unchecked(rect) }
     }
 }
 
@@ -166,7 +166,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(1, 1, 2, 2))
+            .iter_rect(Rect::from_ltwh(1, 1, 2, 2))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -181,7 +181,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(1, 1, 2, 2))
+            .iter_rect(Rect::from_ltwh(1, 1, 2, 2))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -196,7 +196,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(0, 0, 4, 4))
+            .iter_rect(Rect::from_ltwh(0, 0, 4, 4))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -212,7 +212,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(0, 0, 4, 4))
+            .iter_rect(Rect::from_ltwh(0, 0, 4, 4))
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
@@ -228,7 +228,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(3, 3, 2, 2))
+            .iter_rect(Rect::from_ltwh(3, 3, 2, 2))
             .collect::<Vec<_>>();
         assert!(cells.is_empty());
     }
@@ -239,7 +239,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let cells = grid
-            .rect_iter(Rect::from_ltwh(3, 3, 2, 2))
+            .iter_rect(Rect::from_ltwh(3, 3, 2, 2))
             .collect::<Vec<_>>();
         assert!(cells.is_empty());
     }

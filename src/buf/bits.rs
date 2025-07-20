@@ -131,7 +131,7 @@ where
     /// If the position is out of bounds, returns `None`.
     pub fn get(&self, pos: Pos) -> Option<bool> {
         if pos.x < self.width && pos.y < self.height {
-            let index = L::to_1d(pos, self.width).index;
+            let index = L::to_1d(pos, self.width);
             let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
             self.buffer
                 .as_ref()
@@ -216,7 +216,7 @@ where
     /// Sets the bit at the specified position, if it is within bounds.
     pub fn set(&mut self, pos: Pos, value: bool) -> Option<()> {
         if pos.x < self.width && pos.y < self.height {
-            let index = L::to_1d(pos, self.width).index;
+            let index = L::to_1d(pos, self.width);
             let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
             let byte = self.buffer.as_mut().get_mut(byte_index)?;
             if value {
