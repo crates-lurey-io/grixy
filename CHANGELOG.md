@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `GridBuf<T, B>` is now `AsRef<[T]>` when `B: AsRef<[T]>`
 - `GridBuf<T, B>` is now `AsMut<[T]>` when `B: AsMut<[T]>`
+- Optional feature `bytemuck` to implement `bytemuck::Pod` on eligible `GridBuf`
+
+### Changed
+
+- The `alloc` feature is now disabled by default, and can be enabled manually
 
 ## [0.2.1] - 2025-07-18
 

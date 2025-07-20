@@ -43,6 +43,10 @@ pub use inner_slice::{SliceGrid, SliceMutGrid};
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
 mod impl_as_slice;
+
+#[cfg(feature = "bytemuck")]
+mod impl_bytemuck;
+
 mod impl_grid;
 mod impl_iter;
 mod impl_mut;

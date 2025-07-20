@@ -26,9 +26,11 @@
 //!
 //! ### `alloc`
 //!
-//! _Enabled by default._
-//!
 //! Provides additional (but optional) types that use `alloc::vec`.
+//!
+//! ### `bytemuck`
+//!
+//! Provides support for using `bytemuck` to eligible `GridBuffer` instances to slices of bytes
 
 #![no_std]
 
