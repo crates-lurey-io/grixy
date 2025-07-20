@@ -3,7 +3,7 @@ use ixy::index::Layout;
 
 impl<T, B, L> GridBuf<T, B, L>
 where
-    B: AsRef<[T]> + AsMut<[T]>,
+    B: AsMut<[T]>,
     L: Layout,
 {
     /// Returns a mutable reference of the element at the specified position.
@@ -20,7 +20,21 @@ where
     /// Returns an iterator that allows modifying each element in the grid.
     ///
     /// The iterator yields mutable references in the order defined by the layout.
+    #[allow(clippy::iter_without_into_iter)]
     pub fn iter_mut(&mut self) -> core::slice::IterMut<'_, T> {
+        self.buffer.as_mut().iter_mut()
+    }
+}
+
+impl<'a, T, B, L> IntoIterator for &'a mut GridBuf<T, B, L>
+where
+    B: AsMut<[T]>,
+    L: Layout,
+{
+    type Item = &'a mut T;
+    type IntoIter = core::slice::IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
         self.buffer.as_mut().iter_mut()
     }
 }
