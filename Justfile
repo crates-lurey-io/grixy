@@ -35,7 +35,7 @@ doc:
     cargo doc --all-features --no-deps --open --lib
 
 doc-check:
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
 
 doc-gen:
     cargo clean --doc

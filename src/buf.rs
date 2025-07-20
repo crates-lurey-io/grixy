@@ -11,6 +11,8 @@
 //! - [`SliceGrid`]: A read-only, borrowed view over an existing slice.
 //! - [`SliceMutGrid`]: A mutable, borrowed view over an existing slice.
 //!
+//! [`VecGrid`]: `crate::buf::VecGrid`
+//!
 //! # Examples
 //!
 //! Creating an owned `VecGrid` and accessing an element:
