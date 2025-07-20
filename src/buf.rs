@@ -22,29 +22,29 @@
 //! ```
 
 use crate::{
-    core::{GridError, Layout, Pos, RowMajor},
+    core::{ColMajor, GridError, Layout, Pos, RowMajor},
     grid::{BoundedGrid, GridBase, GridReadUnchecked, GridWriteUnchecked},
 };
 use core::marker::PhantomData;
 
-mod array;
-pub use array::ArrayGrid;
+// IMPLEMENATIONS ----------------------------------------------------------------------------------
 
 pub mod bits;
 
+mod impl_array;
+pub use impl_array::ArrayGrid;
+
+#[cfg(feature = "alloc")]
+mod impl_vec;
+
+mod impl_slice;
+pub use impl_slice::{SliceGrid, SliceMutGrid};
+
+#[cfg(feature = "alloc")]
+pub use impl_vec::VecGrid;
+
 mod iter;
-
 mod r#mut;
-
-mod slice;
-use ixy::index::ColMajor;
-pub use slice::*;
-
-#[cfg(feature = "alloc")]
-mod vec;
-
-#[cfg(feature = "alloc")]
-pub use vec::VecGrid;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
 ///
