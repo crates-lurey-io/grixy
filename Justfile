@@ -35,7 +35,7 @@ doc:
     cargo doc --all-features --no-deps --open --lib
 
 doc-check:
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
 
 doc-gen:
     cargo clean --doc
@@ -54,7 +54,7 @@ test-all:
     cargo just test-doc --all-features
     
 coverage *ARGS:
-    cargo tool cargo-llvm-cov --lib --open
+    cargo tool cargo-llvm-cov --lib --open --all-features
 
 coverage-gen:
-    cargo tool cargo-llvm-cov --lib --lcov --output-path lcov.info
+    cargo tool cargo-llvm-cov --lib --lcov --all-features --output-path lcov.info

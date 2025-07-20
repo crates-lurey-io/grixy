@@ -11,6 +11,8 @@
 //! - [`SliceGrid`]: A read-only, borrowed view over an existing slice.
 //! - [`SliceMutGrid`]: A mutable, borrowed view over an existing slice.
 //!
+//! [`VecGrid`]: `crate::buf::VecGrid`
+//!
 //! # Examples
 //!
 //! Creating an owned `VecGrid` and accessing an element:
@@ -21,30 +23,36 @@
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::{
-    core::{GridError, Layout, Pos, RowMajor},
-    grid::{BoundedGrid, GridBase, GridReadUnchecked, GridWriteUnchecked},
-};
+use crate::core::{Layout, Pos, RowMajor};
 use core::marker::PhantomData;
 
-mod array;
-pub use array::ArrayGrid;
+// IMPLEMENATIONS ----------------------------------------------------------------------------------
 
 pub mod bits;
 
-mod iter;
-
-mod r#mut;
-
-mod slice;
-use ixy::index::ColMajor;
-pub use slice::*;
+mod inner_array;
+pub use inner_array::ArrayGrid;
 
 #[cfg(feature = "alloc")]
-mod vec;
+mod inner_vec;
 
 #[cfg(feature = "alloc")]
-pub use vec::VecGrid;
+pub use inner_vec::VecGrid;
+
+mod inner_slice;
+pub use inner_slice::{SliceGrid, SliceMutGrid};
+
+// TRAIT IMPLS -------------------------------------------------------------------------------------
+
+mod impl_as_slice;
+
+#[cfg(feature = "bytemuck")]
+mod impl_bytemuck;
+
+mod impl_grid;
+mod impl_iter;
+mod impl_mut;
+mod impl_new;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
 ///
@@ -54,7 +62,6 @@ pub use vec::VecGrid;
 #[derive(Debug, Clone)]
 pub struct GridBuf<T, B, L = RowMajor>
 where
-    B: AsRef<[T]>,
     L: Layout,
 {
     buffer: B,
@@ -64,65 +71,14 @@ where
     _layout: PhantomData<L>,
 }
 
-impl<T, B> GridBuf<T, B, RowMajor>
+impl<T, B, L> GridBuf<T, B, L>
 where
-    B: AsRef<[T]>,
+    L: Layout,
 {
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// The data buffer is expected to be in [`RowMajor`] order.
-    ///
-    /// ## Errors
-    ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer_row_major(
-        buffer: B,
-        width: usize,
-        height: usize,
-    ) -> Result<Self, GridError> {
-        Self::with_buffer(buffer, width, height)
-    }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// The data buffer is expected to be in [`RowMajor`] order.
-    ///
-    /// ## Safety
-    ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_row_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
-    }
-}
-
-impl<T, B> GridBuf<T, B, ColMajor>
-where
-    B: AsRef<[T]>,
-{
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// The data buffer is expected to be in [`ColMajor`] order.
-    ///
-    /// ## Errors
-    ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer_col_major(
-        buffer: B,
-        width: usize,
-        height: usize,
-    ) -> Result<Self, GridError> {
-        Self::with_buffer(buffer, width, height)
-    }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// The data buffer is expected to be in [`ColMajor`] order.
-    ///
-    /// ## Safety
-    ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_col_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
+    #[must_use]
+    pub fn into_inner(self) -> (B, usize, usize) {
+        (self.buffer, self.width, self.height)
     }
 }
 
@@ -131,39 +87,6 @@ where
     B: AsRef<[T]>,
     L: Layout,
 {
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// ## Errors
-    ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer(buffer: B, width: usize, height: usize) -> Result<Self, GridError> {
-        let expected_size = width * height;
-        if buffer.as_ref().len() != expected_size {
-            return Err(GridError);
-        }
-        Ok(unsafe { Self::with_buffer_unchecked(buffer, width, height) })
-    }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// ## Safety
-    ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_unchecked(buffer: B, width: usize, height: usize) -> Self {
-        debug_assert_eq!(
-            buffer.as_ref().len(),
-            width * height,
-            "Buffer size does not match grid dimensions"
-        );
-        Self {
-            buffer,
-            width,
-            height,
-            _element: PhantomData,
-            _layout: PhantomData,
-        }
-    }
-
     /// Returns a reference of the element at the specified position.'
     ///
     /// If the position is out of bounds, returns `None`.
@@ -174,115 +97,16 @@ where
             None
         }
     }
-
-    /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
-    #[must_use]
-    pub fn into_inner(self) -> (B, usize, usize) {
-        (self.buffer, self.width, self.height)
-    }
-
-    /// Returns an iterator over the elements of the grid.
-    ///
-    /// The iterator yields all items in the grid in the order defined by the layout.
-    #[allow(clippy::iter_without_into_iter)]
-    pub fn iter(&self) -> core::slice::Iter<'_, T> {
-        self.buffer.as_ref().iter()
-    }
-}
-
-impl<T, B, L> GridBase for GridBuf<T, B, L>
-where
-    B: AsRef<[T]>,
-    L: Layout,
-{
-    type Element = T;
-}
-
-unsafe impl<T, B, L> BoundedGrid for GridBuf<T, B, L>
-where
-    B: AsRef<[T]>,
-    L: Layout,
-{
-    fn width(&self) -> usize {
-        self.width
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-}
-
-impl<T, B, L> GridReadUnchecked for GridBuf<T, B, L>
-where
-    B: AsRef<[T]>,
-    L: Layout,
-{
-    unsafe fn get_unchecked(&self, pos: Pos) -> &T {
-        let index = L::to_1d(pos, self.width).index;
-        unsafe { self.buffer.as_ref().get_unchecked(index) }
-    }
-
-    unsafe fn rect_iter_unchecked(
-        &self,
-        bounds: crate::core::Rect,
-    ) -> impl Iterator<Item = &Self::Element> {
-        let slice = self.buffer.as_ref();
-        let width = self.width;
-        (bounds.top()..bounds.bottom()).flat_map(move |y| {
-            let row_start = L::to_1d(Pos::new(bounds.left(), y), width).index;
-            slice[row_start..row_start + bounds.width()].iter()
-        })
-    }
-}
-
-impl<T, B, L> GridWriteUnchecked for GridBuf<T, B, L>
-where
-    B: AsRef<[T]> + AsMut<[T]>,
-    L: Layout,
-{
-    unsafe fn set_unchecked(&mut self, pos: Pos, value: T) {
-        let index = L::to_1d(pos, self.width).index;
-        unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
-    }
-
-    unsafe fn fill_rect_iter_unchecked(
-        &mut self,
-        bounds: crate::core::Rect,
-        iter: impl IntoIterator<Item = Self::Element>,
-    ) {
-        let slice = self.buffer.as_mut();
-        let width = self.width;
-        let mut iter = iter.into_iter();
-        for y in bounds.top()..bounds.bottom() {
-            let x_xtart = L::to_1d(Pos::new(bounds.left(), y), width).index;
-            let x_end = x_xtart + bounds.width();
-            slice[x_xtart..x_end]
-                .iter_mut()
-                .zip(&mut iter)
-                .for_each(|(cell, value)| *cell = value);
-        }
-    }
-
-    unsafe fn fill_rect_solid_unchecked(&mut self, bounds: crate::core::Rect, value: Self::Element)
-    where
-        Self::Element: Copy,
-    {
-        let slice = self.buffer.as_mut();
-        let width = self.width;
-        for y in bounds.top()..bounds.bottom() {
-            let x_start = L::to_1d(Pos::new(bounds.left(), y), width).index;
-            let x_end = x_start + bounds.width();
-            slice[x_start..x_end].fill(value);
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
     extern crate alloc;
-    use crate::core::Rect;
-
     use super::*;
+    use crate::{
+        core::Rect,
+        grid::{BoundedGrid as _, GridReadUnchecked as _, GridWriteUnchecked as _},
+    };
     use alloc::{vec, vec::Vec};
 
     #[test]

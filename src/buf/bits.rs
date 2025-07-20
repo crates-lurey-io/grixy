@@ -42,7 +42,6 @@ extern crate alloc;
 pub struct GridBits<T, B, L>
 where
     T: BitOps,
-    B: AsRef<[T]>,
     L: Layout,
 {
     buffer: B,
@@ -211,7 +210,7 @@ where
 impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
-    B: AsRef<[T]> + AsMut<[T]>,
+    B: AsMut<[T]>,
     L: Layout,
 {
     /// Sets the bit at the specified position, if it is within bounds.
