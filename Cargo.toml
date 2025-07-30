@@ -5,7 +5,7 @@ license = "MIT"
 
 description = "2-dimensional grids"
 repository = "https://github.com/crates-lurey-io/grixy"
-version = "0.5.0-alpha.3"
+version = "0.5.0-alpha.4"
 
 [lints.clippy]
 pedantic = "deny"
@@ -20,8 +20,9 @@ just = { version = "1.40.0" }
 taplo-cli = { version = "0.10.0", bins = ["taplo"] }
 
 [features]
-default = []
+default = ["alloc", "buffer"]
 alloc = []
+buffer = []
 bytemuck = ["dep:bytemuck"]
 
 [dependencies]

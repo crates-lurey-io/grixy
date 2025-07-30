@@ -24,9 +24,15 @@
 //!
 //! ## Features
 //!
+//! The default features are minimal, and useful mostly in library code that operates on grids.
+//!
 //! ### `alloc`
 //!
 //! Provides additional (but optional) types that use `alloc::vec`.
+//!
+//! ### `buffer`
+//!
+//! Provides the linear `GridBuf` type (and convenience types) through `grixy::buf`.
 //!
 //! ### `bytemuck`
 //!
@@ -36,6 +42,7 @@
 
 pub(crate) mod internal;
 
+#[cfg(feature = "buffer")]
 pub mod buf;
 pub mod core;
 pub mod ops;

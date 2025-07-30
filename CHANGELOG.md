@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `fill_rect_from` to `fill_rect_iter`
 - Renamed `grixy::grid` to `grixy::ops`
 - Moved all unchecked operations to `grixy::ops::unchecked`
+- The `buffer` feature can be enabled to include `GridBuf` and related types
 
 ### Removed
 
