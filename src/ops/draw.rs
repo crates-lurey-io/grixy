@@ -1,5 +1,5 @@
 use crate::{
-    core::{GridError, Layout, Pos, Rect, RowMajor},
+    core::{GridError, HasSize, Layout, Pos, Rect, RowMajor},
     ops::{GridRead, GridWrite},
 };
 
@@ -87,7 +87,7 @@ where
     ///
     /// // Copy a 2x2 region from the source grid to the destination grid at position (1, 1),
     /// // scaling each cell by a factor of 2.
-    /// dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Pos::new(1, 1), 2);
+    /// dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Rect::from_ltwh(1, 1, 4, 4));
     ///
     /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
     ///            &[0, 0, 0, 0, 0,
@@ -100,22 +100,24 @@ where
         &mut self,
         src: &impl GridRead<Element = Self::Element>,
         src_rect: Rect,
-        dst_pos: Pos,
-        scale: usize,
+        dst_rect: Rect,
     ) {
-        if scale == 0 {
+        if src_rect.is_empty() || dst_rect.is_empty() {
             return;
         }
-        if scale == 1 {
-            return self.copy_rect(src, src_rect, dst_pos);
+        if src_rect.size() == dst_rect.size() {
+            return self.copy_rect(src, src_rect, dst_rect.top_left());
         }
-        for pos in src_rect.into_iter_row_major() {
-            if let Some(cell) = src.get(pos + src_rect.top_left()) {
-                for y in 0..scale {
-                    for x in 0..scale {
-                        let dst_pos_scaled = dst_pos + Pos::new(x, y) + pos * scale;
-                        let _ = self.set(dst_pos_scaled, *cell);
-                    }
+        for y in 0..dst_rect.height() {
+            for x in 0..dst_rect.width() {
+                let src_x = x * src_rect.width() / dst_rect.width();
+                let src_y = y * src_rect.height() / dst_rect.height();
+
+                let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
+                let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+
+                if let Some(value) = src.get(src_pos) {
+                    let _ = self.set(dst_pos, *value);
                 }
             }
         }
@@ -202,8 +204,7 @@ where
     /// dst.copy_rect_scaled_blended(
     ///   &src,
     ///     Rect::from_ltwh(0, 0, 2, 2),
-    ///     Pos::new(1, 1),
-    ///     2,
+    ///     Rect::from_ltwh(1, 1, 4, 4),
     ///     &|s, d| s + d,
     /// );
     ///
@@ -218,31 +219,30 @@ where
         &mut self,
         src: &impl GridRead<Element = S>,
         src_rect: Rect,
-        dst_pos: Pos,
-        scale: usize,
+        dst_rect: Rect,
         blend: &impl Fn(S, D) -> D,
     ) where
         Self: GridRead<Element = D>,
         Self: GridWrite<Element = D>,
         S: Copy,
     {
-        if scale == 0 {
+        if src_rect.is_empty() || dst_rect.is_empty() {
             return;
         }
-        if scale == 1 {
-            return self.copy_rect_blended(src, src_rect, dst_pos, blend);
+        if src_rect.size() == dst_rect.size() {
+            return self.copy_rect_blended(src, src_rect, dst_rect.top_left(), blend);
         }
-        for pos in src_rect.into_iter_row_major() {
-            let src_pos = pos + src_rect.top_left();
-            if let Some(&src_cell) = src.get(src_pos) {
-                for y in 0..scale {
-                    for x in 0..scale {
-                        let dst_pos_scaled = dst_pos + Pos::new(x, y) + pos * scale;
-                        if let Some(&dst_cell) = self.get(dst_pos_scaled) {
-                            let blended = (blend)(src_cell, dst_cell);
-                            let _ = self.set(dst_pos_scaled, blended);
-                        }
-                    }
+        for y in 0..dst_rect.height() {
+            for x in 0..dst_rect.width() {
+                let src_x = x * src_rect.width() / dst_rect.width();
+                let src_y = y * src_rect.height() / dst_rect.height();
+
+                let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
+                let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+
+                if let (Some(&src_cell), Some(&dst_cell)) = (src.get(src_pos), self.get(dst_pos)) {
+                    let blended = (blend)(src_cell, dst_cell);
+                    let _ = self.set(dst_pos, blended);
                 }
             }
         }
@@ -451,7 +451,11 @@ mod tests {
         let src = NaiveGrid::<i32>::with_cells(3, 3, [1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2), 0);
+        dst.copy_rect_scaled(
+            &src,
+            Rect::from_ltwh(0, 0, 3, 3),
+            Rect::from_ltwh(2, 2, 0, 0),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -469,7 +473,11 @@ mod tests {
         let src = NaiveGrid::<i32>::with_cells(3, 3, [1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2), 1);
+        dst.copy_rect_scaled(
+            &src,
+            Rect::from_ltwh(0, 0, 3, 3),
+            Rect::from_ltwh(2, 2, 3, 3),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -487,7 +495,11 @@ mod tests {
         let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Pos::new(1, 1), 2);
+        dst.copy_rect_scaled(
+            &src,
+            Rect::from_ltwh(0, 0, 2, 2),
+            Rect::from_ltwh(1, 1, 4, 4),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -505,7 +517,11 @@ mod tests {
         let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Pos::new(2, 2), 2);
+        dst.copy_rect_scaled(
+            &src,
+            Rect::from_ltwh(0, 0, 2, 2),
+            Rect::from_ltwh(2, 2, 4, 4),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -523,7 +539,11 @@ mod tests {
         let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Pos::new(5, 5), 2);
+        dst.copy_rect_scaled(
+            &src,
+            Rect::from_ltwh(0, 0, 2, 2),
+            Rect::from_ltwh(6, 6, 4, 4),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -604,8 +624,7 @@ mod tests {
         dst.copy_rect_scaled_blended(
             &src,
             Rect::from_ltwh(0, 0, 2, 2),
-            Pos::new(1, 1),
-            2,
+            Rect::from_ltwh(1, 1, 4, 4),
             &blend_add,
         );
 

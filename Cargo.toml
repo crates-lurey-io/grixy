@@ -5,7 +5,7 @@ license = "MIT"
 
 description = "2-dimensional grids"
 repository = "https://github.com/crates-lurey-io/grixy"
-version = "0.5.0-alpha.5"
+version = "0.5.0-alpha.6"
 
 [lints.clippy]
 pedantic = "deny"
