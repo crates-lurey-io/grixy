@@ -1,4 +1,4 @@
-use ixy::{index::Layout as _, HasSize};
+use ixy::{HasSize, index::Layout as _};
 
 use crate::{
     core::{GridError, Pos, Rect, RowMajor},
@@ -6,14 +6,14 @@ use crate::{
 };
 
 /// Write elements to a 2-dimensional grid position.
-pub trait GridWrite  {
+pub trait GridWrite {
     /// The type of elements in the grid.
     type Element;
 
     /// Sets the element at a specified position.
     ///
     /// ## Errors
-    /// 
+    ///
     /// Returns an error if the position is out of bounds.
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError>;
 
@@ -51,11 +51,9 @@ pub trait GridWrite  {
     /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
     /// checking, etc.).
     fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        RowMajor::iter_pos(dst)
-            .zip(iter)
-            .for_each(|(pos, value)| {
-                let _ = self.set(pos, value);
-            });
+        RowMajor::iter_pos(dst).zip(iter).for_each(|(pos, value)| {
+            let _ = self.set(pos, value);
+        });
     }
 
     /// Sets elements within a rectangular region of the grid.
@@ -108,11 +106,7 @@ pub trait GridWriteUnchecked {
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
-    unsafe fn fill_rect_unchecked(
-        &mut self,
-        dst: Rect,
-        mut f: impl FnMut(Pos) -> Self::Element,
-    ) {
+    unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         RowMajor::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
         });
@@ -330,7 +324,7 @@ mod tests {
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
-            [42, 99, 0], 
+            [42, 99, 0],
             [0,  0,  0],
             [0,  0,  0]
         ]);
@@ -344,7 +338,7 @@ mod tests {
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
-            [42, 99, 0], 
+            [42, 99, 0],
             [0,  0,  0],
             [0,  0,  0]
         ]);
