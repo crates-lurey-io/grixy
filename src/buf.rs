@@ -48,6 +48,8 @@ use ixy::index::Layout;
 
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
+pub use crate::ops::unchecked::TrustedSizeGrid as _;
+
 mod impl_as_slice;
 
 #[cfg(feature = "bytemuck")]
@@ -119,7 +121,6 @@ mod tests {
     use crate::{
         core::Rect,
         ops::{
-            BoundedGrid as _,
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };

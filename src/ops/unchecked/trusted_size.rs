@@ -7,7 +7,7 @@ use crate::core::{Pos, Size};
 /// If the dimensions provide are not accurate, it may lead to _[undefined behavior][]_.
 ///
 /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-pub unsafe trait BoundedGrid {
+pub unsafe trait TrustedSizeGrid {
     /// Returns the width of the grid, in columns.
     fn width(&self) -> usize;
 
@@ -42,7 +42,7 @@ mod tests {
         height: usize,
     }
 
-    unsafe impl BoundedGrid for TestGrid {
+    unsafe impl TrustedSizeGrid for TestGrid {
         fn width(&self) -> usize {
             self.width
         }

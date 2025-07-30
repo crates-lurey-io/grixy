@@ -5,7 +5,9 @@
 //! the operations are safe.
 
 mod read_unchecked;
+mod trusted_size;
 mod write_unchecked;
 
 pub use read_unchecked::GridReadUnchecked;
+pub use trusted_size::TrustedSizeGrid;
 pub use write_unchecked::GridWriteUnchecked;

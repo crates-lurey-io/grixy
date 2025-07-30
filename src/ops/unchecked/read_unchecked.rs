@@ -1,6 +1,6 @@
 use crate::{
     core::{HasSize as _, Layout, Pos, Rect, RowMajor},
-    ops::{BoundedGrid, GridRead},
+    ops::{GridRead, unchecked::TrustedSizeGrid},
 };
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -38,8 +38,8 @@ pub trait GridReadUnchecked {
     }
 }
 
-/// Automatically implement `GridRead` when `GridReadUnchecked` + `BoundedGrid` are implemented.
-impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
+/// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.
+impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
     type Element = T::Element;
 
     fn get(&self, pos: Pos) -> Option<&Self::Element> {
@@ -60,14 +60,16 @@ impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
 #[cfg(test)]
 mod tests {
     extern crate alloc;
+
     use super::*;
+    use crate::ops::unchecked::TrustedSizeGrid;
     use alloc::vec::Vec;
 
     struct UncheckedTestGrid {
         grid: [[u8; 3]; 3],
     }
 
-    unsafe impl BoundedGrid for UncheckedTestGrid {
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }

@@ -214,19 +214,23 @@ where
     L: Layout,
 {
     /// Sets the bit at the specified position, if it is within bounds.
-    pub fn set(&mut self, pos: Pos, value: bool) -> Option<()> {
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the position is out of bounds.
+    pub fn set(&mut self, pos: Pos, value: bool) -> Result<(), GridError> {
         if pos.x < self.width && pos.y < self.height {
             let index = L::to_1d(pos, self.width);
             let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
-            let byte = self.buffer.as_mut().get_mut(byte_index)?;
+            let byte = self.buffer.as_mut().get_mut(byte_index).ok_or(GridError)?;
             if value {
                 *byte |= T::from_usize(1 << bit_index);
             } else {
                 *byte &= !T::from_usize(1 << bit_index);
             }
-            Some(())
+            Ok(())
         } else {
-            None
+            Err(GridError)
         }
     }
 }
@@ -297,7 +301,7 @@ mod tests {
 
     use crate::{
         buf::bits::{ArrayBits, SliceBits, SliceMutBits, VecBits},
-        core::Pos,
+        core::{GridError, Pos},
     };
 
     #[test]
@@ -361,7 +365,7 @@ mod tests {
         grid.set(Pos::new(0, 0), false).unwrap();
         assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
 
-        assert_eq!(grid.set(Pos::new(8, 0), true), None);
+        assert_eq!(grid.set(Pos::new(8, 0), true), Err(GridError));
     }
 
     #[test]

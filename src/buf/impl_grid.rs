@@ -3,13 +3,10 @@ use ixy::index::Layout;
 use crate::{
     buf::GridBuf,
     core::Pos,
-    ops::{
-        BoundedGrid,
-        unchecked::{GridReadUnchecked, GridWriteUnchecked},
-    },
+    ops::unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
 };
 
-unsafe impl<T, B, L> BoundedGrid for GridBuf<T, B, L>
+unsafe impl<T, B, L> TrustedSizeGrid for GridBuf<T, B, L>
 where
     L: Layout,
 {

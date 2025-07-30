@@ -1,6 +1,6 @@
 use crate::{
     core::{GridError, HasSize, Layout as _, Pos, Rect, RowMajor},
-    ops::{BoundedGrid, GridWrite},
+    ops::{GridWrite, unchecked::TrustedSizeGrid},
 };
 
 /// Write elements to a 2-dimensional grid position without bounds checking.
@@ -95,8 +95,8 @@ pub trait GridWriteUnchecked {
     }
 }
 
-/// Automatically implement `GridWrite` when `GridWriteUnchecked` + `BoundedGrid` are implemented.
-impl<T: GridWriteUnchecked + BoundedGrid> GridWrite for T {
+/// Automatically implement `GridWrite` when `GridWriteUnchecked` + `TrustedSizeGrid` are implemented.
+impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
     type Element = T::Element;
 
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
@@ -142,7 +142,7 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    unsafe impl BoundedGrid for UncheckedTestGrid {
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
