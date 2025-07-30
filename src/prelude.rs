@@ -18,8 +18,4 @@ pub use crate::ops::{
     BoundedGrid as _, //
     GridRead as _,
     GridWrite as _,
-    blit_rect,
-    blit_rect_scaled,
-    copy_rect,
-    copy_rect_scaled,
 };
