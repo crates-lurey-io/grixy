@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added `{copy_|blit}_[scaled]_rect` to `grixy::ops`
+- Added `{copy_|blit}_[scaled]_rect` to `grixy::ops` (and _unchecked_ variants)
 - Added `grixy::prelude` module for common imports
 
 ### Changed

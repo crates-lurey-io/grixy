@@ -2,7 +2,7 @@ use ixy::HasSize as _;
 
 use crate::{
     core::{Pos, Rect},
-    ops::{GridRead, GridWrite},
+    ops::{GridRead, GridReadUnchecked, GridWrite, GridWriteUnchecked},
 };
 
 /// Copies a rectangular region from a source grid to a destination grid.
@@ -64,6 +64,42 @@ pub fn copy_rect<E: Clone>(
     }
 }
 
+/// Copies a rectangular region from a source grid to a destination grid.
+///
+/// This function behaves similarly to [`copy_rect`], but bounds checking is skipped for
+/// performance reasons.
+///
+/// ## Safety
+///
+/// The caller must ensure that the source and destination rectangles are valid and that the
+/// source grid contains enough elements to fill the destination rectangle. If the rectangles are
+/// not the same size, the caller must ensure that the source rectangle is large enough to fill
+/// the destination rectangle.
+pub unsafe fn copy_rect_unchecked<E: Clone>(
+    src: &impl GridReadUnchecked<Element = E>,
+    src_rect: Rect,
+    dst: &mut impl GridWriteUnchecked<Element = E>,
+    dst_rect: Rect,
+) {
+    // Optimization: If the source and destination rectangles are the same, we can just copy directly.
+    if src_rect.size() == dst_rect.size() {
+        unsafe {
+            dst.fill_rect_iter_unchecked(dst_rect, src.iter_rect_unchecked(src_rect).cloned());
+        }
+    } else {
+        for y in 0..src_rect.height() {
+            for x in 0..src_rect.width() {
+                let src_pos = src_rect.top_left() + Pos::new(x, y);
+                let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+                unsafe {
+                    let value = src.get_unchecked(src_pos);
+                    dst.set_unchecked(dst_pos, value.clone());
+                }
+            }
+        }
+    }
+}
+
 /// Blends a rectangular region from a source grid to a destination grid.
 ///
 /// This function copies elements from the source rectangle to the destination rectangle, blending
@@ -116,6 +152,36 @@ pub fn blit_rect<S: Clone, D>(
                     let _ = dst.set(dst_pos, blended_value);
                 }
             }
+        }
+    }
+}
+
+/// Blends a rectangular region from a source grid to a destination grid.
+///
+/// This function behaves similarly to [`blit_rect`], but bounds checking is skipped for
+/// performance reasons.
+///
+/// ## Safety
+///
+/// The caller must ensure that the source and destination rectangles are valid and that the
+/// source grid contains enough elements to fill the destination rectangle. If the rectangles are
+/// not the same size, the caller must ensure that the source rectangle is large enough to fill
+/// the destination rectangle.
+pub unsafe fn blit_rect_unchecked<E: Clone>(
+    src: &impl GridReadUnchecked<Element = E>,
+    src_rect: Rect,
+    dst: &mut (impl GridWriteUnchecked<Element = E> + GridReadUnchecked<Element = E>),
+    dst_rect: Rect,
+    blend: &impl Fn(&E, &E) -> E,
+) {
+    for y in 0..src_rect.height() {
+        for x in 0..src_rect.width() {
+            let src_pos = src_rect.top_left() + Pos::new(x, y);
+            let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+            let src_value = unsafe { src.get_unchecked(src_pos) };
+            let dst_value = unsafe { dst.get_unchecked(dst_pos) };
+            let blended_value = blend(src_value, dst_value);
+            unsafe { dst.set_unchecked(dst_pos, blended_value) };
         }
     }
 }
@@ -187,6 +253,44 @@ pub fn blit_rect_scaled<S: Clone, D>(
     }
 }
 
+/// Blits a rectangular region from a source grid to a destination grid without checking bounds.
+///
+/// This function behaves similarly to [`blit_rect`], but bounds checking is skipped for
+/// performance reasons.
+///
+/// ## Safety
+///
+/// The caller must ensure that the source and destination rectangles are valid and that the
+/// source grid contains enough elements to fill the destination rectangle. If the rectangles are
+/// not the same size, the caller must ensure that the source rectangle is large enough to fill
+/// the destination rectangle.
+pub fn blit_rect_scaled_unchecked<E: Clone>(
+    src: &impl GridReadUnchecked<Element = E>,
+    src_rect: Rect,
+    dst: &mut (impl GridWriteUnchecked<Element = E> + GridReadUnchecked<Element = E>),
+    dst_rect: Rect,
+    blend: &impl Fn(&E, &E) -> E,
+) {
+    // Iterate over each pixel of the destination rectangle
+    for y in 0..dst_rect.height() {
+        for x in 0..dst_rect.width() {
+            // Map the destination coordinate back to the source coordinate.
+            let src_x = x * src_rect.width() / dst_rect.width();
+            let src_y = y * src_rect.height() / dst_rect.height();
+
+            // Calculate absolute positions
+            let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
+            let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+
+            // Get the source pixel and blend it with the destination
+            let src_value = unsafe { src.get_unchecked(src_pos) };
+            let dst_value = unsafe { dst.get_unchecked(dst_pos) };
+            let blended_value = blend(src_value, dst_value);
+            unsafe { dst.set_unchecked(dst_pos, blended_value) };
+        }
+    }
+}
+
 /// Copies and scales a rectangular region from a source grid to a destination grid.
 ///
 /// This function behaves similarly to `copy_rect`, but it allows for scaling the source rectangle
@@ -252,6 +356,41 @@ pub fn copy_rect_scaled<E: Clone>(
             if let Some(value) = src.get(src_pos) {
                 let _ = dst.set(dst_pos, value.clone());
             }
+        }
+    }
+}
+
+/// Copies and scales a rectangular region from a source grid to a destination grid.
+///
+/// This function behaves similarly to `copy_rect_scaled`, but bounds checking is skipped for
+/// performance reasons.
+///
+/// ## Safety
+///
+/// The caller must ensure that the source and destination rectangles are valid and that the
+/// source grid contains enough elements to fill the destination rectangle. If the rectangles are
+/// not the same size, the caller must ensure that the source rectangle is large enough to fill
+/// the destination rectangle.
+pub unsafe fn copy_rect_scaled_unchecked<E: Clone>(
+    src: &impl GridReadUnchecked<Element = E>,
+    src_rect: Rect,
+    dst: &mut (impl GridWriteUnchecked<Element = E> + GridReadUnchecked<Element = E>),
+    dst_rect: Rect,
+) {
+    // Iterate over each pixel of the destination rectangle
+    for y in 0..dst_rect.height() {
+        for x in 0..dst_rect.width() {
+            // Map the destination coordinate back to the source coordinate.
+            let src_x = x * src_rect.width() / dst_rect.width();
+            let src_y = y * src_rect.height() / dst_rect.height();
+
+            // Calculate absolute positions
+            let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
+            let dst_pos = dst_rect.top_left() + Pos::new(x, y);
+
+            // Get the source pixel and set it in the destination
+            let src_value = unsafe { src.get_unchecked(src_pos) };
+            unsafe { dst.set_unchecked(dst_pos, src_value.clone()) };
         }
     }
 }
@@ -522,6 +661,173 @@ mod tests {
               11, 11, 12, 12,
               14, 14, 15, 15,
               14, 14, 15, 15
+            ]
+        );
+    }
+
+    #[test]
+    fn copy_rect_unchecked_same_size() {
+        #[rustfmt::skip]
+        let src = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9],
+        3, 3).unwrap();
+
+        let mut dst = VecGrid::<i32, RowMajor>::new(3, 3);
+
+        unsafe {
+            copy_rect_unchecked(
+                &src,
+                Rect::from_ltwh(0, 0, 3, 3),
+                &mut dst,
+                Rect::from_ltwh(0, 0, 3, 3),
+            );
+        }
+
+        #[rustfmt::skip]
+        assert_eq!(
+            dst.iter_rect(Rect::from_ltwh(0, 0, 3, 3))
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![
+                1, 2, 3,
+                4, 5, 6,
+                7, 8, 9
+            ]
+        );
+    }
+
+    #[test]
+    fn copy_rect_unchecked_different_size() {
+        #[rustfmt::skip]
+        let src = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9],
+        3, 3).unwrap();
+
+        let mut dst = VecGrid::<i32, RowMajor>::new(3, 3);
+
+        unsafe {
+            copy_rect_unchecked(
+                &src,
+                Rect::from_ltwh(0, 0, 2, 2),
+                &mut dst,
+                Rect::from_ltwh(0, 0, 3, 3),
+            );
+        }
+
+        #[rustfmt::skip]
+        assert_eq!(
+            dst.iter_rect(Rect::from_ltwh(0, 0, 3, 3))
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![
+                1, 2, 0,
+                4, 5, 0,
+                0, 0, 0
+            ]
+        );
+    }
+
+    #[test]
+    fn blit_rect_unchecked_test() {
+        #[rustfmt::skip]
+        let src = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9],
+        3, 3).unwrap();
+
+        let mut dst = VecGrid::<i32, RowMajor>::new_filled(3, 3, 10);
+
+        unsafe {
+            blit_rect_unchecked(
+                &src,
+                Rect::from_ltwh(0, 0, 2, 2),
+                &mut dst,
+                Rect::from_ltwh(0, 0, 3, 3),
+                &|src, dst| src + dst,
+            );
+        }
+
+        #[rustfmt::skip]
+        assert_eq!(
+            dst.iter_rect(Rect::from_ltwh(0, 0, 3, 3))
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![
+                11, 12, 10,
+                14, 15, 10,
+                10, 10, 10
+            ]
+        );
+    }
+
+    #[test]
+    fn blit_rect_scaled_unchecked_test() {
+        #[rustfmt::skip]
+        let src = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9],
+        3, 3).unwrap();
+
+        let mut dst = VecGrid::<i32, RowMajor>::new_filled(4, 4, 10);
+
+        blit_rect_scaled_unchecked(
+            &src,
+            Rect::from_ltwh(0, 0, 2, 2),
+            &mut dst,
+            Rect::from_ltwh(0, 0, 4, 4),
+            &|src, dst| src + dst,
+        );
+
+        #[rustfmt::skip]
+        assert_eq!(
+            dst.iter_rect(Rect::from_ltwh(0, 0, 4, 4))
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![
+                11, 11, 12, 12,
+                11, 11, 12, 12,
+                14, 14, 15, 15,
+                14, 14, 15, 15
+            ]
+        );
+    }
+
+    #[test]
+    fn copy_rect_scaled_unchecked_test() {
+        #[rustfmt::skip]
+        let src = VecGrid::with_buffer_row_major(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9],
+        3, 3).unwrap();
+
+        let mut dst = VecGrid::<i32, RowMajor>::new(4, 4);
+
+        unsafe {
+            copy_rect_scaled_unchecked(
+                &src,
+                Rect::from_ltwh(0, 0, 2, 2),
+                &mut dst,
+                Rect::from_ltwh(0, 0, 4, 4),
+            );
+        }
+
+        #[rustfmt::skip]
+        assert_eq!(
+            dst.iter_rect(Rect::from_ltwh(0, 0, 4, 4))
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![
+                1, 1, 2, 2,
+                1, 1, 2, 2,
+                4, 4, 5, 5,
+                4, 4, 5, 5
             ]
         );
     }

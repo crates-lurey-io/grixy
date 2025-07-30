@@ -50,8 +50,8 @@
 mod bounded;
 pub use bounded::BoundedGrid;
 
-mod copy;
-pub use copy::*;
+mod operations;
+pub use operations::*;
 
 mod read;
 pub use read::{GridRead, GridReadUnchecked};
