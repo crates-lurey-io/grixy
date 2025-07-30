@@ -120,9 +120,7 @@ mod tests {
     use super::*;
     use crate::{
         core::Rect,
-        ops::{
-            unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
-        },
+        ops::unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
     };
     use alloc::{vec, vec::Vec};
 
@@ -172,8 +170,8 @@ mod tests {
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
         let buffer = VecGrid::with_buffer_row_major(3, 3, vec![
-            1, 2, 3, 
-            4, 5, 6, 
+            1, 2, 3,
+            4, 5, 6,
             7, 8, 9,
         ]).unwrap();
 
