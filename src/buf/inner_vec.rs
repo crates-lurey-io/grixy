@@ -3,6 +3,8 @@ extern crate alloc;
 use alloc::{vec, vec::Vec};
 use ixy::index::RowMajor;
 
+use crate::core::Pos;
+
 /// A 2-dimensional grid implemented by a vector buffer.
 ///
 /// This is a convenience type for using `Vec` as the underlying buffer.
@@ -64,6 +66,21 @@ where
     pub fn new_filled(width: usize, height: usize, value: T) -> Self {
         let size = width * height;
         let buffer = vec![value; size];
+        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
+    }
+
+    /// Creates a new `GridBuf` backed by a `Vec` with the specified width and height.
+    ///
+    /// The provided function is used to initialize an element at each position.
+    #[must_use]
+    pub fn new_generate(width: usize, height: usize, mut f: impl FnMut(Pos) -> T) -> Self {
+        let size = width * height;
+        let mut buffer = Vec::with_capacity(size);
+        for y in 0..height {
+            for x in 0..width {
+                buffer.push(f(Pos::new(x, y)));
+            }
+        }
         unsafe { Self::with_buffer_unchecked(width, height, buffer) }
     }
 }
@@ -198,5 +215,13 @@ mod tests {
         let mut grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
         assert_eq!(grid.get_mut(Pos::new(2, 0)), None); // Out of bounds
         assert_eq!(grid.get_mut(Pos::new(0, 3)), None); // Out of bounds
+    }
+
+    #[test]
+    fn new_generate() {
+        let grid = VecGrid::<usize, RowMajor>::new_generate(3, 2, |pos| pos.x + pos.y * 3);
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(&0));
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(&4));
+        assert_eq!(grid.get(Pos::new(2, 1)), Some(&5));
     }
 }

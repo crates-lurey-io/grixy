@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `GridDraw` to `grixy::ops`
 - Added `grid::ops::blend` for example blend functions
 - Added `grixy::prelude` module for common imports
+- Added `VecGrid::new_generate` method to create a grid with a function
 
 ### Changed
 
