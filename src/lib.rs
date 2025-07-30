@@ -7,7 +7,7 @@
 //! ## Examples
 //!
 //! ```rust
-//! use grixy::{core::Pos, buf::VecGrid, grid::{GridRead, GridWrite}};
+//! use grixy::{core::Pos, buf::VecGrid, ops::{GridRead, GridWrite}};
 //!
 //! #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 //! enum Tile {
@@ -38,4 +38,5 @@ pub(crate) mod internal;
 
 pub mod buf;
 pub mod core;
-pub mod grid;
+pub mod ops;
+pub mod prelude;

@@ -156,7 +156,7 @@ dependencies = [
 
 [[package]]
 name = "grixy"
-version = "0.4.0"
+version = "0.5.0-alpha.1"
 dependencies = [
  "bytemuck",
  "ixy",
@@ -195,9 +195,9 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "ixy"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20462f027dab742ba50b4f25392798dd94fe29506d0d4ba96a7b2eee65cf6e2d"
+checksum = "d5aa60b07084bd132d8764008b8daf900ec1fcc6ac4797f32f8014a3e2423e58"
 
 [[package]]
 name = "libc"

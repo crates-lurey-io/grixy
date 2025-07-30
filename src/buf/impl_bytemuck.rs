@@ -15,7 +15,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{buf::VecGrid, core::Pos, grid::GridWrite};
+    use crate::{buf::VecGrid, core::Pos, ops::GridWrite};
     use bytemuck::{Pod, Zeroable};
 
     #[derive(Clone, Copy, Default)]
@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn rgba_as_bytes() {
         let mut grid = VecGrid::<Rgba, _>::new_row_major(2, 2);
-        let _ = grid.set(
+        grid.set(
             Pos::new(0, 0),
             Rgba {
                 r: 255,
@@ -41,8 +41,9 @@ mod tests {
                 b: 0,
                 a: 255,
             },
-        );
-        let _ = grid.set(
+        )
+        .unwrap();
+        grid.set(
             Pos::new(1, 0),
             Rgba {
                 r: 0,
@@ -50,8 +51,9 @@ mod tests {
                 b: 0,
                 a: 255,
             },
-        );
-        let _ = grid.set(
+        )
+        .unwrap();
+        grid.set(
             Pos::new(0, 1),
             Rgba {
                 r: 0,
@@ -59,8 +61,9 @@ mod tests {
                 b: 255,
                 a: 255,
             },
-        );
-        let _ = grid.set(
+        )
+        .unwrap();
+        grid.set(
             Pos::new(1, 1),
             Rgba {
                 r: 255,
@@ -68,7 +71,8 @@ mod tests {
                 b: 0,
                 a: 255,
             },
-        );
+        )
+        .unwrap();
 
         let bytes = grid.as_bytes();
 

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - WIP (Alpha)
+
+### Added
+
+- Added `{copy_|blit}_[scaled]_rect` to `grixy::ops`
+- Added `grixy::prelude` module for common imports
+
+### Changed
+
+- Renamed `fill_rect_from` to `fill_rect_iter`
+- Renamed `grixy::grid` to `grixy::ops`
+
+### Removed
+
+- `GridBase`; now every Grid trait has it's own `Element` type
+
 ## [0.4.0] - 2025-07-19
 
 ### Changed

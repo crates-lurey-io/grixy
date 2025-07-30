@@ -1,7 +1,4 @@
-use crate::{
-    core::{Pos, Size},
-    grid::GridBase,
-};
+use crate::core::{Pos, Size};
 
 /// A bounded grid type that provides methods to access its dimensions.
 ///
@@ -10,7 +7,7 @@ use crate::{
 /// If the dimensions provide are not accurate, it may lead to _[undefined behavior][]_.
 ///
 /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-pub unsafe trait BoundedGrid: GridBase {
+pub unsafe trait BoundedGrid {
     /// Returns the width of the grid, in columns.
     fn width(&self) -> usize;
 
@@ -43,10 +40,6 @@ mod tests {
     struct TestGrid {
         width: usize,
         height: usize,
-    }
-
-    impl GridBase for TestGrid {
-        type Element = ();
     }
 
     unsafe impl BoundedGrid for TestGrid {

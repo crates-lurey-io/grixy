@@ -3,15 +3,8 @@ use ixy::index::Layout;
 use crate::{
     buf::GridBuf,
     core::Pos,
-    grid::{BoundedGrid, GridBase, GridReadUnchecked, GridWriteUnchecked},
+    ops::{BoundedGrid, GridReadUnchecked, GridWriteUnchecked},
 };
-
-impl<T, B, L> GridBase for GridBuf<T, B, L>
-where
-    L: Layout,
-{
-    type Element = T;
-}
 
 unsafe impl<T, B, L> BoundedGrid for GridBuf<T, B, L>
 where
@@ -31,6 +24,8 @@ where
     B: AsRef<[T]>,
     L: Layout,
 {
+    type Element = T;
+
     unsafe fn get_unchecked(&self, pos: Pos) -> &T {
         let index = L::to_1d(pos, self.width);
         unsafe { self.buffer.as_ref().get_unchecked(index) }
@@ -54,7 +49,9 @@ where
     B: AsMut<[T]>,
     L: Layout,
 {
-    unsafe fn set_unchecked(&mut self, pos: Pos, value: T) {
+    type Element = T;
+
+    unsafe fn set_unchecked(&mut self, pos: Pos, value: Self::Element) {
         let index = L::to_1d(pos, self.width);
         unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
     }

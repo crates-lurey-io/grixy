@@ -2,11 +2,14 @@ use ixy::index::{Layout, RowMajor};
 
 use crate::{
     core::{Pos, Rect},
-    grid::{BoundedGrid, GridBase},
+    ops::BoundedGrid,
 };
 
 /// Read elements from a 2-dimensional grid position.
-pub trait GridRead: GridBase {
+pub trait GridRead {
+    /// The type of elements in the grid.
+    type Element;
+
     /// Returns a reference to an element at a specified position.
     ///
     /// If the position is out of bounds, it returns `None`.
@@ -30,7 +33,10 @@ pub trait GridRead: GridBase {
 }
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
-pub trait GridReadUnchecked: GridBase {
+pub trait GridReadUnchecked {
+    /// The type of elements in the grid.
+    type Element;
+
     /// Returns a reference to an element, without doing bounds checking.
     ///
     /// ## Safety
@@ -63,6 +69,8 @@ pub trait GridReadUnchecked: GridBase {
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `BoundedGrid` are implemented.
 impl<T: GridReadUnchecked + BoundedGrid> GridRead for T {
+    type Element = T::Element;
+
     fn get(&self, pos: Pos) -> Option<&Self::Element> {
         if self.contains_pos(pos) {
             Some(unsafe { self.get_unchecked(pos) })
@@ -89,11 +97,9 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    impl GridBase for CheckedGridTest {
-        type Element = u8;
-    }
-
     impl GridRead for CheckedGridTest {
+        type Element = u8;
+
         fn get(&self, pos: Pos) -> Option<&Self::Element> {
             if pos.x < 3 && pos.y < 3 {
                 Some(&self.grid[pos.y][pos.x])
@@ -107,10 +113,6 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    impl GridBase for UncheckedTestGrid {
-        type Element = u8;
-    }
-
     unsafe impl BoundedGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
@@ -122,6 +124,8 @@ mod tests {
     }
 
     impl GridReadUnchecked for UncheckedTestGrid {
+        type Element = u8;
+
         unsafe fn get_unchecked(&self, pos: Pos) -> &Self::Element {
             &self.grid[pos.y][pos.x]
         }

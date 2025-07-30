@@ -1,16 +1,19 @@
-use ixy::index::Layout as _;
+use ixy::{index::Layout as _, HasSize};
 
 use crate::{
     core::{GridError, Pos, Rect, RowMajor},
-    grid::{BoundedGrid, GridBase},
+    ops::BoundedGrid,
 };
 
 /// Write elements to a 2-dimensional grid position.
-pub trait GridWrite: GridBase {
+pub trait GridWrite  {
+    /// The type of elements in the grid.
+    type Element;
+
     /// Sets the element at a specified position.
     ///
     /// ## Errors
-    ///
+    /// 
     /// Returns an error if the position is out of bounds.
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError>;
 
@@ -28,7 +31,7 @@ pub trait GridWrite: GridBase {
     /// checking, etc.).
     fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         RowMajor::iter_pos(bounds).for_each(|pos| {
-            self.set(pos, f(pos)).unwrap();
+            let _ = self.set(pos, f(pos));
         });
     }
 
@@ -47,11 +50,11 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
     /// checking, etc.).
-    fn fill_rect_from(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        RowMajor::iter_pos(bounds)
+    fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+        RowMajor::iter_pos(dst)
             .zip(iter)
             .for_each(|(pos, value)| {
-                self.set(pos, value).unwrap();
+                let _ = self.set(pos, value);
             });
     }
 
@@ -67,16 +70,19 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
     /// checking, etc.).
-    fn fill_rect_solid(&mut self, bounds: Rect, value: Self::Element)
+    fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {
-        self.fill_rect(bounds, |_| value);
+        self.fill_rect(dst, |_| value);
     }
 }
 
 /// Write elements to a 2-dimensional grid position without bounds checking.
-pub trait GridWriteUnchecked: GridBase {
+pub trait GridWriteUnchecked {
+    /// The type of elements in the grid.
+    type Element;
+
     /// Sets the element at a specified position without bounds checking.
     ///
     /// ## Safety
@@ -104,10 +110,10 @@ pub trait GridWriteUnchecked: GridBase {
     /// (for linear writes, etc.).
     unsafe fn fill_rect_unchecked(
         &mut self,
-        bounds: Rect,
+        dst: Rect,
         mut f: impl FnMut(Pos) -> Self::Element,
     ) {
-        RowMajor::iter_pos(bounds).for_each(|pos| unsafe {
+        RowMajor::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
         });
     }
@@ -134,10 +140,10 @@ pub trait GridWriteUnchecked: GridBase {
     /// (for linear writes, etc.).
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
-        bounds: Rect,
+        dst: Rect,
         iter: impl IntoIterator<Item = Self::Element>,
     ) {
-        RowMajor::iter_pos(bounds)
+        RowMajor::iter_pos(dst)
             .zip(iter)
             .for_each(|(pos, value)| unsafe {
                 self.set_unchecked(pos, value);
@@ -170,38 +176,37 @@ pub trait GridWriteUnchecked: GridBase {
 
 /// Automatically implement `GridWrite` when `GridWriteUnchecked` + `BoundedGrid` are implemented.
 impl<T: GridWriteUnchecked + BoundedGrid> GridWrite for T {
+    type Element = T::Element;
+
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
         if self.contains_pos(pos) {
             unsafe {
                 self.set_unchecked(pos, value);
-                Ok(())
             }
+            Ok(())
         } else {
             Err(GridError)
         }
     }
 
     fn fill_rect(&mut self, bounds: Rect, f: impl FnMut(Pos) -> Self::Element) {
-        // TODO: Size.to_rect()
-        let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
+        let size = self.size().to_rect();
         let rect = bounds.intersect(size);
         unsafe { self.fill_rect_unchecked(rect, f) }
     }
 
-    fn fill_rect_from(&mut self, bounds: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        // TODO: Size.to_rect()
-        let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
-        let rect = bounds.intersect(size);
+    fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+        let size = self.size().to_rect();
+        let rect = dst.intersect(size);
         unsafe { self.fill_rect_iter_unchecked(rect, iter) }
     }
 
-    fn fill_rect_solid(&mut self, bounds: Rect, value: Self::Element)
+    fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {
-        // TODO: Size.to_rect()
-        let size = unsafe { Rect::from_ltrb_unchecked(0, 0, self.width(), self.height()) };
-        let rect = bounds.intersect(size);
+        let size = self.size().to_rect();
+        let rect = dst.intersect(size);
         unsafe { self.fill_rect_solid_unchecked(rect, value) }
     }
 }
@@ -216,10 +221,6 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    impl GridBase for UncheckedTestGrid {
-        type Element = u8;
-    }
-
     unsafe impl BoundedGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
@@ -231,6 +232,8 @@ mod tests {
     }
 
     impl GridWriteUnchecked for UncheckedTestGrid {
+        type Element = u8;
+
         unsafe fn set_unchecked(&mut self, pos: Pos, value: Self::Element) {
             self.grid[pos.y][pos.x] = value;
         }
@@ -240,11 +243,9 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    impl GridBase for TestGrid {
-        type Element = u8;
-    }
-
     impl GridWrite for TestGrid {
+        type Element = u8;
+
         fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
             if pos.x < 3 && pos.y < 3 {
                 self.grid[pos.y][pos.x] = value;
@@ -268,6 +269,7 @@ mod tests {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let pos = Pos { x: 3, y: 1 };
         assert!(grid.set(pos, 42).is_err());
+        assert_eq!(grid.grid, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
     }
 
     #[test]
@@ -275,6 +277,7 @@ mod tests {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let pos = Pos { x: 1, y: 3 };
         assert!(grid.set(pos, 42).is_err());
+        assert_eq!(grid.grid, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
     }
 
     #[test]
@@ -315,7 +318,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_complete() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_from(bounds, vec![42; 9]);
+        grid.fill_rect_iter(bounds, vec![42; 9]);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 
@@ -323,7 +326,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 2).unwrap();
-        grid.fill_rect_from(bounds, vec![42, 99]);
+        grid.fill_rect_iter(bounds, vec![42, 99]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -337,7 +340,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds_with_extra() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 1).unwrap();
-        grid.fill_rect_from(bounds, vec![42, 99, 100]);
+        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -351,7 +354,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(1, 1, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_from(bounds, vec![42, 99, 100]);
+        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -365,7 +368,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(3, 3, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_from(bounds, vec![42, 99, 100]);
+        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -396,7 +399,7 @@ mod tests {
     fn impl_checked_set_out_of_bounds_x() {
         let mut grid = TestGrid { grid: [[0; 3]; 3] };
         let pos = Pos { x: 3, y: 1 };
-        assert!(grid.set(pos, 42).is_err());
+        grid.set(pos, 42).unwrap_err();
         assert_eq!(grid.grid[1][1], 0);
     }
 
@@ -404,7 +407,7 @@ mod tests {
     fn impl_checked_set_out_of_bounds_y() {
         let mut grid = TestGrid { grid: [[0; 3]; 3] };
         let pos = Pos { x: 1, y: 3 };
-        assert!(grid.set(pos, 42).is_err());
+        grid.set(pos, 42).unwrap_err();
         assert_eq!(grid.grid[1][1], 0);
     }
 
@@ -420,7 +423,7 @@ mod tests {
     fn impl_checked_fill_rect_iter() {
         let mut grid = TestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_from(bounds, vec![42; 9]);
+        grid.fill_rect_iter(bounds, vec![42; 9]);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 
