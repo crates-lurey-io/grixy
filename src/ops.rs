@@ -47,14 +47,20 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
+pub mod unchecked;
+
+mod blit_rect;
+mod blit_rect_scaled;
 mod bounded;
-pub use bounded::BoundedGrid;
-
-mod operations;
-pub use operations::*;
-
+mod copy_rect;
+mod copy_rect_scaled;
 mod read;
-pub use read::{GridRead, GridReadUnchecked};
-
 mod write;
-pub use write::{GridWrite, GridWriteUnchecked};
+
+pub use blit_rect::blit_rect;
+pub use blit_rect_scaled::blit_rect_scaled;
+pub use bounded::BoundedGrid;
+pub use copy_rect::copy_rect;
+pub use copy_rect_scaled::copy_rect_scaled;
+pub use read::GridRead;
+pub use write::GridWrite;

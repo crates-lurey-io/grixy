@@ -13,7 +13,7 @@
 pub use crate::buf::VecGrid;
 pub use crate::buf::{ArrayGrid, GridBuf, SliceGrid, SliceMutGrid};
 
-pub use crate::core::{Pos, Rect, RowMajor, Size};
+pub use crate::core::{HasSize as _, Pos, Rect, RowMajor, Size};
 pub use crate::ops::{
     BoundedGrid as _, //
     GridRead as _,

@@ -106,7 +106,10 @@ mod tests {
     use super::*;
     use crate::{
         core::Rect,
-        ops::{BoundedGrid as _, GridReadUnchecked as _, GridWriteUnchecked as _},
+        ops::{
+            BoundedGrid as _,
+            unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
+        },
     };
     use alloc::{vec, vec::Vec};
 
