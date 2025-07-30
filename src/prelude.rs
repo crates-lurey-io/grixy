@@ -11,6 +11,8 @@
 
 #[cfg(feature = "alloc")]
 pub use crate::buf::VecGrid;
+
+#[cfg(feature = "buffer")]
 pub use crate::buf::{ArrayGrid, GridBuf, SliceGrid, SliceMutGrid};
 
 pub use crate::core::{HasSize as _, Pos, Rect, RowMajor, Size};
