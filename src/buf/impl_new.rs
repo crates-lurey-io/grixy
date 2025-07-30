@@ -17,12 +17,12 @@ where
     /// ## Errors
     ///
     /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer(buffer: B, width: usize, height: usize) -> Result<Self, GridError> {
+    pub fn with_buffer(width: usize, height: usize, buffer: B) -> Result<Self, GridError> {
         let expected_size = width * height;
         if buffer.as_ref().len() != expected_size {
             return Err(GridError);
         }
-        Ok(unsafe { Self::with_buffer_unchecked(buffer, width, height) })
+        Ok(unsafe { Self::with_buffer_unchecked(width, height, buffer) })
     }
 
     /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
@@ -30,7 +30,7 @@ where
     /// ## Safety
     ///
     /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_unchecked(buffer: B, width: usize, height: usize) -> Self {
+    pub unsafe fn with_buffer_unchecked(width: usize, height: usize, buffer: B) -> Self {
         debug_assert_eq!(
             buffer.as_ref().len(),
             width * height,
@@ -58,11 +58,11 @@ where
     ///
     /// Returns an error if the buffer size does not match the expected size.
     pub fn with_buffer_row_major(
-        buffer: B,
         width: usize,
         height: usize,
+        buffer: B,
     ) -> Result<Self, GridError> {
-        Self::with_buffer(buffer, width, height)
+        Self::with_buffer(width, height, buffer)
     }
 
     /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
@@ -72,8 +72,8 @@ where
     /// ## Safety
     ///
     /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_row_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    pub unsafe fn with_buffer_row_major_unchecked(width: usize, height: usize, buffer: B) -> Self {
+        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
     }
 }
 
@@ -89,11 +89,11 @@ where
     ///
     /// Returns an error if the buffer size does not match the expected size.
     pub fn with_buffer_col_major(
-        buffer: B,
         width: usize,
         height: usize,
+        buffer: B,
     ) -> Result<Self, GridError> {
-        Self::with_buffer(buffer, width, height)
+        Self::with_buffer(width, height, buffer)
     }
 
     /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
@@ -103,7 +103,7 @@ where
     /// ## Safety
     ///
     /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_col_major_unchecked(buffer: B, width: usize, height: usize) -> Self {
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+    pub unsafe fn with_buffer_col_major_unchecked(width: usize, height: usize, buffer: B) -> Self {
+        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
     }
 }

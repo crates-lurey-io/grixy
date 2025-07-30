@@ -50,9 +50,11 @@
 pub mod unchecked;
 
 mod bounded;
+mod draw;
 mod read;
 mod write;
 
 pub use bounded::BoundedGrid;
+pub use draw::{GridDraw, blend};
 pub use read::GridRead;
 pub use write::GridWrite;

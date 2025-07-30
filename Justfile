@@ -47,11 +47,11 @@ test *ARGS:
     cargo tool cargo-nextest run {{ARGS}}
 
 test-doc *ARGS:
-    cargo test {{ARGS}} --doc
+    cargo test {{ARGS}} --doc --all-features
 
 test-all:
     cargo just test --all-features
-    cargo just test-doc --all-features
+    cargo just test-doc
     
 coverage *ARGS:
     cargo tool cargo-llvm-cov --lib --open --all-features

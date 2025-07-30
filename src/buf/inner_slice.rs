@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn impl_slice() {
         let data: &[u8] = &[1, 2, 3, 4, 5, 6];
-        let grid = SliceGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = SliceGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn impl_slice_mut() {
         let mut data: [u8; 6] = [1, 2, 3, 4, 5, 6];
-        let mut grid = SliceMutGrid::with_buffer_row_major(&mut data, 2, 3).unwrap();
+        let mut grid = SliceMutGrid::with_buffer_row_major(2, 3, &mut data).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));

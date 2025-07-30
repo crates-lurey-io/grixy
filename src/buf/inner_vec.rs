@@ -64,7 +64,7 @@ where
     pub fn new_filled(width: usize, height: usize, value: T) -> Self {
         let size = width * height;
         let buffer = vec![value; size];
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
     }
 }
 
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn impl_vec() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
@@ -104,20 +104,20 @@ mod tests {
     fn with_buffer_unchecked_panics() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5];
         // width * height = 6, but data.len() = 5
-        let _ = unsafe { VecGrid::with_buffer_row_major_unchecked(data, 2, 3) };
+        let _ = unsafe { VecGrid::with_buffer_row_major_unchecked(2, 3, data) };
     }
 
     #[test]
     fn out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 2);
+        let grid = VecGrid::with_buffer_row_major(2, 2, data);
         assert!(grid.is_err());
     }
 
     #[test]
     fn into_inner() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
         let (buffer, width, height) = grid.into_inner();
 
         assert_eq!(width, 2);
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn iter() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         let mut iter = grid.iter();
         assert_eq!(iter.next(), Some(&1));
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn into_iter() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         let mut iter = grid.into_iter();
         assert_eq!(iter.next(), Some(&1));
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn iter_mut() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         #[allow(clippy::explicit_iter_loop)]
         for value in grid.iter_mut() {
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn into_iter_mut() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         for value in &mut grid {
             *value += 1; // Increment each value
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn get_out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         assert_eq!(grid.get(Pos::new(2, 0)), None); // Out of bounds
         assert_eq!(grid.get(Pos::new(0, 3)), None); // Out of bounds
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn get_mut_out_of_bounds() {
         let data: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
-        let mut grid = VecGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let mut grid = VecGrid::with_buffer_row_major(2, 3, data).unwrap();
         assert_eq!(grid.get_mut(Pos::new(2, 0)), None); // Out of bounds
         assert_eq!(grid.get_mut(Pos::new(0, 3)), None); // Out of bounds
     }

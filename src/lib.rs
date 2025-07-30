@@ -40,3 +40,6 @@ pub mod buf;
 pub mod core;
 pub mod ops;
 pub mod prelude;
+
+#[cfg(test)]
+pub mod test;

@@ -1,3 +1,9 @@
+//! Unchecked operations for grids.
+//!
+//! These traits and operations allow for unchecked access to grid elements, bypassing safety
+//! checks. They are intended for use in performance-critical code where the caller guarantees that
+//! the operations are safe.
+
 mod read_unchecked;
 mod write_unchecked;
 

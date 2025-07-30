@@ -23,7 +23,10 @@
 //! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
 //! ```
 
-use crate::core::{Pos, RowMajor};
+use crate::{
+    core::{Pos, RowMajor},
+    ops::GridDraw,
+};
 use core::marker::PhantomData;
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
@@ -100,6 +103,15 @@ where
     }
 }
 
+impl<T, B, L> GridDraw for GridBuf<T, B, L>
+where
+    T: Copy,
+    B: AsMut<[T]> + AsRef<[T]>,
+    L: Layout,
+{
+    // TODO: Optimize for the linear buffer layout.
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -137,7 +149,7 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = VecGrid::with_buffer_col_major(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3).unwrap();
+        let buffer = VecGrid::with_buffer_col_major(3, 3, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]).unwrap();
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
@@ -147,7 +159,7 @@ mod tests {
     #[test]
     fn with_buffer_col_major_unchecked() {
         let buffer = unsafe {
-            VecGrid::with_buffer_col_major_unchecked(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3, 3)
+            VecGrid::with_buffer_col_major_unchecked(3, 3, vec![1, 2, 3, 4, 5, 6, 7, 8, 9])
         };
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
@@ -158,11 +170,11 @@ mod tests {
     #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = VecGrid::with_buffer_row_major(vec![
+        let buffer = VecGrid::with_buffer_row_major(3, 3, vec![
             1, 2, 3, 
             4, 5, 6, 
             7, 8, 9,
-        ], 3, 3).unwrap();
+        ]).unwrap();
 
         assert_eq!(
             unsafe {

@@ -43,7 +43,7 @@ where
         let size = width * height;
         let buffer = [value; N];
         assert!(size <= N, "Buffer size does not match grid dimensions");
-        unsafe { Self::with_buffer_unchecked(buffer, width, height) }
+        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
     }
 }
 
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn impl_arr() {
         let data: [u8; 6] = [1, 2, 3, 4, 5, 6];
-        let grid = ArrayGrid::with_buffer_row_major(data, 2, 3).unwrap();
+        let grid = ArrayGrid::with_buffer_row_major(2, 3, data).unwrap();
 
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
         assert_eq!(grid.get(Pos::new(1, 2)), Some(&6));
