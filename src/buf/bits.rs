@@ -85,6 +85,28 @@ where
     }
 }
 
+impl<T, B, L> AsRef<[T]> for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+    L: Layout,
+{
+    fn as_ref(&self) -> &[T] {
+        self.buffer.as_ref()
+    }
+}
+
+impl<T, B, L> AsMut<[T]> for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsMut<[T]>,
+    L: Layout,
+{
+    fn as_mut(&mut self) -> &mut [T] {
+        self.buffer.as_mut()
+    }
+}
+
 impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
@@ -442,5 +464,28 @@ mod tests {
         let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
         let grid = VecBits::with_buffer_row_major(data, 8, 2);
         assert!(grid.is_err());
+    }
+
+    #[test]
+    fn as_ref() {
+        let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
+        let grid = VecBits::with_buffer_row_major(data, 8, 1).unwrap();
+        let slice: &[u8] = grid.as_ref();
+        assert_eq!(slice.len(), 1);
+        assert_eq!(slice[0], 0b0001_0001);
+    }
+
+    #[test]
+    fn as_mut() {
+        let data: alloc::vec::Vec<u8> = alloc::vec![0b0001_0001];
+        let mut grid = VecBits::with_buffer_row_major(data, 8, 1).unwrap();
+        let slice: &mut [u8] = grid.as_mut();
+        assert_eq!(slice.len(), 1);
+        assert_eq!(slice[0], 0b0001_0001);
+        slice[0] = 0b1111_1011;
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
+        assert_eq!(grid.get(Pos::new(1, 0)), Some(true));
+        assert_eq!(grid.get(Pos::new(2, 0)), Some(false));
+        assert_eq!(grid.get(Pos::new(3, 0)), Some(true));
     }
 }

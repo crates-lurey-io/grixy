@@ -20,11 +20,9 @@ just = { version = "1.40.0" }
 taplo-cli = { version = "0.10.0", bins = ["taplo"] }
 
 [features]
-default = []
+default = ["alloc", "buffer"]
 alloc = []
 buffer = []
-bytemuck = ["dep:bytemuck"]
 
 [dependencies]
-bytemuck = { version = "1.23.1", optional = true }
 ixy = { version = "0.5.5" }

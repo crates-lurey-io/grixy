@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `GridBase`; now every Grid trait has it's own `Element` type
+- The `bytemuck` feature; `GridBuf` already supports `AsRef<[T]>` which is
+  sufficient to use `bytemuck` when `T` is `Pod`.
 
 ## [0.4.0] - 2025-07-19
 

@@ -52,9 +52,6 @@ pub use crate::ops::unchecked::TrustedSizeGrid as _;
 
 mod impl_as_slice;
 
-#[cfg(feature = "bytemuck")]
-mod impl_bytemuck;
-
 mod impl_grid;
 mod impl_iter;
 mod impl_mut;

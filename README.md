@@ -1,6 +1,8 @@
 # grixy
 
-2-dimensional grids.
+Zero-cost 2D grids for Rust.
+
+_Powerful enough for embedded systems, convenient enough for game development._
 
 [![Test](https://github.com/crates-lurey-io/grixy/actions/workflows/test.yml/badge.svg)](https://github.com/crates-lurey-io/grixy/actions/workflows/test.yml)
 [![Docs](https://github.com/crates-lurey-io/grixy/actions/workflows/docs.yml/badge.svg)](https://github.com/crates-lurey-io/grixy/actions/workflows/docs.yml)

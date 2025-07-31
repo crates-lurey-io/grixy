@@ -1,8 +1,13 @@
-//! 2-dimensional grids with `usize`'d coordinate positions.
+//! Zero-cost 2D grids for Rust.
+//!
+//! _Powerful enough for embedded systems, convenient enough for game development._
+//!
+//! ## Overview
 //!
 //! This crate provides traits and implementations for working with 2-dimensional grids that are
 //! indexed by `usize`'d coordinates, i.e. for projects such as 2D games, simulations, pixel
-//! rasterization, and more, with a focus on performance and safety.
+//! rasterization, and more, with a focus on compatibility with embedded use-cases, performance, and
+//! safety.
 //!
 //! ## Examples
 //!
@@ -28,15 +33,17 @@
 //!
 //! ### `alloc`
 //!
+//! _Enabled by default._
+//!
 //! Provides additional (but optional) types that use `alloc::vec`.
 //!
 //! ### `buffer`
 //!
+//! _Enabled by default._
+//!
 //! Provides the linear `GridBuf` type (and convenience types) through `grixy::buf`.
 //!
-//! ### `bytemuck`
-//!
-//! Provides support for using `bytemuck` to eligible `GridBuffer` instances to slices of bytes
+//! If you are just using traits and types, this feature can be safely disabled.
 
 #![no_std]
 
