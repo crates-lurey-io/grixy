@@ -10,12 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `GridDraw` to `grixy::ops`
+- `map` and `copied` to `GridRead`
 - Added `grid::ops::blend` for example blend functions
 - Added `grixy::prelude` module for common imports
 - Added `VecGrid::new_generate` method to create a grid with a function
 
 ### Changed
 
+- `GridRead` and `GridReadUnchecked` use generic associated types (GATs) for
+  `Element`, which allows more flexiblity in how either references or owned
+  values are returned. This capability is used to allow a `.map` method to
+  lazily transform the grid's elements on read.
 - Renamed `fill_rect_from` to `fill_rect_iter`
 - Renamed `grixy::grid` to `grixy::ops`
 - Moved all unchecked operations to `grixy::ops::unchecked`

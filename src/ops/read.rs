@@ -1,6 +1,6 @@
 use crate::{
     core::{Layout as _, Pos, Rect, RowMajor},
-    ops::convert::GridCopied,
+    ops::convert::{GridCopied, GridMapped},
 };
 
 /// Read elements from a 2-dimensional grid position.
@@ -55,6 +55,33 @@ pub trait GridRead {
         T: 'a + Copy,
     {
         GridCopied { source: self }
+    }
+
+    /// Creates a grid that applies a mapping function to its elements.
+    ///
+    /// This is useful when you want to transform the elements of a grid lazily.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    ///
+    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// let mapped = grid.map(|&x| x * 2);
+    /// assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
+    /// ```
+    fn map<'a, S, F, T>(&'a self, map_fn: F) -> GridMapped<'a, S, F, Self, T>
+    where
+        Self: Sized,
+        Self: GridRead<Element<'a> = S>,
+        S: 'a,
+        T: 'a,
+        F: Fn(S) -> T,
+    {
+        GridMapped {
+            source: self,
+            map_fn,
+        }
     }
 }
 
