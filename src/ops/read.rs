@@ -5,12 +5,14 @@ use crate::core::{Pos, Rect};
 /// Read elements from a 2-dimensional grid position.
 pub trait GridRead {
     /// The type of elements in the grid.
-    type Element;
+    type Element<'a>: 'a
+    where
+        Self: 'a;
 
     /// Returns a reference to an element at a specified position.
     ///
     /// If the position is out of bounds, it returns `None`.
-    fn get(&self, pos: Pos) -> Option<&Self::Element>;
+    fn get(&self, pos: Pos) -> Option<Self::Element<'_>>;
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
@@ -24,7 +26,7 @@ pub trait GridRead {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
     }
 }
@@ -40,11 +42,11 @@ mod tests {
     }
 
     impl GridRead for CheckedGridTest {
-        type Element = u8;
+        type Element<'a> = u8;
 
-        fn get(&self, pos: Pos) -> Option<&Self::Element> {
+        fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
             if pos.x < 3 && pos.y < 3 {
-                Some(&self.grid[pos.y][pos.x])
+                Some(self.grid[pos.y][pos.x])
             } else {
                 None
             }
@@ -61,8 +63,8 @@ mod tests {
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
-            &5, &6,
-            &8, &9,
+            5, 6,
+            8, 9,
         ]);
     }
 
@@ -76,9 +78,9 @@ mod tests {
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
-            &1, &2, &3,
-            &4, &5, &6,
-            &7, &8, &9,
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9,
         ]);
     }
 

@@ -24,9 +24,12 @@ where
     B: AsRef<[T]>,
     L: Layout,
 {
-    type Element = T;
+    type Element<'a>
+        = &'a T
+    where
+        Self: 'a;
 
-    unsafe fn get_unchecked(&self, pos: Pos) -> &T {
+    unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
         let index = L::to_1d(pos, self.width);
         unsafe { self.buffer.as_ref().get_unchecked(index) }
     }
@@ -34,7 +37,7 @@ where
     unsafe fn iter_rect_unchecked(
         &self,
         bounds: crate::core::Rect,
-    ) -> impl Iterator<Item = &Self::Element> {
+    ) -> impl Iterator<Item = Self::Element<'_>> {
         let slice = self.buffer.as_ref();
         let width = self.width;
         (bounds.top()..bounds.bottom()).flat_map(move |y| {

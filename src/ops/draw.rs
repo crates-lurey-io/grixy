@@ -46,15 +46,15 @@ where
     ///              0, 0, 1, 1, 1,
     ///              0, 0, 1, 1, 1]);
     /// ```
-    fn copy_rect(
+    fn copy_rect<'src>(
         &mut self,
-        src: &impl GridRead<Element = Self::Element>,
+        src: &'src impl GridRead<Element<'src> = Self::Element>,
         src_rect: Rect,
         dst_pos: Pos,
     ) {
         for pos in src_rect.into_iter_row_major() {
             if let Some(cell) = src.get(pos + src_rect.top_left()) {
-                let _ = self.set(pos + dst_pos, *cell);
+                let _ = self.set(pos + dst_pos, cell);
             }
         }
     }
@@ -96,9 +96,9 @@ where
     ///              0, 3, 3, 4, 4,
     ///              0, 3, 3, 4, 4]);
     /// ```
-    fn copy_rect_scaled(
+    fn copy_rect_scaled<'src>(
         &mut self,
-        src: &impl GridRead<Element = Self::Element>,
+        src: &'src impl GridRead<Element<'src> = Self::Element>,
         src_rect: Rect,
         dst_rect: Rect,
     ) {
@@ -117,7 +117,7 @@ where
                 let dst_pos = dst_rect.top_left() + Pos::new(x, y);
 
                 if let Some(value) = src.get(src_pos) {
-                    let _ = self.set(dst_pos, *value);
+                    let _ = self.set(dst_pos, value);
                 }
             }
         }

@@ -6,20 +6,22 @@ use crate::{
 /// Read elements from a 2-dimensional grid position without bounds checking.
 pub trait GridReadUnchecked {
     /// The type of elements in the grid.
-    type Element;
+    type Element<'a>: 'a
+    where
+        Self: 'a;
 
-    /// Returns a reference to an element, without doing bounds checking.
+    /// Returns an element, without doing bounds checking.
     ///
     /// ## Safety
     ///
     /// Calling this method with an out-of-bounds position is _[undefined behavior][]_.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    unsafe fn get_unchecked(&self, pos: Pos) -> &Self::Element;
+    unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_>;
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    ///Elements are returned in an order agreeable to the grid's internal layout, which defaults to
+    /// Elements are returned in an order agreeable to the grid's internal layout, which defaults to
     /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
     /// right and bottom edges.
     ///
@@ -33,16 +35,19 @@ pub trait GridReadUnchecked {
     /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
-    unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.
 impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
-    type Element = T::Element;
+    type Element<'a>
+        = T::Element<'a>
+    where
+        Self: 'a;
 
-    fn get(&self, pos: Pos) -> Option<&Self::Element> {
+    fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         if self.contains_pos(pos) {
             Some(unsafe { self.get_unchecked(pos) })
         } else {
@@ -50,7 +55,7 @@ impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
         }
     }
 
-    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = &Self::Element> {
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         let size = self.size().to_rect();
         let rect = bounds.intersect(size);
         unsafe { self.iter_rect_unchecked(rect) }
@@ -80,10 +85,10 @@ mod tests {
     }
 
     impl GridReadUnchecked for UncheckedTestGrid {
-        type Element = u8;
+        type Element<'a> = u8;
 
-        unsafe fn get_unchecked(&self, pos: Pos) -> &Self::Element {
-            &self.grid[pos.y][pos.x]
+        unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
+            self.grid[pos.y][pos.x]
         }
     }
 
@@ -92,7 +97,7 @@ mod tests {
         let grid = UncheckedTestGrid {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
-        assert_eq!(grid.get(Pos::new(1, 1)), Some(&5));
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(5));
     }
 
     #[test]
@@ -117,7 +122,7 @@ mod tests {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
         let val = unsafe { grid.get_unchecked(Pos::new(2, 2)) };
-        assert_eq!(val, &9);
+        assert_eq!(val, 9);
     }
 
     #[test]
@@ -130,8 +135,8 @@ mod tests {
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
-            &5, &6, 
-            &8, &9,
+            5, 6,
+            8, 9,
         ]);
     }
 
@@ -145,9 +150,9 @@ mod tests {
             .collect::<Vec<_>>();
         #[rustfmt::skip]
         assert_eq!(cells, &[
-            &1, &2, &3,
-            &4, &5, &6,
-            &7, &8, &9,
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9,
         ]);
     }
 

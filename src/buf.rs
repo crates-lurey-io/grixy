@@ -135,7 +135,7 @@ mod tests {
     fn impl_get_unchecked() {
         let grid = VecGrid::new_filled_row_major(5, 4, 42);
         let pos = Pos::new(2, 3);
-        assert_eq!(unsafe { grid.get_unchecked(pos) }, &42);
+        assert_eq!(*unsafe { grid.get_unchecked(pos) }, 42);
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod tests {
         let mut grid = VecGrid::new_row_major(5, 4);
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
-        assert_eq!(unsafe { grid.get_unchecked(pos) }, &99);
+        assert_eq!(*unsafe { grid.get_unchecked(pos) }, 99);
     }
 
     #[test]
@@ -162,8 +162,8 @@ mod tests {
         };
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
-        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(0, 0)) }, &1);
-        assert_eq!(unsafe { buffer.get_unchecked(Pos::new(2, 2)) }, &9);
+        assert_eq!(*unsafe { buffer.get_unchecked(Pos::new(0, 0)) }, 1);
+        assert_eq!(*unsafe { buffer.get_unchecked(Pos::new(2, 2)) }, 9);
     }
 
     #[test]
@@ -187,9 +187,10 @@ mod tests {
             unsafe {
                 buffer
                     .iter_rect_unchecked(Rect::from_ltwh(0, 0, 3, 3))
+                    .copied()
                     .collect::<Vec<_>>()
             },
-            vec![&1, &2, &3, &4, &5, &6, &7, &8, &9]
+            vec![1, 2, 3, 4, 5, 6, 7, 8, 9]
         );
     }
 

@@ -50,9 +50,12 @@ impl<T> NaiveGrid<T> {
 }
 
 impl<T> GridRead for NaiveGrid<T> {
-    type Element = T;
+    type Element<'a>
+        = &'a T
+    where
+        Self: 'a;
 
-    fn get(&self, pos: crate::core::Pos) -> Option<&Self::Element> {
+    fn get(&self, pos: crate::core::Pos) -> Option<Self::Element<'_>> {
         if pos.x < self.width && pos.y < self.height {
             Some(&self.cells[pos.y * self.width + pos.x])
         } else {
