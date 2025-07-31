@@ -52,11 +52,10 @@ where
         src_rect: Rect,
         dst_pos: Pos,
     ) {
-        for pos in src_rect.into_iter_row_major() {
-            if let Some(cell) = src.get(pos + src_rect.top_left()) {
-                let _ = self.set(pos + dst_pos, cell);
-            }
-        }
+        self.fill_rect_iter(
+            Rect::from_ltwh(dst_pos.x, dst_pos.y, src_rect.width(), src_rect.height()),
+            src.iter_rect(src_rect),
+        );
     }
 
     /// Copies a rectangular `src_rect` from a `src` grid, scaling the copy by a specified factor.

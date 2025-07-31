@@ -47,9 +47,9 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
-pub mod convert;
 pub mod unchecked;
 
+pub(super) mod convert;
 mod draw;
 mod read;
 mod write;
