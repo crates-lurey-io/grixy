@@ -37,7 +37,7 @@ where
     /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
     ///
     /// // Copy a 3x3 region from the source grid to the destination grid at position (2, 2).
-    /// dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
+    /// dst.copy_rect(&src.copied(), Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
     ///
     /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
     ///            &[0, 0, 0, 0, 0,
@@ -87,7 +87,7 @@ where
     ///
     /// // Copy a 2x2 region from the source grid to the destination grid at position (1, 1),
     /// // scaling each cell by a factor of 2.
-    /// dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Rect::from_ltwh(1, 1, 4, 4));
+    /// dst.copy_rect_scaled(&src.copied(), Rect::from_ltwh(0, 0, 2, 2), Rect::from_ltwh(1, 1, 4, 4));
     ///
     /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
     ///            &[0, 0, 0, 0, 0,
@@ -145,7 +145,7 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
+        dst.copy_rect(&src.copied(), Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -168,7 +168,7 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(4, 4));
+        dst.copy_rect(&src.copied(), Rect::from_ltwh(0, 0, 3, 3), Pos::new(4, 4));
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -191,7 +191,7 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(6, 6));
+        dst.copy_rect(&src.copied(), Rect::from_ltwh(0, 0, 3, 3), Pos::new(6, 6));
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -210,7 +210,7 @@ mod tests {
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
         dst.copy_rect_scaled(
-            &src,
+            &src.copied(),
             Rect::from_ltwh(0, 0, 3, 3),
             Rect::from_ltwh(2, 2, 0, 0),
         );
@@ -232,7 +232,7 @@ mod tests {
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
         dst.copy_rect_scaled(
-            &src,
+            &src.copied(),
             Rect::from_ltwh(0, 0, 3, 3),
             Rect::from_ltwh(2, 2, 3, 3),
         );
@@ -254,7 +254,7 @@ mod tests {
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
         dst.copy_rect_scaled(
-            &src,
+            &src.copied(),
             Rect::from_ltwh(0, 0, 2, 2),
             Rect::from_ltwh(1, 1, 4, 4),
         );
@@ -276,7 +276,7 @@ mod tests {
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
         dst.copy_rect_scaled(
-            &src,
+            &src.copied(),
             Rect::from_ltwh(0, 0, 2, 2),
             Rect::from_ltwh(2, 2, 4, 4),
         );
@@ -298,7 +298,7 @@ mod tests {
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
         dst.copy_rect_scaled(
-            &src,
+            &src.copied(),
             Rect::from_ltwh(0, 0, 2, 2),
             Rect::from_ltwh(6, 6, 4, 4),
         );

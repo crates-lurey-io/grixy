@@ -1,6 +1,7 @@
-use ixy::index::{Layout, RowMajor};
-
-use crate::core::{Pos, Rect};
+use crate::{
+    core::{Layout as _, Pos, Rect, RowMajor},
+    ops::convert::GridCopied,
+};
 
 /// Read elements from a 2-dimensional grid position.
 pub trait GridRead {
@@ -28,6 +29,32 @@ pub trait GridRead {
     /// checking, etc.).
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
+    }
+
+    /// Creates a grid that copies all of its elements.
+    ///
+    /// This is useful when you have a `GridRead<&T>`, but need a `GridRead<T>`.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    ///
+    /// // By default, `VecGrid` returns references to its elements (similar to `Vec`).
+    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// assert_eq!(grid.get(Pos::new(1, 1)), Some(&1));
+    ///
+    /// // We can create a `GridRead` that returns owned copies of the elements.
+    /// let copied = grid.copied();
+    /// assert_eq!(copied.get(Pos::new(1, 1)), Some(1));
+    /// ```
+    fn copied<'a, T>(&'a self) -> GridCopied<'a, T, Self>
+    where
+        Self: Sized,
+        Self: GridRead<Element<'a> = &'a T>,
+        T: 'a + Copy,
+    {
+        GridCopied { source: self }
     }
 }
 
