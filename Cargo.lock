@@ -189,6 +189,8 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 [[package]]
 name = "ixy"
 version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1293ac0a90d43891a70c09cfd3169d12040acbcdb893de197e1f48a4356321f4"
 
 [[package]]
 name = "libc"

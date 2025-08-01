@@ -25,4 +25,4 @@ alloc = []
 buffer = []
 
 [dependencies]
-ixy = { path = "../ixy" }
+ixy = { version = "0.5.7" }
