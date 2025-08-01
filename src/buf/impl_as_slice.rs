@@ -20,7 +20,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{buf::GridBuf, core::Pos};
+    use crate::{buf::GridBuf, core::Pos, ops::GridRead as _};
 
     #[test]
     fn vec_u8_as_ref() {

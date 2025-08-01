@@ -7,13 +7,13 @@
 //!
 //! Creating an owned `GridBuf` and accessing an element:
 //! ```
-//! use grixy::{core::Pos, buf::GridBuf};
+//! use grixy::{core::Pos, buf::GridBuf, ops::GridRead};
 //!
 //! let grid = GridBuf::<u8, _>::new_filled(3, 4, 42);
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
-use crate::core::{Layout, Pos, RowMajor};
+use crate::core::{Layout, RowMajor};
 use core::marker::PhantomData;
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
@@ -57,30 +57,16 @@ where
     }
 }
 
-impl<T, B, L> GridBuf<T, B, L>
-where
-    B: AsRef<[T]>,
-    L: Layout,
-{
-    /// Returns a reference of the element at the specified position.'
-    ///
-    /// If the position is out of bounds, returns `None`.
-    pub fn get(&self, pos: Pos) -> Option<&T> {
-        if pos.x < self.width && pos.y < self.height {
-            Some(&self.buffer.as_ref()[L::to_1d(pos, self.width)])
-        } else {
-            None
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     extern crate alloc;
     use super::*;
     use crate::{
-        core::{ColMajor, Rect},
-        ops::unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
+        core::{ColMajor, Pos, Rect},
+        ops::{
+            GridRead as _,
+            unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
+        },
     };
     use alloc::{vec, vec::Vec};
 

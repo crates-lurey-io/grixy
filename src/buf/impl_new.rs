@@ -143,7 +143,7 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::core::Pos;
+    use crate::{core::Pos, ops::GridRead as _};
     use alloc::vec;
 
     #[test]
