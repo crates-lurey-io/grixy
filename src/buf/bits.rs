@@ -234,7 +234,7 @@ where
 unsafe impl<T, B, L> TrustedSizeGrid for GridBits<T, B, L>
 where
     T: BitOps,
-    B: AsRef<[T]> + AsMut<[T]>,
+    B: AsRef<[T]>,
     L: Layout,
 {
     fn width(&self) -> usize {
@@ -255,7 +255,7 @@ mod tests {
     use crate::{
         buf::bits::GridBits,
         core::{GridError, Pos},
-        ops::{GridRead, GridWrite},
+        ops::{GridRead, GridWrite, unchecked::GridReadUnchecked as _},
     };
 
     #[test]
@@ -386,5 +386,13 @@ mod tests {
         assert_eq!(grid.get(Pos::new(1, 0)), Some(true));
         assert_eq!(grid.get(Pos::new(2, 0)), Some(false));
         assert_eq!(grid.get(Pos::new(3, 0)), Some(true));
+    }
+
+    #[test]
+    fn bits_from_slice_is_grid_read() {
+        let data = &[0b0000_0001u8];
+        let grid = GridBits::<_, _, RowMajor>::from_buffer(data, 8);
+        assert!(unsafe { grid.get_unchecked(Pos::new(0, 0)) });
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
     }
 }

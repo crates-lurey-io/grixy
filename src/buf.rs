@@ -24,7 +24,7 @@ pub mod bits;
 
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
 
-mod impl_as_slice;
+mod impl_slice;
 
 mod impl_grid;
 mod impl_new;
