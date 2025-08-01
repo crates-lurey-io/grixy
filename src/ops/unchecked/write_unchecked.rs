@@ -104,7 +104,7 @@ impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
     type Layout = T::Layout;
 
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
-        if self.contains_pos(pos) {
+        if self.contains(pos) {
             unsafe {
                 self.set_unchecked(pos, value);
             }

@@ -53,7 +53,7 @@ impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
     type Layout = T::Layout;
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
-        if self.contains_pos(pos) {
+        if self.contains(pos) {
             Some(unsafe { self.get_unchecked(pos) })
         } else {
             None
