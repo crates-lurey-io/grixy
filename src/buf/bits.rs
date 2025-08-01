@@ -95,9 +95,21 @@ where
 {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
-    /// This creates a grid with a row-major layout; see [`new_with_layout`] to customize.
+    /// This creates a grid with a row-major layout; see [`new_with_layout`][] to customize.
+    ///
+    /// [`new_with_layout`]: GridBits::new_with_layout
     ///
     /// ## Example
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, buf::bits::GridBits};
+    ///
+    /// let grid = GridBits::<u8, _>::new(8, 1);
+    /// assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
+    /// assert_eq!(grid.get(Pos::new(7, 0)), Some(false));
+    /// assert_eq!(grid.get(Pos::new(8, 0)), None);
+    /// assert_eq!(grid.get(Pos::new(0, 1)), None);
+    /// ```
     #[must_use]
     pub fn new(width: usize, height: usize) -> Self {
         let buffer = alloc::vec![T::default(); (width * height).div_ceil(T::MAX_WIDTH)];

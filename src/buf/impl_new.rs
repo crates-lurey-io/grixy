@@ -57,9 +57,20 @@ where
 impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
-    /// This creates a grid with a row-major layout; see [`new_with_layout`] to customize.
+    /// This creates a grid with a row-major layout; see [`new_filled_with_layout`][] to customize.
+    ///
+    /// [`new_filled_with_layout`]: GridBuf::new_filled_with_layout
     ///
     /// ## Example
+    ///
+    /// ```rust
+    /// use grixy::prelude::*;
+    ///
+    /// let grid = GridBuf::<u8, _>::new(3, 3);
+    /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&0));
+    /// assert_eq!(grid.get(Pos::new(2, 2)), Some(&0));
+    /// assert_eq!(grid.get(Pos::new(3, 3)), None); // Out of bounds
+    /// ```
     #[must_use]
     pub fn new(width: usize, height: usize) -> Self
     where
@@ -69,7 +80,9 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
     }
     /// Creates a new grid with the specified width and height, filled with a specified value.
     ///
-    /// This creates a grid with a row-major layout; see [`new_filled_with_layout`] to customize.
+    /// This creates a grid with a row-major layout; see [`new_filled_with_layout`][] to customize.
+    ///
+    /// [`new_filled_with_layout`]: GridBuf::new_filled_with_layout
     ///
     /// ## Example
     ///
