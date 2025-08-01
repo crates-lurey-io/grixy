@@ -3,28 +3,18 @@
 //! The main type, [`GridBuf`], is highly generic, allowing it to act as a view over any buffer
 //! that can be treated as a slice.
 //!
-//! ## Convenience Types
-//!
-//! For ease of use, several type aliases are provided for common use cases:
-//! - [`VecGrid`]: An owned grid backed by a `Vec<T>` (requires the `alloc` feature).
-//! - [`ArrayGrid`]: An owned grid backed by a fixed-size array, `[T; N]`.
-//! - [`SliceGrid`]: A read-only, borrowed view over an existing slice.
-//! - [`SliceMutGrid`]: A mutable, borrowed view over an existing slice.
-//!
-//! [`VecGrid`]: `crate::buf::VecGrid`
-//!
 //! # Examples
 //!
-//! Creating an owned `VecGrid` and accessing an element:
+//! Creating an owned `GridBuf` and accessing an element:
 //! ```
-//! use grixy::{core::Pos, buf::VecGrid};
+//! use grixy::{core::Pos, buf::GridBuf};
 //!
-//! let grid = VecGrid::new_filled_row_major(10, 5, 42);
-//! assert_eq!(grid.get(Pos::new(3, 4)), Some(&42));
+//! let grid = GridBuf::<u8, _>::new_filled(3, 4, 42);
+//! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
 use crate::{
-    core::{Pos, RowMajor},
+    core::{Layout, Pos, RowMajor},
     ops::GridDraw,
 };
 use core::marker::PhantomData;
@@ -33,19 +23,6 @@ use core::marker::PhantomData;
 
 pub mod bits;
 
-mod inner_array;
-pub use inner_array::ArrayGrid;
-
-#[cfg(feature = "alloc")]
-mod inner_vec;
-
-#[cfg(feature = "alloc")]
-pub use inner_vec::VecGrid;
-
-mod inner_slice;
-pub use inner_slice::{SliceGrid, SliceMutGrid};
-use ixy::index::Layout;
-
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
@@ -53,8 +30,6 @@ pub use crate::ops::unchecked::TrustedSizeGrid as _;
 mod impl_as_slice;
 
 mod impl_grid;
-mod impl_iter;
-mod impl_mut;
 mod impl_new;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
@@ -116,28 +91,28 @@ mod tests {
     extern crate alloc;
     use super::*;
     use crate::{
-        core::Rect,
+        core::{ColMajor, Rect},
         ops::unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
     };
     use alloc::{vec, vec::Vec};
 
     #[test]
     fn impl_bounded_grid() {
-        let grid = VecGrid::new_filled_row_major(5, 4, 0);
+        let grid = GridBuf::<u8, _>::new(5, 4);
         assert_eq!(grid.width(), 5);
         assert_eq!(grid.height(), 4);
     }
 
     #[test]
     fn impl_get_unchecked() {
-        let grid = VecGrid::new_filled_row_major(5, 4, 42);
+        let grid = GridBuf::new_filled(5, 4, 42);
         let pos = Pos::new(2, 3);
         assert_eq!(*unsafe { grid.get_unchecked(pos) }, 42);
     }
 
     #[test]
     fn impl_set_unchecked() {
-        let mut grid = VecGrid::new_row_major(5, 4);
+        let mut grid = GridBuf::<u8, _>::new(5, 4);
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(*unsafe { grid.get_unchecked(pos) }, 99);
@@ -145,7 +120,7 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = VecGrid::with_buffer_col_major(3, 3, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]).unwrap();
+        let buffer = GridBuf::<_, _, ColMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
@@ -153,24 +128,13 @@ mod tests {
     }
 
     #[test]
-    fn with_buffer_col_major_unchecked() {
-        let buffer = unsafe {
-            VecGrid::with_buffer_col_major_unchecked(3, 3, vec![1, 2, 3, 4, 5, 6, 7, 8, 9])
-        };
-        assert_eq!(buffer.width(), 3);
-        assert_eq!(buffer.height(), 3);
-        assert_eq!(*unsafe { buffer.get_unchecked(Pos::new(0, 0)) }, 1);
-        assert_eq!(*unsafe { buffer.get_unchecked(Pos::new(2, 2)) }, 9);
-    }
-
-    #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = VecGrid::with_buffer_row_major(3, 3, vec![
+        let buffer = GridBuf::<_, _, RowMajor>::from_buffer(vec![
             1, 2, 3,
             4, 5, 6,
             7, 8, 9,
-        ]).unwrap();
+        ], 3);
 
         assert_eq!(
             unsafe {
@@ -193,7 +157,7 @@ mod tests {
 
     #[test]
     fn fill_rect_iter_unchecked() {
-        let mut grid = VecGrid::new_row_major(3, 3);
+        let mut grid = GridBuf::<_, _, RowMajor>::new(3, 3);
         unsafe {
             grid.fill_rect_iter_unchecked(Rect::from_ltwh(0, 0, 2, 2), vec![1, 2, 3, 4]);
         }
@@ -207,7 +171,7 @@ mod tests {
 
     #[test]
     fn fill_rect_solid_unchecked() {
-        let mut grid = VecGrid::new_row_major(3, 3);
+        let mut grid = GridBuf::<_, _, RowMajor>::new(3, 3);
         unsafe {
             grid.fill_rect_solid_unchecked(Rect::from_ltwh(0, 0, 2, 2), 42);
         }

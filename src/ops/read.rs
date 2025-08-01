@@ -41,10 +41,10 @@ pub trait GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
     ///
-    /// // By default, `VecGrid` returns references to its elements (similar to `Vec`).
-    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// // By default, `GridBuf` returns references to its elements (similar to `Vec`).
+    /// let grid = GridBuf::new_filled(3, 3, 1);
     /// assert_eq!(grid.get(Pos::new(1, 1)), Some(&1));
     ///
     /// // We can create a `GridRead` that returns owned copies of the elements.
@@ -67,9 +67,9 @@ pub trait GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
     ///
-    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let mapped = grid.map(|&x| x * 2);
     /// assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
     /// ```
@@ -94,9 +94,9 @@ pub trait GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid, core::Rect};
+    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf, core::Rect};
     ///
-    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
     /// assert_eq!(view.get(Pos::new(1, 1)), Some(&1));
     /// assert_eq!(view.get(Pos::new(2, 2)), None);
@@ -120,9 +120,9 @@ pub trait GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
     ///
-    /// let grid = VecGrid::new_filled_row_major(2, 2, 1);
+    /// let grid = GridBuf::new_filled(2, 2, 1);
     /// let scaled = grid.scale(2);
     /// assert_eq!(scaled.get(Pos::new(0, 0)), Some(&1));
     /// assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));

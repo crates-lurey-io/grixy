@@ -28,7 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Most of the convenience types and constructors from `GridBuf`
 - `GridBase`; now every Grid trait has it's own `Element` type
+- `Rect::contains_pos` method; use `Rect::contains` instead
 - The `bytemuck` feature; `GridBuf` already supports `AsRef<[T]>` which is
   sufficient to use `bytemuck` when `T` is `Pod`.
 

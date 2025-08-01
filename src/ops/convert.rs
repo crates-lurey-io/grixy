@@ -9,7 +9,7 @@ use crate::{
 
 /// Copies elements from another grid that returns copyable references.
 ///
-/// See [`GridRead::copied`][crate::ops::GridRead::copied] for usage.
+/// See [`GridRead::copied`] for usage.
 pub struct Copied<'a, T, G>
 where
     T: Copy,
@@ -42,7 +42,7 @@ where
 
 /// Transforms elements.
 ///
-/// See [`GridRead::mapped`][crate::ops::GridRead::mapped] for usage.
+/// See [`GridRead::map`] for usage.
 pub struct Mapped<'a, S, F, G, T = S>
 where
     S: 'a,
@@ -79,7 +79,7 @@ where
 
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
 ///
-/// See [`GridRead::view`][crate::ops::GridRead::view] for usage.
+/// See [`GridRead::view`] for usage.
 pub struct Viewed<'a, G>
 where
     G: GridRead,
@@ -115,7 +115,7 @@ where
 
 /// Scales the grid elements using a nearest-neighbor approach.
 ///
-/// See [`GridRead::scale`][crate::ops::GridRead::scale] for usage.
+/// See [`GridRead::scale`] for usage.
 pub struct Scaled<'a, G>
 where
     G: GridRead,
@@ -145,14 +145,14 @@ where
 mod tests {
     extern crate alloc;
 
-    use crate::{buf::VecGrid, core::Rect};
+    use crate::{buf::GridBuf, core::Rect};
     use alloc::{vec, vec::Vec};
 
     use super::*;
 
     #[test]
     fn grid_copied_get() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let copied = grid.copied();
         assert_eq!(copied.get(Pos::new(1, 1)), Some(1));
         assert_eq!(copied.get(Pos::new(3, 3)), None);
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn grid_copied_iter_rect() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let copied = grid.copied();
         let elements: Vec<_> = copied.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
         assert_eq!(elements, vec![1, 1, 1, 1]);
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn grid_mapped_get() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let mapped = grid.map(|x| x * 2);
         assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
         assert_eq!(mapped.get(Pos::new(3, 3)), None);
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn grid_mapped_iter_rect() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let mapped = grid.map(|x| x * 2);
         let elements: Vec<_> = mapped.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
         assert_eq!(elements, vec![2, 2, 2, 2]);
@@ -184,7 +184,7 @@ mod tests {
 
     #[test]
     fn grid_view_get() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
         assert_eq!(view.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(view.get(Pos::new(2, 2)), None);
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn grid_view_iter_rect() {
-        let grid = VecGrid::new_filled_row_major(3, 3, 1);
+        let grid = GridBuf::new_filled(3, 3, 1);
         let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
         let elements: Vec<_> = view.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
         assert_eq!(elements, &[&1, &1, &1, &1]);
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn grid_scaled_get() {
-        let grid = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
+        let grid = GridBuf::<_, _>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(scaled.get(Pos::new(2, 2)), Some(&4));
@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn grid_scaled_iter_rect() {
-        let grid = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
+        let grid = GridBuf::<_, _>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         let elements: Vec<_> = scaled.iter_rect(Rect::from_ltwh(0, 0, 4, 4)).collect();
 

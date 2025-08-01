@@ -44,9 +44,9 @@ pub trait GridWriteUnchecked {
 
     /// Sets elements within a rectangular region of the grid without bounds checking.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// If the provided iterator has fewer elements than the rectangle, the remaining elements will
     /// not be set. If the iterator has more elements than the rectangle, the behavior is undefined.

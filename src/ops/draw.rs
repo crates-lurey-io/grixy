@@ -31,10 +31,10 @@ where
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
+    /// use grixy::{core::{Pos, Rect}, buf::GridBuf, ops::{GridDraw, GridRead}};
     ///
-    /// let src = VecGrid::new_filled_row_major(3, 3, 1);
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
+    /// let src = GridBuf::new_filled(3, 3, 1);
+    /// let mut dst = GridBuf::new_filled(5, 5, 0);
     ///
     /// // Copy a 3x3 region from the source grid to the destination grid at position (2, 2).
     /// dst.copy_rect(&src.copied(), Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
@@ -75,10 +75,10 @@ where
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
+    /// use grixy::{core::{Pos, Rect}, buf::GridBuf, ops::{GridDraw, GridRead}};
     ///
-    /// let src = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
+    /// let src = GridBuf::<_, _>::from_buffer(vec![1, 2, 3, 4], 2);
+    /// let mut dst = GridBuf::new_filled(5, 5, 0);
     ///
     /// assert_eq!(src.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).copied().collect::<Vec<_>>(),
     ///           &[1, 2,

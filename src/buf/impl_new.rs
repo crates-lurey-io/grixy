@@ -1,40 +1,47 @@
-use core::marker::PhantomData;
-
-use ixy::index::Layout;
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 use crate::{
     buf::GridBuf,
-    core::{ColMajor, GridError, RowMajor},
+    core::{Layout, RowMajor},
 };
+use core::marker::PhantomData;
 
 impl<T, B, L> GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
     L: Layout,
 {
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    /// Returns a grid from an existing buffer with a given width in columns.
     ///
-    /// ## Errors
+    /// The height is inferred from the buffer length and width.
     ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer(width: usize, height: usize, buffer: B) -> Result<Self, GridError> {
-        let expected_size = width * height;
-        if buffer.as_ref().len() != expected_size {
-            return Err(GridError);
-        }
-        Ok(unsafe { Self::with_buffer_unchecked(width, height, buffer) })
-    }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    /// Any data type that can be represented as a slice can be used as the buffer type, including
+    /// arrays, slices, and vectors.
     ///
-    /// ## Safety
+    /// ## Panics
     ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_unchecked(width: usize, height: usize, buffer: B) -> Self {
-        debug_assert_eq!(
-            buffer.as_ref().len(),
-            width * height,
-            "Buffer size does not match grid dimensions"
+    /// This panics if the buffer length is not a multiple of the width.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use grixy::prelude::*;
+    ///
+    /// let buffer = vec![1, 2, 3, 4, 5, 6];
+    /// let grid = GridBuf::<_, _>::from_buffer(buffer, 3);
+    ///
+    /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
+    /// assert_eq!(grid.get(Pos::new(1, 0)), Some(&2));
+    /// assert_eq!(grid.get(Pos::new(2, 1)), Some(&6));
+    /// assert_eq!(grid.get(Pos::new(3, 1)), None); // Out of bounds
+    /// ```
+    #[must_use]
+    pub fn from_buffer(buffer: B, width: usize) -> Self {
+        let height = buffer.as_ref().len() / width;
+        assert!(
+            height * width == buffer.as_ref().len(),
+            "Buffer length must be a multiple of width"
         );
         Self {
             buffer,
@@ -46,64 +53,74 @@ where
     }
 }
 
-impl<T, B> GridBuf<T, B, RowMajor>
-where
-    B: AsRef<[T]>,
-{
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+#[cfg(feature = "alloc")]
+impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
+    /// Creates a new grid with the specified width and height, filled with a default value.
     ///
-    /// The data buffer is expected to be in [`RowMajor`] order.
+    /// This creates a grid with a row-major layout; see [`new_with_layout`] to customize.
     ///
-    /// ## Errors
-    ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer_row_major(
-        width: usize,
-        height: usize,
-        buffer: B,
-    ) -> Result<Self, GridError> {
-        Self::with_buffer(width, height, buffer)
+    /// ## Example
+    #[must_use]
+    pub fn new(width: usize, height: usize) -> Self
+    where
+        T: Copy + Default,
+    {
+        Self::new_filled(width, height, T::default())
     }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    /// Creates a new grid with the specified width and height, filled with a specified value.
     ///
-    /// The data buffer is expected to be in [`RowMajor`] order.
+    /// This creates a grid with a row-major layout; see [`new_filled_with_layout`] to customize.
     ///
-    /// ## Safety
+    /// ## Example
     ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_row_major_unchecked(width: usize, height: usize, buffer: B) -> Self {
-        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
+    /// ```rust
+    /// use grixy::prelude::*;
+    ///
+    /// let grid = GridBuf::new_filled(5, 4, 42);
+    ///
+    /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
+    /// assert_eq!(grid.get(Pos::new(4, 3)), Some(&42));
+    /// assert_eq!(grid.get(Pos::new(5, 3)), None); // Out of bounds
+    /// ```
+    #[must_use]
+    pub fn new_filled(width: usize, height: usize, value: T) -> Self
+    where
+        T: Copy,
+    {
+        let buffer = alloc::vec![value; width * height];
+        Self {
+            buffer,
+            width,
+            height,
+            _element: PhantomData,
+            _layout: PhantomData,
+        }
     }
 }
 
-impl<T, B> GridBuf<T, B, ColMajor>
+#[cfg(feature = "alloc")]
+impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
-    B: AsRef<[T]>,
+    L: Layout,
 {
-    /// Creates a `GridBuf` using an existing data buffer, specifying the grid dimensions.
+    /// Creates a new grid with the specified width and height, filled with a default value.
     ///
-    /// The data buffer is expected to be in [`ColMajor`] order.
+    /// The layout is specified by the type parameter `L`, allowing for different memory layouts.
     ///
-    /// ## Errors
-    ///
-    /// Returns an error if the buffer size does not match the expected size.
-    pub fn with_buffer_col_major(
-        width: usize,
-        height: usize,
-        buffer: B,
-    ) -> Result<Self, GridError> {
-        Self::with_buffer(width, height, buffer)
-    }
-
-    /// Creates a new `GridBuf` using an existing data buffer, specifying the grid dimensions.
-    ///
-    /// The data buffer is expected to be in [`ColMajor`] order.
-    ///
-    /// ## Safety
-    ///
-    /// The caller must ensure that the buffer is large enough to hold `width * height` elements.
-    pub unsafe fn with_buffer_col_major_unchecked(width: usize, height: usize, buffer: B) -> Self {
-        unsafe { Self::with_buffer_unchecked(width, height, buffer) }
+    /// ## Example
+    #[must_use]
+    pub fn new_filled_with_layout(width: usize, height: usize, value: T) -> Self
+    where
+        T: Copy,
+        L: Layout,
+    {
+        let buffer = alloc::vec![value; width * height];
+        Self {
+            buffer,
+            width,
+            height,
+            _element: PhantomData,
+            _layout: PhantomData,
+        }
     }
 }
