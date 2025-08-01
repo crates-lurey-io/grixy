@@ -194,7 +194,9 @@ mod tests {
         let grid = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
         let scaled = grid.scale(2);
         assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
-        assert_eq!(scaled.get(Pos::new(2, 2)), None);
+        assert_eq!(scaled.get(Pos::new(2, 2)), Some(&4));
+        assert_eq!(scaled.get(Pos::new(3, 3)), Some(&4));
+        assert_eq!(scaled.get(Pos::new(4, 4)), None);
     }
 
     #[test]
