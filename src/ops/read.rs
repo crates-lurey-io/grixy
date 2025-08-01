@@ -1,3 +1,5 @@
+#[cfg(feature = "buffer")]
+use crate::ops::unchecked::TrustedSizeGrid;
 use crate::{
     core::{Layout, Pos, Rect},
     ops::convert::{Copied, Mapped, Scaled, Viewed},
@@ -138,6 +140,48 @@ pub trait GridRead {
             source: self,
             scale: factor,
         }
+    }
+
+    /// Collects the elements of the grid into a new buffer.
+    ///
+    /// This method is only available when the `buffer` feature is enabled.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
+    ///
+    /// let grid = GridBuf::new_filled(3, 3, 1);
+    /// let collected = grid.copied().collect::<Vec<_>>();
+    /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
+    /// assert_eq!(collected.get(Pos::new(3, 3)), None);
+    /// ```
+    #[cfg(feature = "buffer")]
+    fn collect<'a, B>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, Self::Layout>
+    where
+        B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
+        Self: Sized,
+        Self: TrustedSizeGrid,
+        Self::Element<'a>: Copy,
+    {
+        let iter = self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()));
+        let elem = iter.collect::<B>();
+        crate::buf::GridBuf::from_buffer(elem, self.width())
+    }
+}
+
+/// A trait for grids that can be iterated over.
+pub trait GridIter: GridRead {
+    /// Returns an iterator over the elements of the grid.
+    fn iter(&self) -> impl Iterator<Item = Self::Element<'_>>;
+}
+
+impl<T> GridIter for T
+where
+    T: GridRead + TrustedSizeGrid,
+{
+    fn iter(&self) -> impl Iterator<Item = Self::Element<'_>> {
+        self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()))
     }
 }
 

@@ -4,7 +4,7 @@
 
 use crate::{
     core::{GridError, Pos, Rect},
-    ops::{GridRead, GridWrite},
+    ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
 };
 
 /// Copies elements from another grid that returns copyable references.
@@ -37,6 +37,20 @@ where
 
     fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds).copied()
+    }
+}
+
+unsafe impl<'a, T, G> TrustedSizeGrid for Copied<'a, T, G>
+where
+    T: 'a + Copy,
+    G: TrustedSizeGrid + GridRead<Element<'a> = &'a T>,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
     }
 }
 
@@ -77,6 +91,22 @@ where
     }
 }
 
+unsafe impl<'a, S, F, G, T> TrustedSizeGrid for Mapped<'a, S, F, G, T>
+where
+    S: 'a,
+    T: 'a,
+    F: Fn(S) -> T,
+    G: TrustedSizeGrid + GridRead<Element<'a> = S>,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
+    }
+}
+
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
 ///
 /// See [`GridRead::view`] for usage.
@@ -113,6 +143,19 @@ where
     }
 }
 
+unsafe impl<G> TrustedSizeGrid for Viewed<'_, G>
+where
+    G: TrustedSizeGrid + GridRead,
+{
+    fn width(&self) -> usize {
+        self.bounds.width()
+    }
+
+    fn height(&self) -> usize {
+        self.bounds.height()
+    }
+}
+
 /// Scales the grid elements using a nearest-neighbor approach.
 ///
 /// See [`GridRead::scale`] for usage.
@@ -138,6 +181,19 @@ where
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos / self.scale)
+    }
+}
+
+unsafe impl<G> TrustedSizeGrid for Scaled<'_, G>
+where
+    G: TrustedSizeGrid + GridRead,
+{
+    fn width(&self) -> usize {
+        self.source.width() * self.scale
+    }
+
+    fn height(&self) -> usize {
+        self.source.height() * self.scale
     }
 }
 
@@ -189,6 +245,23 @@ where
     }
 }
 
+unsafe impl<G, F> TrustedSizeGrid for Blended<'_, G, F>
+where
+    G: TrustedSizeGrid + GridRead + GridWrite,
+    F: for<'b> Fn(
+        <G as GridRead>::Element<'b>,
+        <G as GridWrite>::Element,
+    ) -> <G as GridWrite>::Element,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -197,6 +270,14 @@ mod tests {
     use alloc::{vec, vec::Vec};
 
     use super::*;
+
+    #[test]
+    fn grid_copied_size() {
+        let grid = GridBuf::<u8, _, _>::new(10, 10);
+        let copied = grid.copied();
+        assert_eq!(copied.width(), 10);
+        assert_eq!(copied.height(), 10);
+    }
 
     #[test]
     fn grid_copied_get() {
@@ -212,6 +293,14 @@ mod tests {
         let copied = grid.copied();
         let elements: Vec<_> = copied.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
         assert_eq!(elements, vec![1, 1, 1, 1]);
+    }
+
+    #[test]
+    fn grid_mapped_size() {
+        let grid = GridBuf::<u8, _, _>::new(10, 10);
+        let mapped = grid.map(|x| x * 2);
+        assert_eq!(mapped.width(), 10);
+        assert_eq!(mapped.height(), 10);
     }
 
     #[test]
@@ -231,6 +320,14 @@ mod tests {
     }
 
     #[test]
+    fn grid_view_size() {
+        let grid = GridBuf::<u8, _, _>::new(10, 10);
+        let view = grid.view(Rect::from_ltwh(0, 0, 5, 5));
+        assert_eq!(view.width(), 5);
+        assert_eq!(view.height(), 5);
+    }
+
+    #[test]
     fn grid_view_get() {
         let grid = GridBuf::new_filled(3, 3, 1);
         let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
@@ -244,6 +341,14 @@ mod tests {
         let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
         let elements: Vec<_> = view.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
         assert_eq!(elements, &[&1, &1, &1, &1]);
+    }
+
+    #[test]
+    fn grid_scaled_size() {
+        let grid = GridBuf::<u8, _, _>::new(10, 10);
+        let scaled = grid.scale(2);
+        assert_eq!(scaled.width(), 20);
+        assert_eq!(scaled.height(), 20);
     }
 
     #[test]
@@ -269,6 +374,14 @@ mod tests {
             &3, &3, &4, &4,
             &3, &3, &4, &4,
         ]);
+    }
+
+    #[test]
+    fn grid_blended_size() {
+        let mut grid = GridBuf::<u8, _, _>::new(10, 10);
+        let blended = grid.blend(|current, new| current + new);
+        assert_eq!(blended.width(), 10);
+        assert_eq!(blended.height(), 10);
     }
 
     #[test]

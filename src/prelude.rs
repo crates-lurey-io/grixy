@@ -13,4 +13,4 @@
 pub use crate::buf::GridBuf;
 
 pub use crate::core::{HasSize as _, Pos, Rect, RowMajor, Size};
-pub use crate::ops::{GridRead as _, GridWrite as _};
+pub use crate::ops::{GridIter as _, GridRead as _, GridWrite as _};

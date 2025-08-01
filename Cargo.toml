@@ -26,3 +26,9 @@ buffer = []
 
 [dependencies]
 ixy = { version = "0.5.7" }
+
+[dev-dependencies]
+bytemuck = "1.23.1"
+open = "5.3.2"
+png = "0.17.16"
+temp-dir = "0.1.16"
