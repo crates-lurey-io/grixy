@@ -13,10 +13,7 @@
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
-use crate::{
-    core::{Layout, Pos, RowMajor},
-    ops::GridDraw,
-};
+use crate::core::{Layout, Pos, RowMajor};
 use core::marker::PhantomData;
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
@@ -75,15 +72,6 @@ where
             None
         }
     }
-}
-
-impl<T, B, L> GridDraw for GridBuf<T, B, L>
-where
-    T: Copy,
-    B: AsMut<[T]> + AsRef<[T]>,
-    L: Layout,
-{
-    // TODO: Optimize for the linear buffer layout.
 }
 
 #[cfg(test)]

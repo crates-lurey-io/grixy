@@ -6,15 +6,7 @@ use crate::{
 pub mod blend;
 
 /// Perform draw-like operations by writing to a 2-dimensional grid.
-///
-/// [`GridDraw`] does not have a blanket implementation for [`GridWrite`] because the operations are
-/// more complex than simple writes, and optimizations are often needed for specific grid types
-/// (e.g., blitting, scaling), but all methods are automatically derived from [`GridWrite`] for
-/// ease of use.
-pub trait GridDraw: GridWrite
-where
-    Self::Element: Copy,
-{
+pub trait GridDraw: GridWrite {
     /// Copies a rectangular `src_rect` from a `src` grid.
     ///
     /// The operation starts by copying the top-left corner to the specified `dst_pos`; if there
@@ -123,6 +115,8 @@ where
     }
 }
 
+impl<T> GridDraw for T where T: GridWrite {}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -131,8 +125,6 @@ mod tests {
     use alloc::vec::Vec;
 
     use super::*;
-
-    impl<T> GridDraw for NaiveGrid<T> where T: Copy {}
 
     #[test]
     fn copy_rect_within_bounds() {
