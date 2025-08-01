@@ -1,6 +1,6 @@
 use crate::{
     core::{Layout as _, Pos, Rect, RowMajor},
-    ops::convert::{GridCopied, GridMapped},
+    ops::convert::{Copied, Mapped, Scaled, Viewed},
 };
 
 /// Read elements from a 2-dimensional grid position.
@@ -48,13 +48,13 @@ pub trait GridRead {
     /// let copied = grid.copied();
     /// assert_eq!(copied.get(Pos::new(1, 1)), Some(1));
     /// ```
-    fn copied<'a, T>(&'a self) -> GridCopied<'a, T, Self>
+    fn copied<'a, T>(&'a self) -> Copied<'a, T, Self>
     where
         Self: Sized,
         Self: GridRead<Element<'a> = &'a T>,
         T: 'a + Copy,
     {
-        GridCopied { source: self }
+        Copied { source: self }
     }
 
     /// Creates a grid that applies a mapping function to its elements.
@@ -70,7 +70,7 @@ pub trait GridRead {
     /// let mapped = grid.map(|&x| x * 2);
     /// assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
     /// ```
-    fn map<'a, S, F, T>(&'a self, map_fn: F) -> GridMapped<'a, S, F, Self, T>
+    fn map<'a, S, F, T>(&'a self, map_fn: F) -> Mapped<'a, S, F, Self, T>
     where
         Self: Sized,
         Self: GridRead<Element<'a> = S>,
@@ -78,9 +78,59 @@ pub trait GridRead {
         T: 'a,
         F: Fn(S) -> T,
     {
-        GridMapped {
+        Mapped {
             source: self,
             map_fn,
+        }
+    }
+
+    /// Creates a view of the grid over a specified rectangular region.
+    ///
+    /// The view is a lightweight wrapper that allows access to a subset of the grid's elements.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid, core::Rect};
+    ///
+    /// let grid = VecGrid::new_filled_row_major(3, 3, 1);
+    /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
+    /// assert_eq!(view.get(Pos::new(1, 1)), Some(&1));
+    /// assert_eq!(view.get(Pos::new(2, 2)), None);
+    /// ```
+    fn view(&self, bounds: Rect) -> Viewed<'_, Self>
+    where
+        Self: Sized,
+    {
+        Viewed {
+            source: self,
+            bounds,
+        }
+    }
+
+    /// Creates a scaled version of the grid.
+    ///
+    /// The `scale` factor determines how many cells in the original grid correspond to one cell
+    /// in the scaled grid. For example, a scale factor of 2 means that each cell in the scaled grid
+    /// corresponds to a 2x2 block of cells in the original grid.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
+    ///
+    /// let grid = VecGrid::new_filled_row_major(4, 4, 1);
+    /// let scaled = grid.scale(2);
+    /// assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
+    /// assert_eq!(scaled.get(Pos::new(2, 2)), None);
+    /// ```
+    fn scale(&self, factor: usize) -> Scaled<'_, Self>
+    where
+        Self: Sized,
+    {
+        Scaled {
+            source: self,
+            scale: factor,
         }
     }
 }
