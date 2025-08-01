@@ -1,5 +1,5 @@
 use crate::{
-    core::{HasSize as _, Layout, Pos, Rect, RowMajor},
+    core::{HasSize as _, Layout, Pos, Rect},
     ops::{GridRead, unchecked::TrustedSizeGrid},
 };
 
@@ -9,6 +9,9 @@ pub trait GridReadUnchecked {
     type Element<'a>: 'a
     where
         Self: 'a;
+
+    /// The layout of the grid, which determines how elements are stored and accessed.
+    type Layout: Layout;
 
     /// Returns an element, without doing bounds checking.
     ///
@@ -21,9 +24,9 @@ pub trait GridReadUnchecked {
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    /// Elements are returned in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
+    /// Elements are returned in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// ## Safety
     ///
@@ -31,12 +34,12 @@ pub trait GridReadUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
     unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
+        Self::Layout::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
 
@@ -46,6 +49,8 @@ impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
         = T::Element<'a>
     where
         Self: 'a;
+
+    type Layout = T::Layout;
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         if self.contains_pos(pos) {
@@ -67,7 +72,7 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::ops::unchecked::TrustedSizeGrid;
+    use crate::{core::RowMajor, ops::unchecked::TrustedSizeGrid};
     use alloc::vec::Vec;
 
     struct UncheckedTestGrid {
@@ -86,6 +91,8 @@ mod tests {
 
     impl GridReadUnchecked for UncheckedTestGrid {
         type Element<'a> = u8;
+
+        type Layout = RowMajor;
 
         unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
             self.grid[pos.y][pos.x]

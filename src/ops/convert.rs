@@ -29,6 +29,8 @@ where
     where
         Self: 'b;
 
+    type Layout = G::Layout;
+
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos).copied()
     }
@@ -64,6 +66,8 @@ where
     where
         Self: 'b;
 
+    type Layout = G::Layout;
+
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos).map(&self.map_fn)
     }
@@ -92,6 +96,8 @@ where
         = G::Element<'b>
     where
         Self: 'b;
+
+    type Layout = G::Layout;
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         let pos = pos - self.bounds.top_left();
@@ -126,6 +132,9 @@ where
         = G::Element<'b>
     where
         Self: 'b;
+
+    /// The layout of the grid.
+    type Layout = G::Layout;
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos / self.scale)

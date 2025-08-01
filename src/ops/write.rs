@@ -1,9 +1,12 @@
-use crate::core::{GridError, Layout as _, Pos, Rect, RowMajor};
+use crate::core::{GridError, Layout, Pos, Rect};
 
 /// Write elements to a 2-dimensional grid position.
 pub trait GridWrite {
     /// The type of elements in the grid.
     type Element;
+
+    /// The type of layout used for the grid.
+    type Layout: Layout;
 
     /// Sets the element at a specified position.
     ///
@@ -14,54 +17,56 @@ pub trait GridWrite {
 
     /// Sets elements within a rectangular region of the grid.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
-        RowMajor::iter_pos(bounds).for_each(|pos| {
+        Self::Layout::iter_pos(bounds).for_each(|pos| {
             let _ = self.set(pos, f(pos));
         });
     }
 
     /// Sets elements within a rectangular region of the grid.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// If the provided iterator has fewer elements than the rectangle, the remaining elements will
     /// not be set.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        RowMajor::iter_pos(dst).zip(iter).for_each(|(pos, value)| {
-            let _ = self.set(pos, value);
-        });
+        Self::Layout::iter_pos(dst)
+            .zip(iter)
+            .for_each(|(pos, value)| {
+                let _ = self.set(pos, value);
+            });
     }
 
     /// Sets elements within a rectangular region of the grid.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
     where
@@ -76,6 +81,7 @@ mod tests {
     extern crate alloc;
 
     use super::*;
+    use crate::core::RowMajor;
     use alloc::vec;
 
     struct TestGrid {
@@ -84,6 +90,8 @@ mod tests {
 
     impl GridWrite for TestGrid {
         type Element = u8;
+
+        type Layout = RowMajor;
 
         fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
             if pos.x < 3 && pos.y < 3 {

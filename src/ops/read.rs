@@ -1,5 +1,5 @@
 use crate::{
-    core::{Layout as _, Pos, Rect, RowMajor},
+    core::{Layout, Pos, Rect},
     ops::convert::{Copied, Mapped, Scaled, Viewed},
 };
 
@@ -10,6 +10,9 @@ pub trait GridRead {
     where
         Self: 'a;
 
+    /// The layout of the grid.
+    type Layout: Layout;
+
     /// Returns a reference to an element at a specified position.
     ///
     /// If the position is out of bounds, it returns `None`.
@@ -17,18 +20,18 @@ pub trait GridRead {
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    /// Elements are returned in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. Out-of-bounds elements are skipped, and the bounding
-    /// rectangle is treated as _exclusive_ of the right and bottom edges.
+    /// Elements are returned in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        RowMajor::iter_pos(bounds).filter_map(|pos| self.get(pos))
+        Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
     }
 
     /// Creates a grid that copies all of its elements.
@@ -138,7 +141,10 @@ pub trait GridRead {
 #[cfg(test)]
 mod tests {
     extern crate alloc;
+
     use super::*;
+
+    use crate::core::RowMajor;
     use alloc::vec::Vec;
 
     struct CheckedGridTest {
@@ -147,6 +153,8 @@ mod tests {
 
     impl GridRead for CheckedGridTest {
         type Element<'a> = u8;
+
+        type Layout = RowMajor;
 
         fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
             if pos.x < 3 && pos.y < 3 {
