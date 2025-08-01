@@ -332,3 +332,40 @@
             ]
         );
     }
+
+ /// Copies a rectangular regio, applying a blend function to combine elements.
+    ///
+    /// The operation starts by copying the top-left corner to the specified `dst`, blending each
+    /// cell from the source grid with the corresponding cell in the destination grid. If there is
+    /// insufficient space in the current grid or the `rect` is out of bounds of the `src` grid,
+    /// those individual cells are ignored and not copied to/from.
+    ///
+    /// ## Performance
+    ///
+    /// The default implementation reads each cell from the `src` grid, applies the blend function
+    /// to the corresponding cell in the destination grid, and writes the result to the destination
+    /// grid at the specified `dst`, ignoring any cells (on either read or write) that are out of
+    /// bounds. This is a straightforward implementation that may not be optimal for all grid types.
+    fn blend_rect<'src, SE, SG>(
+        &'dst mut self,
+        src: &'src SG,
+        rect: Rect,
+        dst: Pos,
+        blend: &impl Fn(
+            SG::Element<'src>,
+            <Self as GridRead>::Element<'dst>,
+        ) -> <Self as GridWrite>::Element,
+    ) where
+        SG: GridRead<Element<'src> = SE>,
+        SE: Copy,
+    {
+        for pos in SG::Layout::iter_pos(rect) {
+            let src_pos = pos + rect.top_left();
+            if let Some(src_elem) = src.get(src_pos) {
+                if let Some(dst_elem) = self.get(dst + pos) {
+                    let blended = blend(src_elem.clone(), dst_elem.clone());
+                    let _ = self.set(dst + pos, blended);
+                }
+            }
+        }
+    }

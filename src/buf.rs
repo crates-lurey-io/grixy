@@ -85,6 +85,13 @@ mod tests {
     use alloc::{vec, vec::Vec};
 
     #[test]
+    fn into_inner() {
+        let grid = GridBuf::<u8, _>::new(5, 4);
+        let (buffer, width, height) = grid.into_inner();
+        assert_eq!(buffer.len(), width * height);
+    }
+
+    #[test]
     fn impl_bounded_grid() {
         let grid = GridBuf::<u8, _>::new(5, 4);
         assert_eq!(grid.width(), 5);

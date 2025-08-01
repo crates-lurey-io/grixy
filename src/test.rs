@@ -3,7 +3,6 @@
 extern crate alloc;
 
 use alloc::{vec, vec::Vec};
-use core::ops::Add;
 
 use crate::{
     core::{GridError, RowMajor},
@@ -88,10 +87,13 @@ impl<T> IntoIterator for NaiveGrid<T> {
     }
 }
 
-/// A blend function that adds two elements together.
-pub fn blend_add<S, T>(src: S, dst: T) -> T
-where
-    S: Add<T, Output = T>,
-{
-    src + dst
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Cells length does not match grid size")]
+    fn test_with_cells_panics_on_invalid_length() {
+        let _grid = NaiveGrid::<u8>::with_cells(2, 2, vec![1, 2, 3]);
+    }
 }

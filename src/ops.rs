@@ -55,6 +55,6 @@ mod draw;
 mod read;
 mod write;
 
-pub use draw::{GridDraw, blend};
+pub use draw::copy_rect;
 pub use read::GridRead;
 pub use write::GridWrite;

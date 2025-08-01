@@ -1,4 +1,7 @@
-use crate::core::{GridError, Layout, Pos, Rect};
+use crate::{
+    core::{GridError, Layout, Pos, Rect},
+    ops::{GridRead, convert::Blended},
+};
 
 /// Write elements to a 2-dimensional grid position.
 pub trait GridWrite {
@@ -73,6 +76,37 @@ pub trait GridWrite {
         Self::Element: Copy,
     {
         self.fill_rect(dst, |_| value);
+    }
+
+    /// Creates a blended version of this grid, applying a blend function when setting elements.
+    ///
+    /// This is useful for operations like blending colors or combining values.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// use grixy::{core::Pos, ops::{GridRead, GridWrite}, buf::GridBuf};
+    ///
+    /// let mut grid = GridBuf::new_filled(3, 3, 1);
+    /// let blend_fn = |current: &i32, new: i32| current + new;
+    /// let mut blended = grid.blend(blend_fn);
+    ///
+    /// blended.set(Pos::new(1, 1), 5).unwrap();
+    /// assert_eq!(blended.get(Pos::new(1, 1)), Some(&6));
+    /// ```
+    fn blend<F>(&mut self, blend_fn: F) -> Blended<'_, Self, F>
+    where
+        Self: Sized,
+        Self: GridRead,
+        F: Fn(
+            <Self as GridRead>::Element<'_>,
+            <Self as GridWrite>::Element,
+        ) -> <Self as GridWrite>::Element,
+    {
+        Blended {
+            source: self,
+            blend_fn,
+        }
     }
 }
 

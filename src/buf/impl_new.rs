@@ -124,3 +124,27 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    extern crate alloc;
+
+    use super::*;
+    use crate::core::Pos;
+    use alloc::vec;
+
+    #[test]
+    #[should_panic(expected = "Buffer length must be a multiple of width")]
+    fn test_from_buffer_panics_on_invalid_length() {
+        let buffer = vec![1, 2, 3];
+        let _grid: GridBuf<_, _> = GridBuf::from_buffer(buffer, 2);
+    }
+
+    #[test]
+    fn new_filled_with_layout() {
+        let grid = GridBuf::<u8, alloc::vec::Vec<u8>, RowMajor>::new_filled_with_layout(3, 2, 42);
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
+        assert_eq!(grid.get(Pos::new(2, 1)), Some(&42));
+        assert_eq!(grid.get(Pos::new(3, 1)), None); // Out of bounds
+    }
+}

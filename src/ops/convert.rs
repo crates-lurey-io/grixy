@@ -3,8 +3,8 @@
 //! These types are provided as part of the public API, but all usage is through [`GridRead`].
 
 use crate::{
-    core::{Pos, Rect},
-    ops::GridRead,
+    core::{GridError, Pos, Rect},
+    ops::{GridRead, GridWrite},
 };
 
 /// Copies elements from another grid that returns copyable references.
@@ -141,6 +141,54 @@ where
     }
 }
 
+/// Blends write operations to a grid.
+///
+/// See [`GridWrite::blend`] for usage.
+pub struct Blended<'a, G, F>
+where
+    G: GridRead + GridWrite,
+    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
+{
+    pub(super) source: &'a mut G,
+    pub(super) blend_fn: F,
+}
+
+impl<G, F> GridWrite for Blended<'_, G, F>
+where
+    G: GridRead + GridWrite,
+    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
+    <G as GridWrite>::Element: Copy,
+{
+    type Element = <G as GridWrite>::Element;
+    type Layout = <G as GridWrite>::Layout;
+
+    fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
+        let current = self.source.get(pos).ok_or(GridError)?;
+        self.source.set(pos, (self.blend_fn)(current, value))
+    }
+}
+
+impl<G, F> GridRead for Blended<'_, G, F>
+where
+    G: GridRead + GridWrite,
+    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
+{
+    type Element<'b>
+        = <G as GridRead>::Element<'b>
+    where
+        Self: 'b;
+
+    type Layout = <G as GridRead>::Layout;
+
+    fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
+        self.source.get(pos)
+    }
+
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        self.source.iter_rect(bounds)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -221,5 +269,25 @@ mod tests {
             &3, &3, &4, &4,
             &3, &3, &4, &4,
         ]);
+    }
+
+    #[test]
+    fn grid_write_blended_set() {
+        let mut grid = GridBuf::new_filled(3, 3, 0);
+        let mut blended = grid.blend(|current, new| current + new);
+        blended.set(Pos::new(1, 1), 5).unwrap();
+        assert_eq!(blended.get(Pos::new(1, 1)), Some(&5));
+        blended.set(Pos::new(1, 1), 3).unwrap();
+        assert_eq!(blended.get(Pos::new(1, 1)), Some(&8));
+    }
+
+    #[test]
+    fn grid_write_blended_iter_rect() {
+        let mut grid = GridBuf::new_filled(3, 3, 0);
+        let mut blended = grid.blend(|current, new| current + new);
+        blended.set(Pos::new(1, 1), 5).unwrap();
+        blended.set(Pos::new(2, 2), 3).unwrap();
+        let elements: Vec<_> = blended.iter_rect(Rect::from_ltwh(0, 0, 3, 3)).collect();
+        assert_eq!(elements, vec![&0, &0, &0, &0, &5, &0, &0, &0, &3]);
     }
 }
