@@ -89,11 +89,19 @@ impl<T> IntoIterator for NaiveGrid<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::Pos;
+
     use super::*;
 
     #[test]
     #[should_panic(expected = "Cells length does not match grid size")]
     fn test_with_cells_panics_on_invalid_length() {
         let _grid = NaiveGrid::<u8>::with_cells(2, 2, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn get_none() {
+        let grid = NaiveGrid::<u8>::new(3, 3);
+        assert_eq!(grid.get(Pos::new(3, 3)), None);
     }
 }

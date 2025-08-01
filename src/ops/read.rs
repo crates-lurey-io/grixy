@@ -191,7 +191,7 @@ mod tests {
 
     use super::*;
 
-    use crate::core::RowMajor;
+    use crate::{buf::GridBuf, core::RowMajor};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {
@@ -252,5 +252,21 @@ mod tests {
             .iter_rect(Rect::from_ltwh(3, 3, 2, 2))
             .collect::<Vec<_>>();
         assert!(cells.is_empty());
+    }
+
+    #[test]
+    fn collect() {
+        let grid = GridBuf::new_filled(3, 3, 1);
+        let collected = grid.copied().collect::<Vec<_>>();
+        assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
+        assert_eq!(collected.get(Pos::new(3, 3)), None);
+    }
+
+    #[test]
+    fn iter() {
+        let grid = GridBuf::new_filled(3, 3, 1);
+        let collected: Vec<_> = grid.copied().iter().collect();
+        assert_eq!(collected.len(), 9);
+        assert!(collected.iter().all(|&x| x == 1));
     }
 }

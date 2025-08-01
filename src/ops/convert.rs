@@ -379,7 +379,8 @@ mod tests {
     #[test]
     fn grid_blended_size() {
         let mut grid = GridBuf::<u8, _, _>::new(10, 10);
-        let blended = grid.blend(|current, new| current + new);
+        let mut blended = grid.blend(|current, new| current + new);
+        blended.set(Pos::new(1, 1), 5).unwrap();
         assert_eq!(blended.width(), 10);
         assert_eq!(blended.height(), 10);
     }
