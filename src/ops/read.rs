@@ -152,7 +152,7 @@ pub trait GridRead {
     /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let collected = grid.copied.collect::<Vec<_>>();
+    /// let collected = grid.copied().collect::<Vec<_>>();
     /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```
