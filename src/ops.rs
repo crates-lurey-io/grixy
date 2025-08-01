@@ -18,7 +18,7 @@
 //! Implementing [`GridWrite`] to write to a grid:
 //!
 //! ```rust
-//! use grixy::{core::{GridError, Pos}, buf::VecGrid, ops::GridWrite};
+//! use grixy::{core::{GridError, Pos, RowMajor}, buf::VecGrid, ops::GridWrite};
 //!
 //! struct MyGrid {
 //!    grid: Vec<u8>,
@@ -27,6 +27,7 @@
 //!
 //! impl GridWrite for MyGrid {
 //!    type Element = u8;
+//!    type Layout = RowMajor;
 //!
 //!    fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
 //!        if pos.x >= self.width || pos.y >= self.grid.len() / self.width {

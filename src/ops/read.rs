@@ -122,10 +122,13 @@ pub trait GridRead {
     /// ```rust
     /// use grixy::{core::Pos, ops::GridRead, buf::VecGrid};
     ///
-    /// let grid = VecGrid::new_filled_row_major(4, 4, 1);
+    /// let grid = VecGrid::new_filled_row_major(2, 2, 1);
     /// let scaled = grid.scale(2);
+    /// assert_eq!(scaled.get(Pos::new(0, 0)), Some(&1));
     /// assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
-    /// assert_eq!(scaled.get(Pos::new(2, 2)), None);
+    /// assert_eq!(scaled.get(Pos::new(2, 2)), Some(&1));
+    /// assert_eq!(scaled.get(Pos::new(3, 3)), Some(&1));
+    /// assert_eq!(scaled.get(Pos::new(4, 4)), None);
     /// ```
     fn scale(&self, factor: usize) -> Scaled<'_, Self>
     where
