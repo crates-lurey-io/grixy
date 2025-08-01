@@ -10,12 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `GridDraw` to `grixy::ops`
+- `map` and `copied` to `GridRead`
 - Added `grid::ops::blend` for example blend functions
 - Added `grixy::prelude` module for common imports
 - Added `VecGrid::new_generate` method to create a grid with a function
 
 ### Changed
 
+- `GridRead` and `GridReadUnchecked` use generic associated types (GATs) for
+  `Element`, which allows more flexiblity in how either references or owned
+  values are returned. This capability is used to allow a `.map` method to
+  lazily transform the grid's elements on read.
 - Renamed `fill_rect_from` to `fill_rect_iter`
 - Renamed `grixy::grid` to `grixy::ops`
 - Moved all unchecked operations to `grixy::ops::unchecked`
@@ -23,7 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Most of the convenience types and constructors from `GridBuf`
 - `GridBase`; now every Grid trait has it's own `Element` type
+- `Rect::contains_pos` method; use `Rect::contains` instead
+- The `bytemuck` feature; `GridBuf` already supports `AsRef<[T]>` which is
+  sufficient to use `bytemuck` when `T` is `Pod`.
 
 ## [0.4.0] - 2025-07-19
 

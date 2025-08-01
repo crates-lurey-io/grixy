@@ -22,14 +22,9 @@ pub unsafe trait TrustedSizeGrid {
         }
     }
 
-    /// Returns whether the given coordinates are valid for this grid.
-    fn contains(&self, x: usize, y: usize) -> bool {
-        x < self.width() && y < self.height()
-    }
-
     /// Returns whether the given position is valid for this grid.
-    fn contains_pos(&self, pos: Pos) -> bool {
-        self.contains(pos.x, pos.y)
+    fn contains(&self, pos: Pos) -> bool {
+        pos.x < self.width() && pos.y < self.height()
     }
 }
 
@@ -73,8 +68,7 @@ mod tests {
             width: 10,
             height: 5,
         };
-        assert!(grid.contains(5, 3));
-        assert!(grid.contains_pos(Pos::new(5, 3)));
+        assert!(grid.contains(Pos::new(5, 3)));
     }
 
     #[test]
@@ -83,8 +77,7 @@ mod tests {
             width: 10,
             height: 5,
         };
-        assert!(!grid.contains(10, 3));
-        assert!(!grid.contains_pos(Pos::new(10, 3)));
+        assert!(!grid.contains(Pos::new(10, 3)));
     }
 
     #[test]
@@ -93,7 +86,6 @@ mod tests {
             width: 10,
             height: 5,
         };
-        assert!(!grid.contains(5, 5));
-        assert!(!grid.contains_pos(Pos::new(5, 5)));
+        assert!(!grid.contains(Pos::new(5, 5)));
     }
 }

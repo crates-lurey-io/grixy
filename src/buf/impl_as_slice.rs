@@ -20,18 +20,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{buf::VecGrid, core::Pos};
+    use crate::{buf::GridBuf, core::Pos, ops::GridRead as _};
 
     #[test]
     fn vec_u8_as_ref() {
-        let grid = VecGrid::new(10, 10);
+        let grid = GridBuf::<u8, _, _>::new(10, 10);
         let slice: &[u8] = grid.as_ref();
         assert_eq!(slice.len(), 100);
     }
 
     #[test]
     fn vec_u8_as_mut() {
-        let mut grid = VecGrid::new(10, 10);
+        let mut grid = GridBuf::<u8, _, _>::new(10, 10);
         let slice: &mut [u8] = grid.as_mut();
         assert_eq!(slice.len(), 100);
         slice[0] = 42;

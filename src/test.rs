@@ -2,12 +2,10 @@
 
 extern crate alloc;
 
-use core::ops::Add;
-
 use alloc::{vec, vec::Vec};
 
 use crate::{
-    core::GridError,
+    core::{GridError, RowMajor},
     ops::{GridRead, GridWrite},
 };
 
@@ -50,9 +48,14 @@ impl<T> NaiveGrid<T> {
 }
 
 impl<T> GridRead for NaiveGrid<T> {
-    type Element = T;
+    type Element<'a>
+        = &'a T
+    where
+        Self: 'a;
 
-    fn get(&self, pos: crate::core::Pos) -> Option<&Self::Element> {
+    type Layout = RowMajor;
+
+    fn get(&self, pos: crate::core::Pos) -> Option<Self::Element<'_>> {
         if pos.x < self.width && pos.y < self.height {
             Some(&self.cells[pos.y * self.width + pos.x])
         } else {
@@ -63,6 +66,7 @@ impl<T> GridRead for NaiveGrid<T> {
 
 impl<T> GridWrite for NaiveGrid<T> {
     type Element = T;
+    type Layout = RowMajor;
 
     fn set(&mut self, pos: crate::core::Pos, value: Self::Element) -> Result<(), GridError> {
         if pos.x < self.width && pos.y < self.height {
@@ -83,10 +87,13 @@ impl<T> IntoIterator for NaiveGrid<T> {
     }
 }
 
-/// A blend function that adds two elements together.
-pub fn blend_add<S, T>(src: S, dst: T) -> T
-where
-    S: Add<T, Output = T>,
-{
-    src + dst
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Cells length does not match grid size")]
+    fn test_with_cells_panics_on_invalid_length() {
+        let _grid = NaiveGrid::<u8>::with_cells(2, 2, vec![1, 2, 3]);
+    }
 }

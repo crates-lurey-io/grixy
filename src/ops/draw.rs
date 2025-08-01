@@ -1,381 +1,47 @@
 use crate::{
-    core::{GridError, HasSize, Layout, Pos, Rect, RowMajor},
+    core::{Pos, Rect},
     ops::{GridRead, GridWrite},
 };
 
-pub mod blend;
-
-/// Perform draw-like operations by writing to a 2-dimensional grid.
+/// Copies a rectangular region from a source grid to a destination grid.
 ///
-/// [`GridDraw`] does not have a blanket implementation for [`GridWrite`] because the operations are
-/// more complex than simple writes, and optimizations are often needed for specific grid types
-/// (e.g., blitting, scaling), but all methods are automatically derived from [`GridWrite`] for
-/// ease of use.
-pub trait GridDraw: GridWrite
-where
-    Self::Element: Copy,
-{
-    /// Copies a rectangular `src_rect` from a `src` grid.
-    ///
-    /// The operation starts by copying the top-left corner to the specified `dst_pos`; if there
-    /// is insufficient space in the current grid, or the `src_rect` is out of bounds of the `src`
-    /// grid, those individual cells are ignored and not copied to/from.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation reads each cell from the `src` grid and writes it to the
-    /// destination grid at the specified `dst_pos`, ignoring any cells (on either read or write)
-    /// that are out of bounds. This is a straightforward implementation that may not be optimal for
-    /// all grid types.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
-    ///
-    /// let src = VecGrid::new_filled_row_major(3, 3, 1);
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
-    ///
-    /// // Copy a 3x3 region from the source grid to the destination grid at position (2, 2).
-    /// dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
-    ///
-    /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
-    ///            &[0, 0, 0, 0, 0,
-    ///              0, 0, 0, 0, 0,
-    ///              0, 0, 1, 1, 1,
-    ///              0, 0, 1, 1, 1,
-    ///              0, 0, 1, 1, 1]);
-    /// ```
-    fn copy_rect(
-        &mut self,
-        src: &impl GridRead<Element = Self::Element>,
-        src_rect: Rect,
-        dst_pos: Pos,
-    ) {
-        for pos in src_rect.into_iter_row_major() {
-            if let Some(cell) = src.get(pos + src_rect.top_left()) {
-                let _ = self.set(pos + dst_pos, *cell);
-            }
-        }
-    }
-
-    /// Copies a rectangular `src_rect` from a `src` grid, scaling the copy by a specified factor.
-    ///
-    /// The operation starts by copying the top-left corner to the specified `dst_pos`, scaling each
-    /// cell by the `scale` factor. If there is insufficient space in the current grid or the
-    /// `src_rect` is out of bounds of the `src` grid, those individual cells are ignored and not
-    /// copied to/from.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation reads each cell from the `src` grid, scales it by the `scale`
-    /// factor, and writes it to the destination grid at the specified `dst_pos`, ignoring
-    /// any cells (on either read or write) that are out of bounds. This is a straightforward
-    /// implementation that may not be optimal for all grid types.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
-    ///
-    /// let src = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
-    ///
-    /// assert_eq!(src.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).copied().collect::<Vec<_>>(),
-    ///           &[1, 2,
-    ///             3, 4]);
-    ///
-    /// // Copy a 2x2 region from the source grid to the destination grid at position (1, 1),
-    /// // scaling each cell by a factor of 2.
-    /// dst.copy_rect_scaled(&src, Rect::from_ltwh(0, 0, 2, 2), Rect::from_ltwh(1, 1, 4, 4));
-    ///
-    /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
-    ///            &[0, 0, 0, 0, 0,
-    ///              0, 1, 1, 2, 2,
-    ///              0, 1, 1, 2, 2,
-    ///              0, 3, 3, 4, 4,
-    ///              0, 3, 3, 4, 4]);
-    /// ```
-    fn copy_rect_scaled(
-        &mut self,
-        src: &impl GridRead<Element = Self::Element>,
-        src_rect: Rect,
-        dst_rect: Rect,
-    ) {
-        if src_rect.is_empty() || dst_rect.is_empty() {
-            return;
-        }
-        if src_rect.size() == dst_rect.size() {
-            return self.copy_rect(src, src_rect, dst_rect.top_left());
-        }
-        for y in 0..dst_rect.height() {
-            for x in 0..dst_rect.width() {
-                let src_x = x * src_rect.width() / dst_rect.width();
-                let src_y = y * src_rect.height() / dst_rect.height();
-
-                let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
-                let dst_pos = dst_rect.top_left() + Pos::new(x, y);
-
-                if let Some(value) = src.get(src_pos) {
-                    let _ = self.set(dst_pos, *value);
-                }
-            }
-        }
-    }
-
-    /// Copies a rectangular region from a source grid to the destination grid, applying a blend
-    /// function.
-    ///
-    /// The operation starts by copying the top-left corner to the specified `dst_pos`, blending
-    /// each cell from the source grid with the corresponding cell in the destination grid. If there
-    /// is insufficient space in the current grid or the `src_rect` is out of bounds of the `src`
-    /// grid, those individual cells are ignored and not copied to/from.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation reads each cell from the `src` grid, applies the blend function
-    /// to the corresponding cell in the destination grid, and writes the result to the destination
-    /// grid at the specified `dst_pos`, ignoring any cells (on either read or write) that are out
-    /// of bounds. This is a straightforward implementation that may not be optimal for all grid
-    /// types.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
-    ///
-    /// let src = VecGrid::new_filled_row_major(3, 3, 1);
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 2);
-    ///
-    /// dst.copy_rect_blended(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2), &|s, d| s + d);
-    ///
-    /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
-    ///           &[2, 2, 2, 2, 2,
-    ///             2, 2, 2, 2, 2,
-    ///             2, 2, 3, 3, 3,
-    ///             2, 2, 3, 3, 3,
-    ///             2, 2, 3, 3, 3]);
-    /// ```
-    fn copy_rect_blended<S, D>(
-        &mut self,
-        src: &impl GridRead<Element = S>,
-        src_rect: Rect,
-        dst_pos: Pos,
-        blend: &impl Fn(S, D) -> D,
-    ) where
-        Self: GridRead<Element = D>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        for pos in src_rect.into_iter_row_major() {
-            let src_pos = pos + src_rect.top_left();
-            let dst_pos_abs = pos + dst_pos;
-            if let (Some(&src_cell), Some(&dst_cell)) = (src.get(src_pos), self.get(dst_pos_abs)) {
-                let blended = (blend)(src_cell, dst_cell);
-                let _ = self.set(dst_pos_abs, blended);
-            }
-        }
-    }
-
-    /// Copies a rectangular `src_rect` from a `src` grid, scaling the copy by a specified factor
-    /// and applying a blend function.
-    ///
-    /// The operation starts by copying the top-left corner to the specified `dst_pos`, scaling each
-    /// cell by the `scale` factor and blending it with the corresponding cell in the destination
-    /// grid. If there is insufficient space in the current grid or the `src_rect` is out of bounds
-    /// of the `src` grid, those individual cells are ignored and not copied to/from.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation reads each cell from the `src` grid, scales it by the `scale`
-    /// factor, applies the blend function to the corresponding cell in the destination grid, and
-    /// writes the result to the destination grid at the specified `dst_pos`, ignoring any cells
-    /// (on either read or write) that are out of bounds. This is a straightforward implementation
-    /// that may not be optimal for all grid types.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::{Pos, Rect}, buf::VecGrid, ops::{GridDraw, GridRead}};
-    ///
-    /// let src = VecGrid::with_buffer_row_major(2, 2, vec![1, 2, 3, 4]).unwrap();
-    /// let mut dst = VecGrid::new_filled_row_major(5, 5, 0);
-    ///
-    /// dst.copy_rect_scaled_blended(
-    ///   &src,
-    ///     Rect::from_ltwh(0, 0, 2, 2),
-    ///     Rect::from_ltwh(1, 1, 4, 4),
-    ///     &|s, d| s + d,
-    /// );
-    ///
-    /// assert_eq!(dst.iter_rect(Rect::from_ltwh(0, 0, 5, 5)).copied().collect::<Vec<_>>(),
-    ///           &[0, 0, 0, 0, 0,
-    ///             0, 1, 1, 2, 2,
-    ///             0, 1, 1, 2, 2,
-    ///             0, 3, 3, 4, 4,
-    ///             0, 3, 3, 4, 4]);
-    /// ```
-    fn copy_rect_scaled_blended<S, D>(
-        &mut self,
-        src: &impl GridRead<Element = S>,
-        src_rect: Rect,
-        dst_rect: Rect,
-        blend: &impl Fn(S, D) -> D,
-    ) where
-        Self: GridRead<Element = D>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        if src_rect.is_empty() || dst_rect.is_empty() {
-            return;
-        }
-        if src_rect.size() == dst_rect.size() {
-            return self.copy_rect_blended(src, src_rect, dst_rect.top_left(), blend);
-        }
-        for y in 0..dst_rect.height() {
-            for x in 0..dst_rect.width() {
-                let src_x = x * src_rect.width() / dst_rect.width();
-                let src_y = y * src_rect.height() / dst_rect.height();
-
-                let src_pos = src_rect.top_left() + Pos::new(src_x, src_y);
-                let dst_pos = dst_rect.top_left() + Pos::new(x, y);
-
-                if let (Some(&src_cell), Some(&dst_cell)) = (src.get(src_pos), self.get(dst_pos)) {
-                    let blended = (blend)(src_cell, dst_cell);
-                    let _ = self.set(dst_pos, blended);
-                }
-            }
-        }
-    }
-
-    /// Sets the element at a specified position, applying a blend function.
-    ///
-    /// The current element at the destination position is blended with the source element.
-    ///
-    /// ## Blending
-    ///
-    /// The blend function takes the current element at the destination position and the new value,
-    /// and returns the blended value that will be set at the destination position.
-    ///
-    /// Some example blend functions are provided in the [`blend`] module.
-    ///
-    /// ## Errors
-    ///
-    /// If the position is out of bounds, this method returns an error.
-    fn set_blended<S, D>(
-        &mut self,
-        pos: Pos,
-        value: D,
-        blend: &impl Fn(S, D) -> D,
-    ) -> Result<(), crate::core::GridError>
-    where
-        Self: GridRead<Element = S>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        let src = *self.get(pos).ok_or(GridError)?;
-        let dst = value;
-        let blended = (blend)(src, dst);
-        self.set(pos, blended)
-    }
-
-    /// Sets elements within a rectangular region of the grid, applying a blend function.
-    ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
-    ///
-    /// If the provided iterator has fewer elements than the rectangle, the remaining elements will
-    /// not be set.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation uses [`RowMajor::iter_pos`][] to iterate over the rectangle,
-    /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
-    /// checking, etc.).
-    ///
-    /// [`RowMajor::iter_pos`]: `crate::core::RowMajor::iter_pos`
-    fn fill_rect_blended<S, D>(
-        &mut self,
-        bounds: Rect,
-        mut f: impl FnMut(Pos) -> D,
-        blend: &impl Fn(S, D) -> D,
-    ) where
-        Self: GridRead<Element = S>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        for pos in bounds.into_iter_row_major() {
-            let _ = self.set_blended(pos, f(pos), blend);
-        }
-    }
-
-    /// Sets elements within a rectangular region of the grid, applying a blend function.
-    ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
-    ///
-    /// If the provided iterator has fewer elements than the rectangle, the remaining elements will
-    /// not be set.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
-    /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
-    /// checking, etc.).
-    fn fill_rect_blended_iter<S, D>(
-        &mut self,
-        dst: Rect,
-        iter: impl IntoIterator<Item = D>,
-        blend: &impl Fn(S, D) -> D,
-    ) where
-        Self: GridRead<Element = S>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        for (pos, value) in RowMajor::iter_pos(dst).zip(iter) {
-            let _ = self.set_blended(pos, value, blend);
-        }
-    }
-
-    /// Sets elements within a rectangular region of the grid, applying a blend function.
-    ///
-    ///
-    /// Elements are set in an order agreeable to the grid's internal layout, which defaults to
-    /// [`RowMajor`], but can be overridden. The bounding rectangle is treated as _exclusive_ of the
-    /// right and bottom edges.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation uses [`RowMajor::iter_pos`] to iterate over the rectangle,
-    /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear writes, reduced bounds
-    /// checking, etc.).
-    fn fill_rect_blended_solid<S, D>(&mut self, dst: Rect, value: D, blend: &impl Fn(S, D) -> D)
-    where
-        Self: GridRead<Element = S>,
-        Self: GridWrite<Element = D>,
-        S: Copy,
-    {
-        for pos in dst.into_iter_row_major() {
-            let _ = self.set_blended(pos, value, blend);
-        }
-    }
+/// The operation starts by copying the top-left corner to the specified offset; if there is
+/// insufficient space in the current grid, or the rectangle is out of bounds of the source grid,
+/// those individual cells are ignored and not copied to/from.
+///
+/// ## Examples
+///
+/// ```rust
+/// use grixy::{core::{Pos, Rect}, ops::{copy_rect, GridRead, GridWrite}, buf::GridBuf};
+///
+/// let src = GridBuf::new_filled(3, 3, 1);
+/// let mut dst = GridBuf::new(5, 5);
+/// copy_rect(&src.copied(), &mut dst, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
+///
+/// assert_eq!(dst.get(Pos::new(2, 2)), Some(&1));
+/// assert_eq!(dst.get(Pos::new(4, 4)), Some(&1));
+/// assert_eq!(dst.get(Pos::new(5, 5)), None);
+/// ```
+pub fn copy_rect<'s, E>(
+    src: &'s impl GridRead<Element<'s> = E>,
+    dst: &mut impl GridWrite<Element = E>,
+    from: Rect,
+    to: Pos,
+) {
+    dst.fill_rect_iter(
+        Rect::from_ltwh(to.x, to.y, from.width(), from.height()),
+        src.iter_rect(from),
+    );
 }
 
 #[cfg(test)]
 mod tests {
     extern crate alloc;
 
-    use crate::test::{NaiveGrid, blend_add};
+    use crate::test::NaiveGrid;
     use alloc::vec::Vec;
 
     use super::*;
-
-    impl<T> GridDraw for NaiveGrid<T> where T: Copy {}
 
     #[test]
     fn copy_rect_within_bounds() {
@@ -387,7 +53,12 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(2, 2));
+        copy_rect(
+            &src.copied(),
+            &mut dst,
+            Rect::from_ltwh(0, 0, 3, 3),
+            Pos::new(2, 2),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -410,7 +81,12 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(4, 4));
+        copy_rect(
+            &src.copied(),
+            &mut dst,
+            Rect::from_ltwh(0, 0, 3, 3),
+            Pos::new(4, 4),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -433,7 +109,12 @@ mod tests {
         ]);
 
         let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect(&src, Rect::from_ltwh(0, 0, 3, 3), Pos::new(6, 6));
+        copy_rect(
+            &src.copied(),
+            &mut dst,
+            Rect::from_ltwh(0, 0, 3, 3),
+            Pos::new(6, 6),
+        );
 
         #[rustfmt::skip]
         assert_eq!(dst.into_iter().collect::<Vec<_>>(),
@@ -444,200 +125,5 @@ mod tests {
             0, 0, 0, 0, 0, 
             0, 0, 0, 0, 0,
         ]);
-    }
-
-    #[test]
-    fn copy_rect_scaled_0_noop() {
-        let src = NaiveGrid::<i32>::with_cells(3, 3, [1, 1, 1, 1, 1, 1, 1, 1, 1]);
-
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(
-            &src,
-            Rect::from_ltwh(0, 0, 3, 3),
-            Rect::from_ltwh(2, 2, 0, 0),
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(dst.into_iter().collect::<Vec<_>>(),
-        &[
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-        ]);
-    }
-
-    #[test]
-    fn copy_rect_scaled_1_no_scale() {
-        let src = NaiveGrid::<i32>::with_cells(3, 3, [1, 1, 1, 1, 1, 1, 1, 1, 1]);
-
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(
-            &src,
-            Rect::from_ltwh(0, 0, 3, 3),
-            Rect::from_ltwh(2, 2, 3, 3),
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(dst.into_iter().collect::<Vec<_>>(),
-        &[
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 1, 1, 1,
-            0, 0, 1, 1, 1,
-            0, 0, 1, 1, 1,
-        ]);
-    }
-
-    #[test]
-    fn copy_rect_scaled_2x2_to_4x4() {
-        let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
-
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(
-            &src,
-            Rect::from_ltwh(0, 0, 2, 2),
-            Rect::from_ltwh(1, 1, 4, 4),
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(dst.into_iter().collect::<Vec<_>>(),
-        &[
-            0, 0, 0, 0, 0,
-            0, 1, 1, 2, 2,
-            0, 1, 1, 2, 2,
-            0, 3, 3, 4, 4,
-            0, 3, 3, 4, 4,
-        ]);
-    }
-
-    #[test]
-    fn copy_rect_scaled_2x2_to_4x4_partially_out_of_bounds() {
-        let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
-
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(
-            &src,
-            Rect::from_ltwh(0, 0, 2, 2),
-            Rect::from_ltwh(2, 2, 4, 4),
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(dst.into_iter().collect::<Vec<_>>(),
-        &[
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 1, 1, 2,
-            0, 0, 1, 1, 2,
-            0, 0, 3, 3, 4,
-        ]);
-    }
-
-    #[test]
-    fn copy_rect_scaled_2x2_to_4x4_completely_out_of_bounds() {
-        let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
-
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled(
-            &src,
-            Rect::from_ltwh(0, 0, 2, 2),
-            Rect::from_ltwh(6, 6, 4, 4),
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(dst.into_iter().collect::<Vec<_>>(),
-        &[
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-        ]);
-    }
-
-    #[test]
-    fn set_with_blend_test() {
-        let mut grid = NaiveGrid::<i32>::with_cells(1, 1, [1]);
-        let _ = grid.set_blended(Pos::new(0, 0), 2, &blend_add);
-        assert_eq!(grid.get(Pos::new(0, 0)), Some(&3));
-    }
-
-    #[test]
-    fn fill_rect_blended_test() {
-        let mut grid = NaiveGrid::<i32>::new(3, 3);
-        let value = 5;
-        let blend = &blend_add;
-        grid.fill_rect_blended(Rect::from_ltwh(0, 0, 3, 3), |_| value, blend);
-        assert!(grid.into_iter().all(|v| v == 5));
-    }
-
-    #[test]
-    fn fill_rect_blended_iter_test() {
-        let mut grid = NaiveGrid::<i32>::new(3, 3);
-        let values = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let blend = &blend_add;
-        grid.fill_rect_blended_iter(Rect::from_ltwh(0, 0, 3, 3), values, blend);
-        assert_eq!(
-            grid.into_iter().collect::<Vec<_>>(),
-            &[1, 2, 3, 4, 5, 6, 7, 8, 9]
-        );
-    }
-
-    #[test]
-    fn fill_rect_blended_solid_test() {
-        let mut grid = NaiveGrid::<i32>::new(3, 3);
-        let value = 42;
-        let blend = &blend_add;
-        grid.fill_rect_blended_solid(Rect::from_ltwh(0, 0, 3, 3), value, blend);
-        assert!(grid.into_iter().all(|v| v == 42));
-    }
-
-    #[test]
-    fn copy_rect_blended_test() {
-        let src = NaiveGrid::<i32>::with_cells(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_blended(
-            &src,
-            Rect::from_ltwh(0, 0, 3, 3),
-            Pos::new(2, 2),
-            &blend_add,
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(
-            dst.into_iter().collect::<Vec<_>>(),
-            &[
-                0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0,
-                0, 0, 1, 2, 3,
-                0, 0, 4, 5, 6,
-                0, 0, 7, 8, 9
-            ]
-        );
-    }
-
-    #[test]
-    fn copy_rect_scaled_blended_test() {
-        let src = NaiveGrid::<i32>::with_cells(2, 2, [1, 2, 3, 4]);
-        let mut dst = NaiveGrid::<i32>::new(5, 5);
-        dst.copy_rect_scaled_blended(
-            &src,
-            Rect::from_ltwh(0, 0, 2, 2),
-            Rect::from_ltwh(1, 1, 4, 4),
-            &blend_add,
-        );
-
-        #[rustfmt::skip]
-        assert_eq!(
-            dst.into_iter().collect::<Vec<_>>(),
-            &[
-                0, 0, 0, 0, 0,      
-                0, 1, 1, 2, 2,
-                0, 1, 1, 2, 2,
-                0, 3, 3, 4, 4,
-                0, 3, 3, 4, 4,
-            ]
-        );
     }
 }

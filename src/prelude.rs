@@ -3,17 +3,14 @@
 //! ```rust
 //! use grixy::prelude::*;
 //!
-//! let mut grid = VecGrid::new_row_major(10, 10);
-//! grid.set(Pos::new(5, 5), 42);
+//! let mut grid = GridBuf::<u8, _>::new(5, 5);
+//! grid.set(Pos::new(4, 4), 42);
 //!
-//! assert_eq!(grid.get(Pos::new(5, 5)), Some(&42));
+//! assert_eq!(grid.get(Pos::new(4, 4)), Some(&42));
 //! ```
 
-#[cfg(feature = "alloc")]
-pub use crate::buf::VecGrid;
-
 #[cfg(feature = "buffer")]
-pub use crate::buf::{ArrayGrid, GridBuf, SliceGrid, SliceMutGrid};
+pub use crate::buf::GridBuf;
 
 pub use crate::core::{HasSize as _, Pos, Rect, RowMajor, Size};
 pub use crate::ops::{GridRead as _, GridWrite as _};

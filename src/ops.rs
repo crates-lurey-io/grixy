@@ -9,16 +9,16 @@
 //! Using [`GridRead`] to read from a grid:
 //!
 //! ```rust
-//! use grixy::{core::Pos, buf::VecGrid, ops::GridRead};
+//! use grixy::{core::Pos, buf::GridBuf, ops::GridRead};
 //!
-//! let grid = VecGrid::new_filled_row_major(10, 10, 42);
+//! let grid = GridBuf::new_filled(10, 10, 42);
 //! assert_eq!(grid.get(Pos::new(5, 5)), Some(&42));
 //! ```
 //!
 //! Implementing [`GridWrite`] to write to a grid:
 //!
 //! ```rust
-//! use grixy::{core::{GridError, Pos}, buf::VecGrid, ops::GridWrite};
+//! use grixy::{core::{GridError, Pos, RowMajor}, ops::GridWrite};
 //!
 //! struct MyGrid {
 //!    grid: Vec<u8>,
@@ -27,6 +27,7 @@
 //!
 //! impl GridWrite for MyGrid {
 //!    type Element = u8;
+//!    type Layout = RowMajor;
 //!
 //!    fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
 //!        if pos.x >= self.width || pos.y >= self.grid.len() / self.width {
@@ -47,12 +48,13 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
+pub mod convert;
 pub mod unchecked;
 
 mod draw;
 mod read;
 mod write;
 
-pub use draw::{GridDraw, blend};
+pub use draw::copy_rect;
 pub use read::GridRead;
 pub use write::GridWrite;
