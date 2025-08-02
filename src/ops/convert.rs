@@ -107,10 +107,7 @@ where
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
 ///
 /// See [`GridRead::view`] for usage.
-pub struct Viewed<'a, G>
-where
-    G: GridRead,
-{
+pub struct Viewed<'a, G> {
     pub(super) source: &'a G,
     pub(super) bounds: Rect,
 }
@@ -142,7 +139,7 @@ where
 
 unsafe impl<G> TrustedSizeGrid for Viewed<'_, G>
 where
-    G: TrustedSizeGrid + GridRead,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.bounds.width()
@@ -156,10 +153,7 @@ where
 /// Scales the grid elements using a nearest-neighbor approach.
 ///
 /// See [`GridRead::scale`] for usage.
-pub struct Scaled<'a, G>
-where
-    G: GridRead,
-{
+pub struct Scaled<'a, G> {
     pub(super) source: &'a G,
     pub(super) scale: usize,
 }
@@ -183,7 +177,7 @@ where
 
 unsafe impl<G> TrustedSizeGrid for Scaled<'_, G>
 where
-    G: TrustedSizeGrid + GridRead,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width() * self.scale
