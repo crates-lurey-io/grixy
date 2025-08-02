@@ -206,8 +206,7 @@ where
 
 impl<G, F> GridRead for Blended<'_, G, F>
 where
-    G: GridRead + GridWrite,
-    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
+    G: GridRead,
 {
     type Element<'b>
         = <G as GridRead>::Element<'b>
