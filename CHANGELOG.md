@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- All conversions are now exposed through the `convert` module.
 - Conversions now consume the source grid, rather than borrowing it. This allows
   more fluent chaining of operations, at the cost of needing to use a wrapper
   like `Rc<Grid>` to keep the original grid around

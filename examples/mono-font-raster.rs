@@ -19,13 +19,10 @@ fn main() {
     let scale: usize = input.trim().parse().unwrap_or(1);
 
     // Creates a 2-dimensional view over the bits of the font.
-    let bitm_font = GridBits::<_, _>::from_buffer(IBM_VGA_8X8, 8);
+    let font = GridBits::<_, _>::from_buffer(IBM_VGA_8X8, 8)
+        .map(|bit| if bit { 0xFFFF_FFFFu32 } else { 0xFF00_0000u32 })
+        .scale(scale);
 
-    // Creates a transformed view over the font, where each "on" pixel is an RGBA pixel.
-    let rgba_font = bitm_font.map(|bit| if bit { 0xFFFF_FFFFu32 } else { 0xFF00_0000u32 });
-
-    // Prepare a canvas to draw the fonts on.
-    let scaled_font = rgba_font.scale(scale);
     let mut canvas = grixy::buf::GridBuf::<u32, _>::new(8 * 16 * scale, 8 * 16 * scale);
 
     // Draws each glyph from the font onto the canvas, with 32 (different) glyphs per row.
@@ -35,7 +32,7 @@ fn main() {
 
         // Draws the glyph onto the canvas at the specified position.
         copy_rect(
-            &scaled_font,
+            &font,
             &mut canvas,
             Rect::from_ltwh(0, i * 8 * scale, 8 * scale, 8 * scale),
             Pos::new(x, y),
