@@ -91,6 +91,8 @@ pub trait GridRead {
         Mapped {
             source: self,
             map_fn,
+            _source: PhantomData,
+            _target: PhantomData,
         }
     }
 

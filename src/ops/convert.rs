@@ -54,15 +54,11 @@ where
 /// Transforms elements.
 ///
 /// See [`GridRead::map`] for usage.
-pub struct Mapped<'a, S, F, G, T = S>
-where
-    S: 'a,
-    T: 'a,
-    F: Fn(S) -> T,
-    G: GridRead<Element<'a> = S>,
-{
+pub struct Mapped<'a, S, F, G, T = S> {
     pub(super) source: &'a G,
     pub(super) map_fn: F,
+    pub(super) _source: PhantomData<S>,
+    pub(super) _target: PhantomData<T>,
 }
 
 impl<'a, S, F, G, T> GridRead for Mapped<'a, S, F, G, T>
@@ -88,12 +84,9 @@ where
     }
 }
 
-unsafe impl<'a, S, F, G, T> TrustedSizeGrid for Mapped<'a, S, F, G, T>
+unsafe impl<S, F, G, T> TrustedSizeGrid for Mapped<'_, S, F, G, T>
 where
-    S: 'a,
-    T: 'a,
-    F: Fn(S) -> T,
-    G: TrustedSizeGrid + GridRead<Element<'a> = S>,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
