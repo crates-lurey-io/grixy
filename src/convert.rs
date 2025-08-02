@@ -346,9 +346,30 @@ mod tests {
     }
 
     #[test]
-    fn grid_smart_pointers() {
+    fn grid_rc() {
         use alloc::rc::Rc;
 
         let rc = Rc::new(GridBuf::new_filled(3, 3, 1));
+        let rf = Rc::clone(&rc);
+        let chained = rf
+            .copied()
+            .map(|x| x * 2)
+            .view(Rect::from_ltwh(0, 0, 2, 2))
+            .scale(2);
+        assert_eq!(chained.get(Pos::new(1, 1)), Some(2));
+    }
+
+    #[test]
+    fn grid_arc() {
+        use alloc::sync::Arc;
+
+        let arc = Arc::new(GridBuf::new_filled(3, 3, 1));
+        let af = Arc::clone(&arc);
+        let chained = af
+            .copied()
+            .map(|x| x * 2)
+            .view(Rect::from_ltwh(0, 0, 2, 2))
+            .scale(2);
+        assert_eq!(chained.get(Pos::new(1, 1)), Some(2));
     }
 }
