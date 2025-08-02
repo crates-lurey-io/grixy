@@ -184,11 +184,7 @@ where
 /// Blends write operations to a grid.
 ///
 /// See [`GridWrite::blend`] for usage.
-pub struct Blended<'a, G, F>
-where
-    G: GridRead + GridWrite,
-    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
-{
+pub struct Blended<'a, G, F> {
     pub(super) source: &'a mut G,
     pub(super) blend_fn: F,
 }
@@ -231,11 +227,7 @@ where
 
 unsafe impl<G, F> TrustedSizeGrid for Blended<'_, G, F>
 where
-    G: TrustedSizeGrid + GridRead + GridWrite,
-    F: for<'b> Fn(
-        <G as GridRead>::Element<'b>,
-        <G as GridWrite>::Element,
-    ) -> <G as GridWrite>::Element,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
