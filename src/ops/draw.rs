@@ -12,7 +12,7 @@ use crate::{
 /// ## Examples
 ///
 /// ```rust
-/// use grixy::{core::{Pos, Rect}, ops::{copy_rect, GridRead, GridWrite}, buf::GridBuf};
+/// use grixy::{core::{Pos, Rect}, convert::GridConvertExt as _, ops::{copy_rect, GridRead, GridWrite}, buf::GridBuf};
 ///
 /// let src = GridBuf::new_filled(3, 3, 1);
 /// let mut dst = GridBuf::new(5, 5);

@@ -5,7 +5,9 @@ use crate::{
 
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
 ///
-/// See [`GridRead::view`] for usage.
+/// See [`GridConvertExt::view`][] for usage.
+///
+/// [`GridConvertExt::view`]: crate::convert::GridConvertExt::view
 pub struct Viewed<G> {
     pub(super) source: G,
     pub(super) bounds: Rect,

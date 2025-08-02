@@ -5,7 +5,9 @@ use crate::{
 
 /// Scales the grid elements using a nearest-neighbor approach.
 ///
-/// See [`GridRead::scale`] for usage.
+/// See [`GridConvertExt::scale`][] for usage.
+///
+/// [`GridConvertExt::scale`]: crate::convert::GridConvertExt::scale
 pub struct Scaled<G> {
     pub(super) source: G,
     pub(super) scale: usize,

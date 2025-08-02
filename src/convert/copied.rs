@@ -7,7 +7,9 @@ use crate::{
 
 /// Copies elements from another grid that returns copyable references.
 ///
-/// See [`GridRead::copied`] for usage.
+/// See [`GridConvertExt::copied`][] for usage.
+///
+/// [`GridConvertExt::copied`]: crate::convert::GridConvertExt::copied
 pub struct Copied<T, G> {
     pub(super) source: G,
     pub(super) _element: PhantomData<T>,

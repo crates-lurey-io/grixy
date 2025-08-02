@@ -20,6 +20,9 @@ pub use scaled::Scaled;
 mod viewed;
 pub use viewed::Viewed;
 
+pub mod blend;
+
+/// Extension trait for converting grids into different forms.
 pub trait GridConvertExt: GridRead {
     /// Creates a grid that copies all of its elements.
     ///
@@ -28,7 +31,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
+    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
     ///
     /// // By default, `GridBuf` returns references to its elements (similar to `Vec`).
     /// let grid = GridBuf::new_filled(3, 3, 1);
@@ -56,7 +59,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
+    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let mapped = grid.map(|&x| x * 2);
@@ -81,7 +84,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf, core::Rect};
+    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf, core::Rect};
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
@@ -107,7 +110,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
+    /// use grixy::{core::Pos,convert::GridConvertExt as _,  ops::GridRead, buf::GridBuf};
     ///
     /// let grid = GridBuf::new_filled(2, 2, 1);
     /// let scaled = grid.scale(2);
@@ -134,7 +137,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
+    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let collected = grid.copied().collect::<Vec<_>>();
@@ -163,7 +166,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, ops::{GridRead, GridWrite}, buf::GridBuf};
+    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::{GridRead, GridWrite}, buf::GridBuf};
     ///
     /// let mut grid = GridBuf::new_filled(3, 3, 1);
     /// let blend_fn = |current: &i32, new: i32| current + new;

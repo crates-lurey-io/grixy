@@ -5,7 +5,9 @@ use crate::{
 
 /// Blends write operations to a grid.
 ///
-/// See [`GridWrite::blend`] for usage.
+/// See [`GridConvertExt::blend`][] for usage.
+///
+/// [`GridConvertExt::blend`]: crate::convert::GridConvertExt::blend
 pub struct Blended<'a, G, F> {
     pub(super) source: &'a mut G,
     pub(super) blend_fn: F,
