@@ -38,10 +38,9 @@ where
     }
 }
 
-unsafe impl<'a, T, G> TrustedSizeGrid for Copied<'a, T, G>
+unsafe impl<T, G> TrustedSizeGrid for Copied<'_, T, G>
 where
-    T: 'a + Copy,
-    G: TrustedSizeGrid + GridRead<Element<'a> = &'a T>,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
