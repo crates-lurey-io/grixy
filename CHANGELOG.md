@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - Unreleased
+
+### Added
+
+- Re-added `grid::ops::blend`, which was mistakenly omitted
+- Implements `GridRead` and `GridWrite` for smart pointers (Box, Rc, Arc) that
+  contain a grid
+
+### Changed
+
+- Conversions now consume the source grid, rather than borrowing it. This allows
+  more fluent chaining of operations, at the cost of needing to use a wrapper
+  like `Rc<Grid>` to keep the original grid around
+- Generic bounds for various conversion structs have been relaxed. While it
+  technically could have changed the API, it was not used in any particularly
+  useful way
+
 ## [0.5.0] - 2025-08-01
 
 Major changes to the API, including new traits and methods for grid operations.

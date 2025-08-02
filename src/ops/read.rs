@@ -55,11 +55,10 @@ pub trait GridRead {
     /// let copied = grid.copied();
     /// assert_eq!(copied.get(Pos::new(1, 1)), Some(1));
     /// ```
-    fn copied<'a, T>(&'a self) -> Copied<'a, T, Self>
+    fn copied<'a, T>(self) -> Copied<T, Self>
     where
-        Self: Sized,
-        Self: GridRead<Element<'a> = &'a T>,
-        T: 'a + Copy,
+        Self: Sized + GridRead<Element<'a> = &'a T> + 'a,
+        T: Copy + 'a,
     {
         Copied {
             source: self,
@@ -80,19 +79,15 @@ pub trait GridRead {
     /// let mapped = grid.map(|&x| x * 2);
     /// assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
     /// ```
-    fn map<'a, S, F, T>(&'a self, map_fn: F) -> Mapped<'a, S, F, Self, T>
+    fn map<F, T>(self, map_fn: F) -> Mapped<F, Self, T>
     where
         Self: Sized,
-        Self: GridRead<Element<'a> = S>,
-        S: 'a,
-        T: 'a,
-        F: Fn(S) -> T,
+        F: Fn(Self::Element<'_>) -> T,
     {
         Mapped {
             source: self,
             map_fn,
-            _source: PhantomData,
-            _target: PhantomData,
+            _element: PhantomData,
         }
     }
 

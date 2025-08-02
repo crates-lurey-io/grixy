@@ -12,15 +12,15 @@ use crate::{
 /// Copies elements from another grid that returns copyable references.
 ///
 /// See [`GridRead::copied`] for usage.
-pub struct Copied<'a, T, G> {
-    pub(super) source: &'a G,
+pub struct Copied<T, G> {
+    pub(super) source: G,
     pub(super) _element: PhantomData<T>,
 }
 
-impl<'a, T, G> GridRead for Copied<'a, T, G>
+impl<T, G> GridRead for Copied<T, G>
 where
-    T: 'a + Copy,
-    G: GridRead<Element<'a> = &'a T>,
+    T: Copy,
+    for<'a> G: GridRead<Element<'a> = &'a T> + 'a,
 {
     type Element<'b>
         = T
@@ -38,7 +38,7 @@ where
     }
 }
 
-unsafe impl<T, G> TrustedSizeGrid for Copied<'_, T, G>
+unsafe impl<T, G> TrustedSizeGrid for Copied<T, G>
 where
     G: TrustedSizeGrid,
 {
@@ -54,19 +54,16 @@ where
 /// Transforms elements.
 ///
 /// See [`GridRead::map`] for usage.
-pub struct Mapped<'a, S, F, G, T = S> {
-    pub(super) source: &'a G,
+pub struct Mapped<F, G, T> {
+    pub(super) source: G,
     pub(super) map_fn: F,
-    pub(super) _source: PhantomData<S>,
-    pub(super) _target: PhantomData<T>,
+    pub(super) _element: PhantomData<T>,
 }
 
-impl<'a, S, F, G, T> GridRead for Mapped<'a, S, F, G, T>
+impl<F, G, T> GridRead for Mapped<F, G, T>
 where
-    S: 'a,
-    T: 'a,
-    F: Fn(S) -> T,
-    G: GridRead<Element<'a> = S>,
+    F: Fn(G::Element<'_>) -> T,
+    G: GridRead,
 {
     type Element<'b>
         = T
@@ -84,7 +81,7 @@ where
     }
 }
 
-unsafe impl<S, F, G, T> TrustedSizeGrid for Mapped<'_, S, F, G, T>
+unsafe impl<F, G, T> TrustedSizeGrid for Mapped<F, G, T>
 where
     G: TrustedSizeGrid,
 {
@@ -248,10 +245,9 @@ mod tests {
 
     #[test]
     fn grid_copied_size() {
-        let grid = GridBuf::<u8, _, _>::new(10, 10);
-        let copied = grid.copied();
-        assert_eq!(copied.width(), 10);
-        assert_eq!(copied.height(), 10);
+        let grid = GridBuf::<u8, _, _>::new(10, 10).copied();
+        assert_eq!(grid.width(), 10);
+        assert_eq!(grid.height(), 10);
     }
 
     #[test]
