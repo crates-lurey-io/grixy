@@ -1,10 +1,6 @@
-use core::marker::PhantomData;
-
-#[cfg(feature = "buffer")]
-use crate::ops::unchecked::TrustedSizeGrid;
 use crate::{
     core::{Layout, Pos, Rect},
-    ops::convert::{Copied, Mapped, Scaled, Viewed},
+    ops::unchecked::TrustedSizeGrid,
 };
 
 /// Read elements from a 2-dimensional grid position.
@@ -37,144 +33,6 @@ pub trait GridRead {
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
     }
-
-    /// Creates a grid that copies all of its elements.
-    ///
-    /// This is useful when you have a `GridRead<&T>`, but need a `GridRead<T>`.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
-    ///
-    /// // By default, `GridBuf` returns references to its elements (similar to `Vec`).
-    /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// assert_eq!(grid.get(Pos::new(1, 1)), Some(&1));
-    ///
-    /// // We can create a `GridRead` that returns owned copies of the elements.
-    /// let copied = grid.copied();
-    /// assert_eq!(copied.get(Pos::new(1, 1)), Some(1));
-    /// ```
-    fn copied<'a, T>(&'a self) -> Copied<'a, T, Self>
-    where
-        Self: Sized,
-        Self: GridRead<Element<'a> = &'a T>,
-        T: 'a + Copy,
-    {
-        Copied {
-            source: self,
-            _element: PhantomData,
-        }
-    }
-
-    /// Creates a grid that applies a mapping function to its elements.
-    ///
-    /// This is useful when you want to transform the elements of a grid lazily.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
-    ///
-    /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let mapped = grid.map(|&x| x * 2);
-    /// assert_eq!(mapped.get(Pos::new(1, 1)), Some(2));
-    /// ```
-    fn map<'a, S, F, T>(&'a self, map_fn: F) -> Mapped<'a, S, F, Self, T>
-    where
-        Self: Sized,
-        Self: GridRead<Element<'a> = S>,
-        S: 'a,
-        T: 'a,
-        F: Fn(S) -> T,
-    {
-        Mapped {
-            source: self,
-            map_fn,
-            _source: PhantomData,
-            _target: PhantomData,
-        }
-    }
-
-    /// Creates a view of the grid over a specified rectangular region.
-    ///
-    /// The view is a lightweight wrapper that allows access to a subset of the grid's elements.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf, core::Rect};
-    ///
-    /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
-    /// assert_eq!(view.get(Pos::new(1, 1)), Some(&1));
-    /// assert_eq!(view.get(Pos::new(2, 2)), None);
-    /// ```
-    fn view(&self, bounds: Rect) -> Viewed<'_, Self>
-    where
-        Self: Sized,
-    {
-        Viewed {
-            source: self,
-            bounds,
-        }
-    }
-
-    /// Creates a scaled version of the grid.
-    ///
-    /// The `scale` factor determines how many cells in the original grid correspond to one cell
-    /// in the scaled grid. For example, a scale factor of 2 means that each cell in the scaled grid
-    /// corresponds to a 2x2 block of cells in the original grid.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
-    ///
-    /// let grid = GridBuf::new_filled(2, 2, 1);
-    /// let scaled = grid.scale(2);
-    /// assert_eq!(scaled.get(Pos::new(0, 0)), Some(&1));
-    /// assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
-    /// assert_eq!(scaled.get(Pos::new(2, 2)), Some(&1));
-    /// assert_eq!(scaled.get(Pos::new(3, 3)), Some(&1));
-    /// assert_eq!(scaled.get(Pos::new(4, 4)), None);
-    /// ```
-    fn scale(&self, factor: usize) -> Scaled<'_, Self>
-    where
-        Self: Sized,
-    {
-        Scaled {
-            source: self,
-            scale: factor,
-        }
-    }
-
-    /// Collects the elements of the grid into a new buffer.
-    ///
-    /// This method is only available when the `buffer` feature is enabled.
-    ///
-    /// ## Examples
-    ///
-    /// ```rust
-    /// use grixy::{core::Pos, ops::GridRead, buf::GridBuf};
-    ///
-    /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let collected = grid.copied().collect::<Vec<_>>();
-    /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
-    /// assert_eq!(collected.get(Pos::new(3, 3)), None);
-    /// ```
-    #[cfg(feature = "buffer")]
-    fn collect<'a, B>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, Self::Layout>
-    where
-        B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
-        Self: Sized,
-        Self: TrustedSizeGrid,
-        Self::Element<'a>: Copy,
-    {
-        let iter = self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()));
-        let elem = iter.collect::<B>();
-        crate::buf::GridBuf::from_buffer(elem, self.width())
-    }
 }
 
 /// A trait for grids that can be iterated over.
@@ -198,7 +56,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{buf::GridBuf, core::RowMajor};
+    use crate::{buf::GridBuf, convert::GridConvertExt as _, core::RowMajor};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {

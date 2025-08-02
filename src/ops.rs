@@ -48,9 +48,13 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
-pub mod blend;
-pub mod convert;
 pub mod unchecked;
+
+#[cfg(feature = "alloc")]
+mod alloc;
+
+#[cfg(feature = "cell")]
+mod cell;
 
 mod draw;
 mod read;

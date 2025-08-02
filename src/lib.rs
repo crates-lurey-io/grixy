@@ -35,7 +35,9 @@
 //!
 //! _Enabled by default._
 //!
-//! Provides additional (but optional) types that use `alloc::vec`.
+//! Provides additional (but optional) functionality that uses `alloc`.
+//!
+//! If you are just using traits and types, this feature can be safely disabled.
 //!
 //! ### `buffer`
 //!
@@ -44,6 +46,10 @@
 //! Provides the linear `GridBuf` type (and convenience types) through `grixy::buf`.
 //!
 //! If you are just using traits and types, this feature can be safely disabled.
+//!
+//! ### `cell`
+//!
+//! Provides `GridWrite` when a mutable cell is wrapping a `GridWrite` type.
 
 #![no_std]
 
@@ -51,6 +57,7 @@ pub(crate) mod internal;
 
 #[cfg(feature = "buffer")]
 pub mod buf;
+pub mod convert;
 pub mod core;
 pub mod ops;
 pub mod prelude;
