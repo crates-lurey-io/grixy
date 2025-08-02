@@ -2,6 +2,8 @@
 //!
 //! These types are provided as part of the public API, but all usage is through [`GridRead`].
 
+use core::marker::PhantomData;
+
 use crate::{
     core::{GridError, Pos, Rect},
     ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
@@ -10,13 +12,9 @@ use crate::{
 /// Copies elements from another grid that returns copyable references.
 ///
 /// See [`GridRead::copied`] for usage.
-pub struct Copied<'a, T, G>
-where
-    T: Copy,
-    T: 'a,
-    G: GridRead<Element<'a> = &'a T>,
-{
+pub struct Copied<'a, T, G> {
     pub(super) source: &'a G,
+    pub(super) _element: PhantomData<T>,
 }
 
 impl<'a, T, G> GridRead for Copied<'a, T, G>
@@ -40,10 +38,9 @@ where
     }
 }
 
-unsafe impl<'a, T, G> TrustedSizeGrid for Copied<'a, T, G>
+unsafe impl<T, G> TrustedSizeGrid for Copied<'_, T, G>
 where
-    T: 'a + Copy,
-    G: TrustedSizeGrid + GridRead<Element<'a> = &'a T>,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
@@ -57,15 +54,11 @@ where
 /// Transforms elements.
 ///
 /// See [`GridRead::map`] for usage.
-pub struct Mapped<'a, S, F, G, T = S>
-where
-    S: 'a,
-    T: 'a,
-    F: Fn(S) -> T,
-    G: GridRead<Element<'a> = S>,
-{
+pub struct Mapped<'a, S, F, G, T = S> {
     pub(super) source: &'a G,
     pub(super) map_fn: F,
+    pub(super) _source: PhantomData<S>,
+    pub(super) _target: PhantomData<T>,
 }
 
 impl<'a, S, F, G, T> GridRead for Mapped<'a, S, F, G, T>
@@ -91,12 +84,9 @@ where
     }
 }
 
-unsafe impl<'a, S, F, G, T> TrustedSizeGrid for Mapped<'a, S, F, G, T>
+unsafe impl<S, F, G, T> TrustedSizeGrid for Mapped<'_, S, F, G, T>
 where
-    S: 'a,
-    T: 'a,
-    F: Fn(S) -> T,
-    G: TrustedSizeGrid + GridRead<Element<'a> = S>,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
@@ -110,10 +100,7 @@ where
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
 ///
 /// See [`GridRead::view`] for usage.
-pub struct Viewed<'a, G>
-where
-    G: GridRead,
-{
+pub struct Viewed<'a, G> {
     pub(super) source: &'a G,
     pub(super) bounds: Rect,
 }
@@ -145,7 +132,7 @@ where
 
 unsafe impl<G> TrustedSizeGrid for Viewed<'_, G>
 where
-    G: TrustedSizeGrid + GridRead,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.bounds.width()
@@ -159,10 +146,7 @@ where
 /// Scales the grid elements using a nearest-neighbor approach.
 ///
 /// See [`GridRead::scale`] for usage.
-pub struct Scaled<'a, G>
-where
-    G: GridRead,
-{
+pub struct Scaled<'a, G> {
     pub(super) source: &'a G,
     pub(super) scale: usize,
 }
@@ -186,7 +170,7 @@ where
 
 unsafe impl<G> TrustedSizeGrid for Scaled<'_, G>
 where
-    G: TrustedSizeGrid + GridRead,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width() * self.scale
@@ -200,11 +184,7 @@ where
 /// Blends write operations to a grid.
 ///
 /// See [`GridWrite::blend`] for usage.
-pub struct Blended<'a, G, F>
-where
-    G: GridRead + GridWrite,
-    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
-{
+pub struct Blended<'a, G, F> {
     pub(super) source: &'a mut G,
     pub(super) blend_fn: F,
 }
@@ -226,8 +206,7 @@ where
 
 impl<G, F> GridRead for Blended<'_, G, F>
 where
-    G: GridRead + GridWrite,
-    F: Fn(<G as GridRead>::Element<'_>, <G as GridWrite>::Element) -> <G as GridWrite>::Element,
+    G: GridRead,
 {
     type Element<'b>
         = <G as GridRead>::Element<'b>
@@ -247,11 +226,7 @@ where
 
 unsafe impl<G, F> TrustedSizeGrid for Blended<'_, G, F>
 where
-    G: TrustedSizeGrid + GridRead + GridWrite,
-    F: for<'b> Fn(
-        <G as GridRead>::Element<'b>,
-        <G as GridWrite>::Element,
-    ) -> <G as GridWrite>::Element,
+    G: TrustedSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()
