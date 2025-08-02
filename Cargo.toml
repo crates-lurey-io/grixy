@@ -23,6 +23,7 @@ taplo-cli = { version = "0.10.0", bins = ["taplo"] }
 default = ["alloc", "buffer"]
 alloc = []
 buffer = []
+cell = []
 
 [dependencies]
 ixy = { version = "0.5.7" }

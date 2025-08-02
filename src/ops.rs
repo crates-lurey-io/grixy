@@ -50,6 +50,12 @@
 
 pub mod unchecked;
 
+#[cfg(feature = "alloc")]
+mod alloc;
+
+#[cfg(feature = "cell")]
+mod cell;
+
 mod draw;
 mod read;
 mod write;

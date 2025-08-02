@@ -333,4 +333,22 @@ mod tests {
         let elements: Vec<_> = blended.iter_rect(Rect::from_ltwh(0, 0, 3, 3)).collect();
         assert_eq!(elements, vec![&0, &0, &0, &0, &5, &0, &0, &0, &3]);
     }
+
+    #[test]
+    fn grid_chained_operations() {
+        let grid = GridBuf::new_filled(3, 3, 1)
+            .copied()
+            .map(|x| x * 2)
+            .view(Rect::from_ltwh(0, 0, 2, 2))
+            .scale(2);
+
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(2));
+    }
+
+    #[test]
+    fn grid_smart_pointers() {
+        use alloc::rc::Rc;
+
+        let rc = Rc::new(GridBuf::new_filled(3, 3, 1));
+    }
 }
