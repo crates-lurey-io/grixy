@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 #[cfg(feature = "buffer")]
 use crate::ops::unchecked::TrustedSizeGrid;
 use crate::{
@@ -59,7 +61,10 @@ pub trait GridRead {
         Self: GridRead<Element<'a> = &'a T>,
         T: 'a + Copy,
     {
-        Copied { source: self }
+        Copied {
+            source: self,
+            _element: PhantomData,
+        }
     }
 
     /// Creates a grid that applies a mapping function to its elements.

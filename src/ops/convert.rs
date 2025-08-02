@@ -2,6 +2,8 @@
 //!
 //! These types are provided as part of the public API, but all usage is through [`GridRead`].
 
+use core::marker::PhantomData;
+
 use crate::{
     core::{GridError, Pos, Rect},
     ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
@@ -10,13 +12,9 @@ use crate::{
 /// Copies elements from another grid that returns copyable references.
 ///
 /// See [`GridRead::copied`] for usage.
-pub struct Copied<'a, T, G>
-where
-    T: Copy,
-    T: 'a,
-    G: GridRead<Element<'a> = &'a T>,
-{
+pub struct Copied<'a, T, G> {
     pub(super) source: &'a G,
+    pub(super) _element: PhantomData<T>,
 }
 
 impl<'a, T, G> GridRead for Copied<'a, T, G>
