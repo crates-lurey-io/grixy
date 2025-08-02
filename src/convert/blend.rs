@@ -5,7 +5,7 @@
 /// ## Examples
 ///
 /// ```rust
-/// use grixy::ops::blend;
+/// use grixy::convert::blend;
 ///
 /// let src = 42;
 /// let dst: i32 = 24;
@@ -22,7 +22,7 @@ where
 /// Replaces the destination element with the source element.
 ///
 /// ```rust
-/// use grixy::ops::blend;
+/// use grixy::convert::blend;
 ///
 /// let src = 42;
 /// let dst: i32 = 24;
@@ -36,7 +36,7 @@ pub fn source<S, D>(src: S, _dst: D) -> S {
 /// Retains the destination element, ignoring the source element.
 ///
 /// ```rust
-/// use grixy::ops::blend;
+/// use grixy::convert::blend;
 ///
 /// let src = 42;
 /// let dst: i32 = 24;
