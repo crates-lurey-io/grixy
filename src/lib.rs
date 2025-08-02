@@ -51,6 +51,7 @@ pub(crate) mod internal;
 
 #[cfg(feature = "buffer")]
 pub mod buf;
+pub mod convert;
 pub mod core;
 pub mod ops;
 pub mod prelude;

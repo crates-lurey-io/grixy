@@ -38,7 +38,7 @@ pub fn copy_rect<'s, E>(
 mod tests {
     extern crate alloc;
 
-    use crate::test::NaiveGrid;
+    use crate::{convert::GridConvertExt as _, test::NaiveGrid};
     use alloc::vec::Vec;
 
     use super::*;
