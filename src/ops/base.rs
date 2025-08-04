@@ -1,6 +1,6 @@
 use crate::core::{Pos, Rect, Size};
 
-/// A base trait for grids that provides common functionality across both read and write operations.
+/// A base trait for grids.
 pub trait GridBase {
     /// Returns the size of the grid, if known.
     ///

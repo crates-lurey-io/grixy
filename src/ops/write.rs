@@ -41,6 +41,8 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(self.trim_rect(bounds)).for_each(|pos| {
             let _ = self.set(pos, f(pos));
@@ -62,6 +64,8 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         Self::Layout::iter_pos(self.trim_rect(dst))
             .zip(iter)
@@ -82,6 +86,8 @@ pub trait GridWrite: GridBase {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
     where
         Self::Element: Copy,

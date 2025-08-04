@@ -8,8 +8,8 @@
 //! Operations include:
 //!
 //! - [`blend`](GridConvertExt::blend): Creates a blended version of the grid, applying a blend function when setting elements.
-//! - [`collect`](GridConvertExt::collect): Collects the elements of the grid into a new buffer.
 //! - [`copied`](GridConvertExt::copied): Creates a grid that copies all of its elements.
+//! - [`flatten`](GridConvertExt::flatten): Collects the elements of the grid into a new buffer.
 //! - [`map`](GridConvertExt::map): Creates a grid that applies a mapping function to its elements.
 //! - [`scale`](GridConvertExt::scale): Creates a scaled version of the grid.
 //! - [`view`](GridConvertExt::view): Creates a view of the grid over a specified rectangular region.

@@ -1,3 +1,5 @@
+//! Defines how to traverse and optionally, store grids in linear memory.
+
 use core::marker::PhantomData;
 
 use crate::core::{Pos, Rect, Size};

@@ -35,6 +35,8 @@ extern crate alloc;
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+///
+/// [`Layout`]: layout::Layout
 #[derive(Debug, Clone)]
 pub struct GridBits<T, B, L>
 where
