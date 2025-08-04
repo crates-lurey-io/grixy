@@ -40,10 +40,7 @@ pub trait GridReadUnchecked {
     ///
     /// Implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
-    unsafe fn iter_rect_unchecked(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        core::iter::empty()
-        // Self::Layout::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
-    }
+    unsafe fn iter_rect_unchecked(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>>;
 }
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.
@@ -99,6 +96,13 @@ mod tests {
 
         unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
             self.grid[pos.y][pos.x]
+        }
+
+        unsafe fn iter_rect_unchecked(
+            &self,
+            _bounds: Rect,
+        ) -> impl Iterator<Item = Self::Element<'_>> {
+            core::iter::empty()
         }
     }
 

@@ -210,6 +210,13 @@ where
         // let byte = unsafe { self.buffer.as_ref().get_unchecked(byte_index) };
         // (byte.to_usize() >> bit_index) & 1 != 0
     }
+
+    unsafe fn iter_rect_unchecked(
+        &self,
+        _bounds: crate::prelude::Rect,
+    ) -> impl Iterator<Item = Self::Element<'_>> {
+        core::iter::empty()
+    }
 }
 
 impl<T, B, L> GridWriteUnchecked for GridBits<T, B, L>

@@ -1,17 +1,19 @@
-use crate::buf::GridBuf;
+use crate::{buf::GridBuf, ops::layout};
 
-impl<T, B> AsRef<[T]> for GridBuf<T, B>
+impl<T, B, L> AsRef<[T]> for GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
+    L: layout::Linear,
 {
     fn as_ref(&self) -> &[T] {
         self.buffer.as_ref()
     }
 }
 
-impl<T, B> AsMut<[T]> for GridBuf<T, B>
+impl<T, B, L> AsMut<[T]> for GridBuf<T, B, L>
 where
     B: AsMut<[T]>,
+    L: layout::Linear,
 {
     fn as_mut(&mut self) -> &mut [T] {
         self.buffer.as_mut()

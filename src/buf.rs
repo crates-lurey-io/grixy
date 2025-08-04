@@ -34,25 +34,25 @@ mod impl_slice;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
-pub struct GridBuf<T, B, L = layout::RowMajor>
+pub struct GridBuf<T, B, L>
 where
     L: layout::Linear,
 {
     buffer: B,
     width: usize,
     height: usize,
+    layout: L,
     _element: PhantomData<T>,
-    _layout: PhantomData<L>,
 }
 
 impl<T, B, L> GridBuf<T, B, L>
 where
     L: layout::Linear,
 {
-    /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
+    /// Consumes the `GridBuf`, returning the underlying buffer, layout, width, and height.
     #[must_use]
-    pub fn into_inner(self) -> (B, usize, usize) {
-        (self.buffer, self.width, self.height)
+    pub fn into_inner(self) -> (B, L, usize, usize) {
+        (self.buffer, self.layout, self.width, self.height)
     }
 }
 
@@ -72,14 +72,15 @@ mod tests {
 
     #[test]
     fn into_inner() {
-        let grid = GridBuf::<u8, _>::new(5, 4);
-        let (buffer, width, height) = grid.into_inner();
+        let grid = GridBuf::<u8, _, _>::new(5, 4);
+        let (buffer, layout, width, height) = grid.into_inner();
         assert_eq!(buffer.len(), width * height);
+        assert_eq!(layout, RowMajor);
     }
 
     #[test]
     fn impl_bounded_grid() {
-        let grid = GridBuf::<u8, _>::new(5, 4);
+        let grid = GridBuf::<u8, _, _>::new(5, 4);
         assert_eq!(grid.width(), 5);
         assert_eq!(grid.height(), 4);
     }
@@ -93,7 +94,7 @@ mod tests {
 
     #[test]
     fn impl_set_unchecked() {
-        let mut grid = GridBuf::<u8, _>::new(5, 4);
+        let mut grid = GridBuf::new(5, 4);
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(*unsafe { grid.get_unchecked(pos) }, 99);
@@ -101,7 +102,7 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = GridBuf::<_, _, ColumnMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
+        let buffer = GridBuf::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], ColumnMajor, 3);
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
@@ -111,11 +112,11 @@ mod tests {
     #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = GridBuf::<_, _, RowMajor>::from_buffer(vec![
+        let buffer = GridBuf::from_buffer(vec![
             1, 2, 3,
             4, 5, 6,
             7, 8, 9,
-        ], 3);
+        ], RowMajor, 3);
 
         assert_eq!(
             unsafe {
