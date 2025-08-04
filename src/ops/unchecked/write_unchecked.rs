@@ -120,7 +120,7 @@ impl<T: GridBase + GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
             }
             Ok(())
         } else {
-            Err(GridError)
+            Err(GridError::OutOfBounds { pos })
         }
     }
 

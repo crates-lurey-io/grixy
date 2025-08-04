@@ -45,7 +45,7 @@ where
     type Layout = <G as GridWrite>::Layout;
 
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
-        let current = self.source.get(pos).ok_or(GridError)?;
+        let current = self.source.get(pos).ok_or(GridError::OutOfBounds { pos })?;
         self.source.set(pos, (self.blend_fn)(current, value))
     }
 }

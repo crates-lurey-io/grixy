@@ -1,5 +1,7 @@
 //! Core types used in the Grixy crate.
 
+use core::{error::Error, fmt::Display};
+
 pub use ixy::HasSize;
 
 /// A 2-dimensional position type.
@@ -19,4 +21,18 @@ pub type Size = ixy::Size;
 
 /// An error type for operations on or creating a `Grid`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GridError;
+#[non_exhaustive]
+pub enum GridError {
+    /// Could not access an element at a specified position due to it being out of bounds.
+    OutOfBounds { pos: Pos },
+}
+
+impl Display for GridError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            GridError::OutOfBounds { pos } => write!(f, "Position out of bounds: {pos}"),
+        }
+    }
+}
+
+impl Error for GridError {}

@@ -87,7 +87,7 @@ impl<T> GridWrite for NaiveGrid<T> {
             self.cells[pos.y * self.width + pos.x] = value;
             Ok(())
         } else {
-            Err(GridError)
+            Err(GridError::OutOfBounds { pos })
         }
     }
 }

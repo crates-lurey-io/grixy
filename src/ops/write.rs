@@ -1,7 +1,9 @@
+use ixy::HasSize;
+
 use crate::{
     core::{GridError, Pos, Rect},
     ops::{
-        GridBase,
+        ExactSizeGrid, GridBase,
         layout::{self, Layout as _},
     },
 };
@@ -28,6 +30,69 @@ pub trait GridWrite: GridBase {
     ///
     /// Returns an error if the position is out of bounds.
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError>;
+
+    /// Clears the grid, setting all elements to their default value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn clear(&mut self)
+    where
+        Self::Element: Default,
+        Self: ExactSizeGrid,
+    {
+        self.clear_rect(self.size().to_rect());
+    }
+
+    /// Sets elements within the grid.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill(&mut self, f: impl FnMut(Pos) -> Self::Element)
+    where
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect(self.size().to_rect(), f);
+    }
+
+    /// Sets elements within the grid from an iterator.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill_iter(&mut self, iter: impl Iterator<Item = Self::Element>)
+    where
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect_iter(self.size().to_rect(), iter);
+    }
+
+    /// Sets elements within the grid to a single value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill_solid(&mut self, value: Self::Element)
+    where
+        Self::Element: Copy,
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect_solid(self.size().to_rect(), value);
+    }
+
+    /// Clears a rectangular region of the grid, setting all elements to their default value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right
+    /// and bottom edges.
+    ///
+    /// ## Performance
+    ///
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// involving bounds checking for each element. Other implementations may optimize this, for
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
+    /// checking, etc.).
+    ///
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
+    fn clear_rect(&mut self, bounds: Rect)
+    where
+        Self::Element: Default,
+    {
+        self.fill_rect(bounds, |_| Default::default());
+    }
 
     /// Sets elements within a rectangular region of the grid.
     ///
@@ -126,7 +191,7 @@ mod tests {
                 self.grid[pos.y][pos.x] = value;
                 Ok(())
             } else {
-                Err(GridError)
+                Err(GridError::OutOfBounds { pos })
             }
         }
     }

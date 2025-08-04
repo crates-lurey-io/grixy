@@ -373,7 +373,12 @@ mod tests {
         grid.set(Pos::new(0, 0), false).unwrap();
         assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
 
-        assert_eq!(grid.set(Pos::new(8, 0), true), Err(GridError));
+        assert_eq!(
+            grid.set(Pos::new(8, 0), true),
+            Err(GridError::OutOfBounds {
+                pos: Pos::new(8, 0)
+            })
+        );
     }
 
     #[test]
