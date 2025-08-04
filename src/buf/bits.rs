@@ -239,16 +239,15 @@ where
     type Element = bool;
     type Layout = L;
 
-    unsafe fn set_unchecked(&mut self, _pos: Pos, _value: bool) {
-        todo!()
-        // let index = L::to_1d(pos, self.width);
-        // let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
-        // let byte = unsafe { self.buffer.as_mut().get_unchecked_mut(byte_index) };
-        // if value {
-        //     *byte |= T::from_usize(1 << bit_index);
-        // } else {
-        //     *byte &= !T::from_usize(1 << bit_index);
-        // }
+    unsafe fn set_unchecked(&mut self, pos: Pos, value: bool) {
+        let index = L::to_1d(pos, self.width);
+        let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
+        let byte = unsafe { self.buffer.as_mut().get_unchecked_mut(byte_index) };
+        if value {
+            *byte |= T::from_usize(1 << bit_index);
+        } else {
+            *byte &= !T::from_usize(1 << bit_index);
+        }
     }
 }
 

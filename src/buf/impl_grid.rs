@@ -62,45 +62,39 @@ where
     type Element = T;
     type Layout = L;
 
-    unsafe fn set_unchecked(&mut self, _pos: Pos, _value: Self::Element) {
-        todo!()
-        // let index = L::to_1d(pos, self.width);
-        // unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
+    unsafe fn set_unchecked(&mut self, pos: Pos, value: Self::Element) {
+        let index = L::to_1d(pos, self.width);
+        unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
     }
 
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
-        _bounds: crate::core::Rect,
-        _iter: impl IntoIterator<Item = Self::Element>,
+        bounds: crate::core::Rect,
+        iter: impl IntoIterator<Item = Self::Element>,
     ) {
-        todo!()
-        // let slice = self.buffer.as_mut();
-        // let width = self.width;
-        // let mut iter = iter.into_iter();
-        // for y in bounds.top()..bounds.bottom() {
-        //     let x_xtart = L::to_1d(Pos::new(bounds.left(), y), width);
-        //     let x_end = x_xtart + bounds.width();
-        //     slice[x_xtart..x_end]
-        //         .iter_mut()
-        //         .zip(&mut iter)
-        //         .for_each(|(cell, value)| *cell = value);
-        // }
+        let slice = self.buffer.as_mut();
+        let width = self.width;
+        let mut iter = iter.into_iter();
+        for y in bounds.top()..bounds.bottom() {
+            let x_xtart = L::to_1d(Pos::new(bounds.left(), y), width);
+            let x_end = x_xtart + bounds.width();
+            slice[x_xtart..x_end]
+                .iter_mut()
+                .zip(&mut iter)
+                .for_each(|(cell, value)| *cell = value);
+        }
     }
 
-    unsafe fn fill_rect_solid_unchecked(
-        &mut self,
-        _bounds: crate::core::Rect,
-        _value: Self::Element,
-    ) where
+    unsafe fn fill_rect_solid_unchecked(&mut self, bounds: crate::core::Rect, value: Self::Element)
+    where
         Self::Element: Copy,
     {
-        todo!()
-        // let slice = self.buffer.as_mut();
-        // let width = self.width;
-        // for y in bounds.top()..bounds.bottom() {
-        //     let x_start = L::to_1d(Pos::new(bounds.left(), y), width);
-        //     let x_end = x_start + bounds.width();
-        //     slice[x_start..x_end].fill(value);
-        // }
+        let slice = self.buffer.as_mut();
+        let width = self.width;
+        for y in bounds.top()..bounds.bottom() {
+            let x_start = L::to_1d(Pos::new(bounds.left(), y), width);
+            let x_end = x_start + bounds.width();
+            slice[x_start..x_end].fill(value);
+        }
     }
 }
