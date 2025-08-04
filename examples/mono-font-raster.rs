@@ -1,12 +1,6 @@
 //! Loads a monospace font and renders an RGBA PNG based on every glyph in the font.
 
-use grixy::{
-    buf::{GridBuf, bits::GridBits},
-    core::{Pos, Rect},
-    ops::{ExactSizeGrid as _, copy_rect},
-    prelude::RowMajor,
-    transform::GridConvertExt as _,
-};
+use grixy::prelude::*;
 use temp_dir::TempDir;
 
 fn main() {

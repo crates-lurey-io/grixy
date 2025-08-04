@@ -11,9 +11,9 @@ _Nothing as of now_.
 - [x] Implement `Index|IndexMut<Pos>`
 - [x] Rename `collect` to `flatten`
 - [x] Add auto-trait with `clear`, `fill`, and related
-- [ ] Add an example of noise generation (`examples/noise.rs`)
-- [ ] Add an example of pathfinding (`examples/pathfinding.rs`)
-- [ ] Add an example of a grid with a custom layout (`examples/z-order.rs`)
+- [x] Add an example of noise generation (`examples/noise.rs`)
+- [x] Add an example of pathfinding (`examples/pathfinding.rs`)
+- [x] Add an example of a grid with a custom layout (`examples/z-order.rs`)
 - [ ] Benchmark heavily and adjust as needed
 
 ## 0.6.0 (Stable)

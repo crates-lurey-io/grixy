@@ -10,10 +10,10 @@
 //! ```
 
 #[cfg(feature = "buffer")]
-pub use crate::buf::GridBuf;
+pub use crate::buf::{GridBuf, bits::GridBits};
 pub use crate::core::{GridError, HasSize as _, Pos, Rect, Size};
 pub use crate::ops::{
-    GridBase, GridIter as _, GridRead, GridWrite,
+    ExactSizeGrid as _, GridBase, GridIter as _, GridRead, GridWrite, copy_rect,
     layout::{Block, ColumnMajor, Layout as _, Linear as _, RowMajor},
 };
 pub use crate::transform::GridConvertExt as _;

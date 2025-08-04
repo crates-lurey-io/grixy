@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use crate::{
     core::{Pos, Size},
-    ops::{GridBase, GridRead},
+    ops::{ExactSizeGrid, GridBase, GridRead},
 };
 
 /// Transforms elements.
@@ -22,6 +22,19 @@ where
 {
     fn size_hint(&self) -> (Size, Option<Size>) {
         self.source.size_hint()
+    }
+}
+
+impl<F, G, T> ExactSizeGrid for Mapped<F, G, T>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
     }
 }
 
