@@ -1,6 +1,6 @@
 use crate::{
-    core::{Pos, Rect},
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{Pos, Rect, Size},
+    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
 };
 
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
@@ -11,6 +11,16 @@ use crate::{
 pub struct Viewed<G> {
     pub(super) source: G,
     pub(super) bounds: Rect,
+}
+
+impl<G> GridBase for Viewed<G>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<crate::core::Size>) {
+        let size = Size::new(self.bounds.width(), self.bounds.height());
+        (size, Some(size))
+    }
 }
 
 impl<G> GridRead for Viewed<G>

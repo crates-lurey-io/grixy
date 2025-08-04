@@ -1,6 +1,6 @@
 use crate::{
-    core::{GridError, Pos, Rect},
-    ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
+    core::{GridError, Pos, Rect, Size},
+    ops::{GridBase, GridRead, GridWrite, unchecked::TrustedSizeGrid},
 };
 
 /// Blends write operations to a grid.
@@ -11,6 +11,15 @@ use crate::{
 pub struct Blended<'a, G, F> {
     pub(super) source: &'a mut G,
     pub(super) blend_fn: F,
+}
+
+impl<G, F> GridBase for Blended<'_, G, F>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        self.source.size_hint()
+    }
 }
 
 impl<G, F> GridWrite for Blended<'_, G, F>

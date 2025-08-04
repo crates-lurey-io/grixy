@@ -199,12 +199,12 @@ pub trait GridConvertExt: GridRead {
     /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let collected = grid.copied().collect::<Vec<_>, RowMajor>();
+    /// let collected = grid.copied().flatten::<Vec<_>, RowMajor>();
     /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```
     #[cfg(feature = "buffer")]
-    fn collect<'a, B, L>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
+    fn flatten<'a, B, L>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
         L: layout::Linear,

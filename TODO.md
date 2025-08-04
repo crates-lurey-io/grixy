@@ -6,14 +6,14 @@ _Nothing as of now_.
 
 ## 0.6.0 (Beta)
 
+- [ ] Add `size_hint` (untrusted)
 - [ ] Make more descriptive `GridError` enum variants
 - [ ] Add rotate
 - [ ] Add flip
 - [ ] Add transpose
 - [ ] Implement some nice debug string representations/formats
-- [ ] Implement `Index|IndexMut<Pos>`
-- [ ] Implement `Clone` when buffer is clonable
-- [ ] Rename `collect` to `flatten`
+- [x] Implement `Index|IndexMut<Pos>`
+- [x] Rename `collect` to `flatten`
 - [ ] Add auto-trait with `clear`, `fill`, and related
 - [ ] Add an example of noise generation (`examples/noise.rs`)
 - [ ] Add an example of pathfinding (`examples/pathfinding.rs`)
@@ -28,7 +28,6 @@ _Nothing as of now_.
 
 - [ ] Ranges?
 - [ ] Optional support for `defmt`
-- [ ] Add `size_hint` (untrusted)
 - [ ] Add `GridMut` trait for mutable grid buffer operations
   - [ ] `resize`
   - [ ] `push_{row,col,block}`

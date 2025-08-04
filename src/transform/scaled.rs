@@ -1,6 +1,6 @@
 use crate::{
-    core::Pos,
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{Pos, Size},
+    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
 };
 
 /// Scales the grid elements using a nearest-neighbor approach.
@@ -11,6 +11,16 @@ use crate::{
 pub struct Scaled<G> {
     pub(super) source: G,
     pub(super) scale: usize,
+}
+
+impl<G> GridBase for Scaled<G>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        let (lo, hi) = self.source.size_hint();
+        (lo * self.scale, hi.map(|s| s * self.scale))
+    }
 }
 
 impl<G> GridRead for Scaled<G>

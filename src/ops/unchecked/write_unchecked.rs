@@ -1,6 +1,10 @@
 use crate::{
     core::{GridError, HasSize, Pos, Rect},
-    ops::{GridWrite, layout, layout::Layout as _, unchecked::TrustedSizeGrid},
+    ops::{
+        GridBase, GridWrite,
+        layout::{self, Layout as _},
+        unchecked::TrustedSizeGrid,
+    },
 };
 
 /// Write elements to a 2-dimensional grid position without bounds checking.
@@ -99,7 +103,7 @@ pub trait GridWriteUnchecked {
 }
 
 /// Automatically implement `GridWrite` when `GridWriteUnchecked` + `TrustedSizeGrid` are implemented.
-impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
+impl<T: GridBase + GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
     type Element = T::Element;
     type Layout = T::Layout;
 
@@ -140,7 +144,10 @@ impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
 mod tests {
     extern crate alloc;
 
-    use crate::ops::layout::RowMajor;
+    use crate::{
+        core::Size,
+        ops::{GridBase, layout::RowMajor},
+    };
 
     use super::*;
     use alloc::vec;
@@ -156,6 +163,13 @@ mod tests {
 
         fn height(&self) -> usize {
             3
+        }
+    }
+
+    impl GridBase for UncheckedTestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
         }
     }
 

@@ -5,9 +5,9 @@ extern crate alloc;
 use alloc::{vec, vec::Vec};
 
 use crate::{
-    core::GridError,
+    core::{GridError, Size},
     ops::{
-        GridRead, GridWrite,
+        GridBase, GridRead, GridWrite,
         layout::{self, Layout as _},
     },
 };
@@ -47,6 +47,13 @@ impl<T> NaiveGrid<T> {
             width,
             height,
         }
+    }
+}
+
+impl<T> GridBase for NaiveGrid<T> {
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        let size = Size::new(self.width, self.height);
+        (size, Some(size))
     }
 }
 

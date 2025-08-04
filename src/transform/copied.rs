@@ -1,8 +1,8 @@
 use core::marker::PhantomData;
 
 use crate::{
-    core::Pos,
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{Pos, Size},
+    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
 };
 
 /// Copies elements from another grid that returns copyable references.
@@ -13,6 +13,15 @@ use crate::{
 pub struct Copied<T, G> {
     pub(super) source: G,
     pub(super) _element: PhantomData<T>,
+}
+
+impl<T, G> GridBase for Copied<T, G>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        self.source.size_hint()
+    }
 }
 
 impl<T, G> GridRead for Copied<T, G>

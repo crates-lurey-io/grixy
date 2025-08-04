@@ -1,7 +1,7 @@
 use crate::{
     core::{Pos, Rect},
     ops::{
-        GridRead,
+        GridBase, GridRead,
         layout::{self, Layout as _},
         unchecked::TrustedSizeGrid,
     },
@@ -50,7 +50,7 @@ pub trait GridReadUnchecked {
 }
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.
-impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
+impl<T: GridBase + GridReadUnchecked + TrustedSizeGrid> GridRead for T {
     type Element<'a>
         = T::Element<'a>
     where
@@ -72,11 +72,21 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::ops::{layout::RowMajor, unchecked::TrustedSizeGrid};
+    use crate::{
+        core::Size,
+        ops::{layout::RowMajor, unchecked::TrustedSizeGrid},
+    };
     use alloc::vec::Vec;
 
     struct UncheckedTestGrid {
         grid: [[u8; 3]; 3],
+    }
+
+    impl GridBase for UncheckedTestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
     }
 
     unsafe impl TrustedSizeGrid for UncheckedTestGrid {

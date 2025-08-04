@@ -13,7 +13,10 @@
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
-use core::marker::PhantomData;
+use core::{
+    marker::PhantomData,
+    ops::{Index, IndexMut},
+};
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
 
@@ -21,8 +24,8 @@ pub mod bits;
 
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
-use crate::ops::layout;
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
+use crate::{core::Pos, ops::layout};
 
 mod impl_grid;
 mod impl_new;
@@ -53,6 +56,28 @@ where
     #[must_use]
     pub fn into_inner(self) -> (B, usize, usize) {
         (self.buffer, self.width, self.height)
+    }
+}
+
+impl<T, B, L> Index<Pos> for GridBuf<T, B, L>
+where
+    L: layout::Linear,
+    B: AsRef<[T]>,
+{
+    type Output = T;
+
+    fn index(&self, index: Pos) -> &Self::Output {
+        &self.buffer.as_ref()[index.y * self.width + index.x]
+    }
+}
+
+impl<T, B, L> IndexMut<Pos> for GridBuf<T, B, L>
+where
+    L: layout::Linear,
+    B: AsRef<[T]> + AsMut<[T]>,
+{
+    fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
+        &mut self.buffer.as_mut()[index.y * self.width + index.x]
     }
 }
 
@@ -163,5 +188,14 @@ mod tests {
             42, 42, 0,
             0, 0, 0,
         ]);
+    }
+
+    #[test]
+    fn index_ops() {
+        let mut grid = GridBuf::<u8, _, _>::new(3, 3);
+        grid[Pos::new(1, 1)] = 42;
+        assert_eq!(grid[Pos::new(1, 1)], 42);
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(&42));
+        assert_eq!(grid.get(Pos::new(3, 3)), None); // Out of bounds
     }
 }

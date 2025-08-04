@@ -1,6 +1,6 @@
 use crate::{
     core::{Pos, Rect},
-    ops::GridRead,
+    ops::{GridBase, GridRead},
 };
 
 #[cfg(not(feature = "alloc"))]
@@ -10,6 +10,15 @@ extern crate alloc;
 
 macro_rules! impl_grid_read {
     ($rc:ident) => {
+        impl<T> GridBase for $rc<T>
+        where
+            T: GridBase,
+        {
+            fn size_hint(&self) -> (crate::core::Size, Option<crate::core::Size>) {
+                self.as_ref().size_hint()
+            }
+        }
+
         impl<T> GridRead for $rc<T>
         where
             T: GridRead,

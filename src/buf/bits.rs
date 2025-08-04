@@ -13,16 +13,16 @@
 //! assert_eq!(grid.get(Pos::new(3, 0)), Some(false));
 //! ```
 
-use core::marker::PhantomData;
+use core::{marker::PhantomData, ops::Index};
 
 mod ops;
 pub use ops::BitOps;
 
 use crate::{
-    core::Pos,
+    core::{Pos, Size},
     internal,
     ops::{
-        layout,
+        GridBase, layout,
         unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
     },
 };
@@ -191,6 +191,18 @@ where
     }
 }
 
+impl<T, B, L> GridBase for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+    L: layout::Linear,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        let size = Size::new(self.width, self.height);
+        (size, Some(size))
+    }
+}
+
 impl<T, B, L> GridReadUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
@@ -263,6 +275,20 @@ where
 
     fn height(&self) -> usize {
         self.height
+    }
+}
+
+impl<T, B, L> Index<Pos> for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+    L: layout::Linear,
+{
+    type Output = bool;
+
+    fn index(&self, index: Pos) -> &Self::Output {
+        let value = unsafe { self.get_unchecked(index) };
+        if value { &true } else { &false }
     }
 }
 
@@ -412,5 +438,12 @@ mod tests {
         let grid = GridBits::<_, _, RowMajor>::from_buffer(data, 8);
         assert!(unsafe { grid.get_unchecked(Pos::new(0, 0)) });
         assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
+    }
+
+    #[test]
+    fn index() {
+        let data = &[0b0000_0001u8];
+        let grid = GridBits::<_, _, RowMajor>::from_buffer(data, 8);
+        assert!(grid[Pos::new(0, 0)]);
     }
 }

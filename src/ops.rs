@@ -18,11 +18,18 @@
 //! Implementing [`GridWrite`] to write to a grid:
 //!
 //! ```rust
-//! use grixy::{core::{GridError, Pos}, ops::{GridWrite, layout::RowMajor}};
+//! use grixy::prelude::*;
 //!
 //! struct MyGrid {
 //!    grid: Vec<u8>,
 //!    width: usize,
+//! }
+//!
+//! impl GridBase for MyGrid {
+//!   fn size_hint(&self) -> (Size, Option<Size>) {
+//!     let size = Size::new(self.width, self.grid.len() / self.width);
+//!     (size, Some(size))
+//!   }
 //! }
 //!
 //! impl GridWrite for MyGrid {
@@ -57,10 +64,12 @@ mod alloc;
 #[cfg(feature = "cell")]
 mod cell;
 
+mod base;
 mod draw;
 mod read;
 mod write;
 
+pub use base::GridBase;
 pub use draw::copy_rect;
 pub use read::{GridIter, GridRead};
 pub use write::GridWrite;
