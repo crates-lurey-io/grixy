@@ -3,7 +3,7 @@
 use grixy::{
     buf::{GridBuf, bits::GridBits},
     core::{Pos, Rect},
-    ops::{copy_rect, unchecked::TrustedSizeGrid as _},
+    ops::{ExactSizeGrid as _, copy_rect},
     prelude::RowMajor,
     transform::GridConvertExt as _,
 };

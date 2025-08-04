@@ -146,7 +146,7 @@ mod tests {
 
     use crate::{
         core::Size,
-        ops::{GridBase, layout::RowMajor},
+        ops::{ExactSizeGrid, layout::RowMajor},
     };
 
     use super::*;
@@ -156,7 +156,14 @@ mod tests {
         grid: [[u8; 3]; 3],
     }
 
-    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
+    impl GridBase for UncheckedTestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
+    }
+
+    impl ExactSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
@@ -166,12 +173,7 @@ mod tests {
         }
     }
 
-    impl GridBase for UncheckedTestGrid {
-        fn size_hint(&self) -> (Size, Option<Size>) {
-            let size = Size::new(3, 3);
-            (size, Some(size))
-        }
-    }
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {}
 
     impl GridWriteUnchecked for UncheckedTestGrid {
         type Element = u8;

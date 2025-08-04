@@ -1,6 +1,6 @@
 use crate::{
     core::{GridError, Pos, Rect, Size},
-    ops::{GridBase, GridRead, GridWrite, unchecked::TrustedSizeGrid},
+    ops::{ExactSizeGrid, GridBase, GridRead, GridWrite},
 };
 
 /// Blends write operations to a grid.
@@ -19,6 +19,19 @@ where
 {
     fn size_hint(&self) -> (Size, Option<Size>) {
         self.source.size_hint()
+    }
+}
+
+impl<G, F> ExactSizeGrid for Blended<'_, G, F>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
     }
 }
 
@@ -54,18 +67,5 @@ where
 
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds)
-    }
-}
-
-unsafe impl<G, F> TrustedSizeGrid for Blended<'_, G, F>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.source.width()
-    }
-
-    fn height(&self) -> usize {
-        self.source.height()
     }
 }

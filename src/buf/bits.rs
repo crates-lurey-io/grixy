@@ -22,7 +22,7 @@ use crate::{
     core::{Pos, Size},
     internal,
     ops::{
-        GridBase, layout,
+        ExactSizeGrid, GridBase, layout,
         unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
     },
 };
@@ -191,18 +191,6 @@ where
     }
 }
 
-impl<T, B, L> GridBase for GridBits<T, B, L>
-where
-    T: BitOps,
-    B: AsRef<[T]>,
-    L: layout::Linear,
-{
-    fn size_hint(&self) -> (Size, Option<Size>) {
-        let size = Size::new(self.width, self.height);
-        (size, Some(size))
-    }
-}
-
 impl<T, B, L> GridReadUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
@@ -263,7 +251,19 @@ where
     }
 }
 
-unsafe impl<T, B, L> TrustedSizeGrid for GridBits<T, B, L>
+impl<T, B, L> GridBase for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+    L: layout::Linear,
+{
+    fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
+        let size = Size::new(self.width, self.height);
+        (size, Some(size))
+    }
+}
+
+impl<T, B, L> ExactSizeGrid for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
@@ -276,6 +276,14 @@ where
     fn height(&self) -> usize {
         self.height
     }
+}
+
+unsafe impl<T, B, L> TrustedSizeGrid for GridBits<T, B, L>
+where
+    T: BitOps,
+    B: AsRef<[T]>,
+    L: layout::Linear,
+{
 }
 
 impl<T, B, L> Index<Pos> for GridBits<T, B, L>

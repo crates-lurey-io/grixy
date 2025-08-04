@@ -74,7 +74,7 @@ mod tests {
     use super::*;
     use crate::{
         core::Size,
-        ops::{layout::RowMajor, unchecked::TrustedSizeGrid},
+        ops::{ExactSizeGrid, layout::RowMajor, unchecked::TrustedSizeGrid},
     };
     use alloc::vec::Vec;
 
@@ -89,7 +89,7 @@ mod tests {
         }
     }
 
-    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
+    impl ExactSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
@@ -98,6 +98,8 @@ mod tests {
             3
         }
     }
+
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {}
 
     impl GridReadUnchecked for UncheckedTestGrid {
         type Element<'a> = u8;

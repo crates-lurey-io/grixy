@@ -6,7 +6,7 @@ _Nothing as of now_.
 
 ## 0.6.0 (Beta)
 
-- [ ] Add `size_hint` (untrusted)
+- [x] Add `size_hint` (untrusted)
 - [ ] Make more descriptive `GridError` enum variants
 - [ ] Add rotate
 - [ ] Add flip

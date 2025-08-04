@@ -1,6 +1,6 @@
 use crate::{
     core::{Pos, Size},
-    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
+    ops::{ExactSizeGrid, GridBase, GridRead},
 };
 
 /// Scales the grid elements using a nearest-neighbor approach.
@@ -23,6 +23,19 @@ where
     }
 }
 
+impl<G> ExactSizeGrid for Scaled<G>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.source.width() * self.scale
+    }
+
+    fn height(&self) -> usize {
+        self.source.height() * self.scale
+    }
+}
+
 impl<G> GridRead for Scaled<G>
 where
     G: GridRead,
@@ -37,18 +50,5 @@ where
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos / self.scale)
-    }
-}
-
-unsafe impl<G> TrustedSizeGrid for Scaled<G>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.source.width() * self.scale
-    }
-
-    fn height(&self) -> usize {
-        self.source.height() * self.scale
     }
 }

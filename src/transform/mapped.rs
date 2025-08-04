@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use crate::{
     core::{Pos, Size},
-    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
+    ops::{GridBase, GridRead},
 };
 
 /// Transforms elements.
@@ -43,18 +43,5 @@ where
 
     fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds).map(&self.map_fn)
-    }
-}
-
-unsafe impl<F, G, T> TrustedSizeGrid for Mapped<F, G, T>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.source.width()
-    }
-
-    fn height(&self) -> usize {
-        self.source.height()
     }
 }

@@ -1,35 +1,18 @@
-use crate::core::{Pos, Size};
+use crate::ops::ExactSizeGrid;
 
-/// A bounded grid type that provides methods to access its dimensions.
+/// A grid that reports an accuate size using `size_hint()`.
 ///
 /// ## Safety
 ///
 /// If the dimensions provide are not accurate, it may lead to _[undefined behavior][]_.
 ///
 /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-pub unsafe trait TrustedSizeGrid {
-    /// Returns the width of the grid, in columns.
-    fn width(&self) -> usize;
-
-    /// Returns the height of the grid, in rows.
-    fn height(&self) -> usize;
-
-    /// Returns the size of the grid.
-    fn size(&self) -> Size {
-        Size {
-            width: self.width(),
-            height: self.height(),
-        }
-    }
-
-    /// Returns whether the given position is valid for this grid.
-    fn contains(&self, pos: Pos) -> bool {
-        pos.x < self.width() && pos.y < self.height()
-    }
-}
+pub unsafe trait TrustedSizeGrid: ExactSizeGrid {}
 
 #[cfg(test)]
 mod tests {
+    use crate::core::{Pos, Size};
+
     use super::*;
 
     struct TestGrid {
@@ -37,7 +20,7 @@ mod tests {
         height: usize,
     }
 
-    unsafe impl TrustedSizeGrid for TestGrid {
+    impl ExactSizeGrid for TestGrid {
         fn width(&self) -> usize {
             self.width
         }
@@ -46,6 +29,8 @@ mod tests {
             self.height
         }
     }
+
+    unsafe impl TrustedSizeGrid for TestGrid {}
 
     #[test]
     fn size() {

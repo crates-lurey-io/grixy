@@ -1,11 +1,9 @@
-use ixy::Size;
-
 use crate::{
     buf::GridBuf,
-    core::Pos,
+    core::{Pos, Size},
     internal,
     ops::{
-        GridBase, layout,
+        ExactSizeGrid, GridBase, layout,
         unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
     },
 };
@@ -14,13 +12,13 @@ impl<T, B, L> GridBase for GridBuf<T, B, L>
 where
     L: layout::Linear,
 {
-    fn size_hint(&self) -> (Size, Option<Size>) {
+    fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
         let size = Size::new(self.width, self.height);
         (size, Some(size))
     }
 }
 
-unsafe impl<T, B, L> TrustedSizeGrid for GridBuf<T, B, L>
+impl<T, B, L> ExactSizeGrid for GridBuf<T, B, L>
 where
     L: layout::Linear,
 {
@@ -32,6 +30,8 @@ where
         self.height
     }
 }
+
+unsafe impl<T, B, L> TrustedSizeGrid for GridBuf<T, B, L> where L: layout::Linear {}
 
 impl<T, B, L> GridReadUnchecked for GridBuf<T, B, L>
 where

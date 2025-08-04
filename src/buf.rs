@@ -88,7 +88,7 @@ mod tests {
     use crate::{
         core::{Pos, Rect},
         ops::{
-            GridRead as _,
+            ExactSizeGrid as _, GridRead as _,
             layout::RowMajor,
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },

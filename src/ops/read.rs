@@ -1,9 +1,8 @@
 use crate::{
-    core::{Pos, Rect, Size},
+    core::{Pos, Rect},
     ops::{
-        GridBase,
+        ExactSizeGrid, GridBase,
         layout::{self, Layout as _},
-        unchecked::TrustedSizeGrid,
     },
 };
 
@@ -25,29 +24,6 @@ pub trait GridRead: GridBase {
     /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
     type Layout: layout::Layout;
 
-    /// Returns the size of the grid, if known.
-    ///
-    /// Specifically, `size_hint()` returns a tuple where the first element is the minimum size,
-    /// and the second element is the upper bound.
-    ///
-    /// The second half of the tuple is an [`Option<usize>`]. A `None` here means that either there
-    /// is no known upper bound, or the upper bound is larger than [`usize`].
-    ///
-    /// ## Implementation
-    ///
-    /// It is not enforced that a grid contains the declared number of elements. A buggy grid may
-    /// contain less than the lower bound, or more than the upper bound of elements.
-    ///
-    /// `size_hint()` is primarily intended to be used for optimizations such as reserving space
-    /// when flattening a grid, or to eagerly trim a bounding rectangle to conform to the grid's
-    /// size, but must not be trusted to e.g., omit bounds checks in unsafe code. An incorrect
-    /// implementation of `size_hint()` should not lead to memory safety violations.
-    ///
-    /// The default implementation returns `(Size::new(0, 0), None)`, which is always valid.
-    fn size_hint(&self) -> (Size, Option<Size>) {
-        (Size::new(0, 0), None)
-    }
-
     /// Returns a reference to an element at a specified position.
     ///
     /// If the position is out of bounds, it returns `None`.
@@ -66,7 +42,7 @@ pub trait GridRead: GridBase {
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        Self::Layout::iter_pos(bounds).filter_map(move |pos| self.get(pos))
+        Self::Layout::iter_pos(self.trim_rect(bounds)).filter_map(move |pos| self.get(pos))
     }
 }
 
@@ -78,7 +54,7 @@ pub trait GridIter: GridRead {
 
 impl<T> GridIter for T
 where
-    T: GridRead + TrustedSizeGrid,
+    T: GridRead + ExactSizeGrid,
 {
     fn iter(&self) -> impl Iterator<Item = Self::Element<'_>> {
         self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()))
@@ -91,7 +67,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{buf::GridBuf, ops::layout::RowMajor, transform::GridConvertExt as _};
+    use crate::{buf::GridBuf, core::Size, ops::layout::RowMajor, transform::GridConvertExt as _};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {

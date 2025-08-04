@@ -1,6 +1,6 @@
 use crate::{
     core::{Pos, Rect, Size},
-    ops::{GridBase, GridRead, unchecked::TrustedSizeGrid},
+    ops::{ExactSizeGrid, GridBase, GridRead},
 };
 
 /// Views a sub-grid, allowing access to a specific rectangular area of the grid.
@@ -20,6 +20,19 @@ where
     fn size_hint(&self) -> (Size, Option<crate::core::Size>) {
         let size = Size::new(self.bounds.width(), self.bounds.height());
         (size, Some(size))
+    }
+}
+
+impl<G> ExactSizeGrid for Viewed<G>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.bounds.width()
+    }
+
+    fn height(&self) -> usize {
+        self.bounds.height()
     }
 }
 
@@ -45,18 +58,5 @@ where
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         let bounds = bounds - self.bounds.top_left();
         self.source.iter_rect(bounds)
-    }
-}
-
-unsafe impl<G> TrustedSizeGrid for Viewed<G>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.bounds.width()
-    }
-
-    fn height(&self) -> usize {
-        self.bounds.height()
     }
 }
