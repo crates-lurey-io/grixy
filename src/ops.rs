@@ -62,5 +62,5 @@ mod read;
 mod write;
 
 pub use draw::copy_rect;
-pub use read::{GridIter, GridRead, IterRect};
+pub use read::{GridIter, GridRead};
 pub use write::GridWrite;

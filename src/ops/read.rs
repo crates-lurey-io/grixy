@@ -3,41 +3,6 @@ use crate::{
     ops::{layout, layout::Layout as _, unchecked::TrustedSizeGrid},
 };
 
-/// The result of iterating over a rectangular region of a grid.
-pub enum IterRect<'a, A, U>
-where
-    A: Iterator<Item = &'a U> + 'a,
-    U: Iterator<Item = &'a U> + 'a,
-{
-    /// The region is aligned, meaning the grid's layout matches the region's layout.
-    Aligned(&'a mut A),
-
-    /// The region is unaligned, meaning the grid's layout does not match the region's layout.
-    Unaligned(&'a mut U),
-}
-
-impl<'a, A, U> Iterator for IterRect<'a, A, U>
-where
-    A: Iterator<Item = &'a U> + 'a,
-    U: Iterator<Item = &'a U> + 'a,
-{
-    type Item = &'a U;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self {
-            IterRect::Aligned(iter) => iter.next(),
-            IterRect::Unaligned(iter) => iter.next(),
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        match self {
-            IterRect::Aligned(iter) => iter.size_hint(),
-            IterRect::Unaligned(iter) => iter.size_hint(),
-        }
-    }
-}
-
 /// Read elements from a 2-dimensional grid position.
 pub trait GridRead {
     /// The type of elements in the grid.

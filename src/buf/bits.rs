@@ -20,6 +20,7 @@ pub use ops::BitOps;
 
 use crate::{
     core::Pos,
+    internal,
     ops::{
         layout,
         unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
@@ -203,19 +204,29 @@ where
 
     type Layout = L;
 
-    unsafe fn get_unchecked(&self, _pos: Pos) -> Self::Element<'_> {
-        todo!()
-        // let index = L::to_1d(pos, self.width);
-        // let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
-        // let byte = unsafe { self.buffer.as_ref().get_unchecked(byte_index) };
-        // (byte.to_usize() >> bit_index) & 1 != 0
+    unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
+        let index = L::to_1d(pos, self.width);
+        let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
+        let byte = unsafe { self.buffer.as_ref().get_unchecked(byte_index) };
+        (byte.to_usize() >> bit_index) & 1 != 0
     }
 
     unsafe fn iter_rect_unchecked(
         &self,
         bounds: crate::prelude::Rect,
     ) -> impl Iterator<Item = Self::Element<'_>> {
-        core::iter::empty()
+        if let Some(aligned) = L::slice_rect_aligned(self.as_ref(), self.size(), bounds) {
+            let iter = aligned.iter().flat_map(|byte| {
+                (0..T::MAX_WIDTH).map(move |bit_index| (byte.to_usize() >> bit_index) & 1 != 0)
+            });
+            internal::IterRect::Aligned(iter)
+        } else {
+            let iter = {
+                let pos = Self::Layout::iter_pos(bounds);
+                pos.map(move |pos| unsafe { self.get_unchecked(pos) })
+            };
+            internal::IterRect::Unaligned(iter)
+        }
     }
 }
 

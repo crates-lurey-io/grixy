@@ -1,6 +1,7 @@
 use crate::{
     buf::GridBuf,
     core::Pos,
+    internal,
     ops::{
         layout,
         unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
@@ -32,23 +33,24 @@ where
 
     type Layout = L;
 
-    unsafe fn get_unchecked(&self, _pos: Pos) -> Self::Element<'_> {
-        todo!()
-        // let index = L::to_1d(pos, self.width);
-        // unsafe { self.buffer.as_ref().get_unchecked(index) }
+    unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
+        let index = L::to_1d(pos, self.width);
+        unsafe { self.buffer.as_ref().get_unchecked(index) }
     }
 
     unsafe fn iter_rect_unchecked(
         &self,
-        _bounds: crate::core::Rect,
+        bounds: crate::core::Rect,
     ) -> impl Iterator<Item = Self::Element<'_>> {
-        core::iter::empty()
-        // let slice = self.buffer.as_ref();
-        // let width = self.width;
-        // (bounds.top()..bounds.bottom()).flat_map(move |y| {
-        //     let row_start = L::to_1d(Pos::new(bounds.left(), y), width);
-        //     slice[row_start..row_start + bounds.width()].iter()
-        // })
+        if let Some(aligned) = L::slice_rect_aligned(self.as_ref(), self.size(), bounds) {
+            internal::IterRect::Aligned(aligned.iter())
+        } else {
+            let iter = {
+                let pos = L::iter_pos(bounds);
+                pos.map(move |pos| unsafe { self.get_unchecked(pos) })
+            };
+            internal::IterRect::Unaligned(iter)
+        }
     }
 }
 

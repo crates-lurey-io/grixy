@@ -30,7 +30,7 @@ where
     }
 
     fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        core::iter::empty()
+        self.source.iter_rect(bounds / self.scale)
     }
 }
 

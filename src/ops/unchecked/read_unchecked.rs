@@ -1,6 +1,10 @@
 use crate::{
     core::{HasSize as _, Pos, Rect},
-    ops::{GridRead, layout, unchecked::TrustedSizeGrid},
+    ops::{
+        GridRead,
+        layout::{self, Layout as _},
+        unchecked::TrustedSizeGrid,
+    },
 };
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -24,9 +28,9 @@ pub trait GridReadUnchecked {
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    /// Elements are returned in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
+    /// Elements are returned in an order agreeable to the grid's internal layout.
+    ///
+    /// The bounding rectangle is treated as _exclusive_ of the right and bottom edges.
     ///
     /// ## Safety
     ///
@@ -40,7 +44,9 @@ pub trait GridReadUnchecked {
     ///
     /// Implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
-    unsafe fn iter_rect_unchecked(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>>;
+    unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        layout::RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
+    }
 }
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.

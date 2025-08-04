@@ -1,8 +1,8 @@
 use core::marker::PhantomData;
 
-use crate::core::{Pos, Rect};
+use crate::core::{Pos, Rect, Size};
 
-use ixy::layout::{self, Traversal as _};
+use ixy::layout::{self, Linear as _, Traversal as _};
 
 /// Crate-internal trait for mapping to [`ixy::layout`].
 trait InternalLayout {
@@ -28,8 +28,33 @@ pub struct Sparse<T = RowMajor> {
     inner: PhantomData<T>,
 }
 
+impl<T: InternalLayout<Traversal: layout::Linear>> Linear for T {
+    fn to_1d(pos: Pos, width: usize) -> usize {
+        T::Traversal::pos_to_index(pos, width)
+    }
+
+    fn to_2d(index: usize, width: usize) -> Pos {
+        T::Traversal::index_to_pos(index, width)
+    }
+
+    fn slice_rect_aligned<E>(slice: &[E], size: Size, rect: Rect) -> Option<&[E]> {
+        T::Traversal::slice_rect_aligned(slice, size, rect)
+    }
+}
+
 /// Defines the layout of a grid in linear (contiguous) memory.
-pub trait Linear: Layout {}
+pub trait Linear: Layout {
+    /// Converts a 2D position to a 1D index based on the grid's width.
+    fn to_1d(pos: Pos, width: usize) -> usize;
+
+    /// Converts a 1D index to a 2D position based on the grid's width.
+    fn to_2d(index: usize, width: usize) -> Pos;
+
+    /// Returns an iterator over positions in a rectangular region of the grid.
+    ///
+    /// If the rectangle is not aligned with the grid's layout, returns `None`.
+    fn slice_rect_aligned<E>(slice: &[E], size: Size, rect: Rect) -> Option<&[E]>;
+}
 
 /// Top-to-bottom, left-to-right traversal order for 2D layouts.
 pub enum ColumnMajor {}
@@ -38,16 +63,12 @@ impl InternalLayout for ColumnMajor {
     type Traversal = layout::ColumnMajor;
 }
 
-impl Linear for ColumnMajor {}
-
 /// Left-to-right, top-to-bottom traversal order for 2D layouts.
 pub enum RowMajor {}
 
 impl InternalLayout for RowMajor {
     type Traversal = layout::RowMajor;
 }
-
-impl Linear for RowMajor {}
 
 /// 2D space divided into blocks, each containing a grid of cells.
 ///
@@ -75,11 +96,4 @@ where
     C: layout::Traversal,
 {
     type Traversal = layout::Block<W, H, G, C>;
-}
-
-impl<const W: usize, const H: usize, G, C> Linear for Block<W, H, layout::Block<W, H, G, C>>
-where
-    G: layout::Traversal,
-    C: layout::Traversal,
-{
 }
