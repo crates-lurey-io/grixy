@@ -1,4 +1,7 @@
-use crate::core::{GridError, Layout, Pos, Rect};
+use crate::{
+    core::{GridError, Pos, Rect},
+    ops::layout,
+};
 
 /// Write elements to a 2-dimensional grid position.
 pub trait GridWrite {
@@ -6,7 +9,7 @@ pub trait GridWrite {
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: Layout;
+    type Layout: layout::Layout;
 
     /// Sets the element at a specified position.
     ///
@@ -27,10 +30,11 @@ pub trait GridWrite {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
-        Self::Layout::iter_pos(bounds).for_each(|pos| {
-            let _ = self.set(pos, f(pos));
-        });
+    fn fill_rect(&mut self, _bounds: Rect, mut _f: impl FnMut(Pos) -> Self::Element) {
+        todo!()
+        // Self::Layout::iter_pos(bounds).for_each(|pos| {
+        //     let _ = self.set(pos, f(pos));
+        // });
     }
 
     /// Sets elements within a rectangular region of the grid.
@@ -48,12 +52,13 @@ pub trait GridWrite {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        Self::Layout::iter_pos(dst)
-            .zip(iter)
-            .for_each(|(pos, value)| {
-                let _ = self.set(pos, value);
-            });
+    fn fill_rect_iter(&mut self, _dst: Rect, _iter: impl IntoIterator<Item = Self::Element>) {
+        todo!()
+        // Self::Layout::iter_pos(dst)
+        //     .zip(iter)
+        //     .for_each(|(pos, value)| {
+        //         let _ = self.set(pos, value);
+        //     });
     }
 
     /// Sets elements within a rectangular region of the grid.
@@ -80,8 +85,9 @@ pub trait GridWrite {
 mod tests {
     extern crate alloc;
 
+    use crate::ops::layout::RowMajor;
+
     use super::*;
-    use crate::core::RowMajor;
     use alloc::vec;
 
     struct TestGrid {

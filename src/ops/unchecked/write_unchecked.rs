@@ -1,6 +1,6 @@
 use crate::{
-    core::{GridError, HasSize, Layout, Pos, Rect},
-    ops::{GridWrite, unchecked::TrustedSizeGrid},
+    core::{GridError, HasSize, Pos, Rect},
+    ops::{GridWrite, layout, unchecked::TrustedSizeGrid},
 };
 
 /// Write elements to a 2-dimensional grid position without bounds checking.
@@ -9,7 +9,7 @@ pub trait GridWriteUnchecked {
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: Layout;
+    type Layout: layout::Layout;
 
     /// Sets the element at a specified position without bounds checking.
     ///
@@ -36,10 +36,11 @@ pub trait GridWriteUnchecked {
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
-    unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
-        Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
-            self.set_unchecked(pos, f(pos));
-        });
+    unsafe fn fill_rect_unchecked(&mut self, _dst: Rect, mut _f: impl FnMut(Pos) -> Self::Element) {
+        todo!()
+        // Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
+        //     self.set_unchecked(pos, f(pos));
+        // });
     }
 
     /// Sets elements within a rectangular region of the grid without bounds checking.
@@ -64,14 +65,15 @@ pub trait GridWriteUnchecked {
     /// (for linear writes, etc.).
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
-        dst: Rect,
-        iter: impl IntoIterator<Item = Self::Element>,
+        _dst: Rect,
+        _iter: impl IntoIterator<Item = Self::Element>,
     ) {
-        Self::Layout::iter_pos(dst)
-            .zip(iter)
-            .for_each(|(pos, value)| unsafe {
-                self.set_unchecked(pos, value);
-            });
+        todo!()
+        // Self::Layout::iter_pos(dst)
+        //     .zip(iter)
+        //     .for_each(|(pos, value)| unsafe {
+        //         self.set_unchecked(pos, value);
+        //     });
     }
 
     /// Sets elements within a rectangular region of the grid without bounds checking.
@@ -140,8 +142,9 @@ impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
 mod tests {
     extern crate alloc;
 
+    use crate::ops::layout::RowMajor;
+
     use super::*;
-    use crate::core::RowMajor;
     use alloc::vec;
 
     struct UncheckedTestGrid {

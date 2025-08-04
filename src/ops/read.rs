@@ -1,6 +1,6 @@
 use crate::{
-    core::{Layout, Pos, Rect},
-    ops::unchecked::TrustedSizeGrid,
+    core::{Pos, Rect},
+    ops::{layout, unchecked::TrustedSizeGrid},
 };
 
 /// Read elements from a 2-dimensional grid position.
@@ -11,7 +11,7 @@ pub trait GridRead {
         Self: 'a;
 
     /// The layout of the grid.
-    type Layout: Layout;
+    type Layout: layout::Layout;
 
     /// Returns a reference to an element at a specified position.
     ///
@@ -30,8 +30,9 @@ pub trait GridRead {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
+    fn iter_rect(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        // Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
+        core::iter::empty()
     }
 }
 
@@ -56,7 +57,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{buf::GridBuf, core::RowMajor, transform::GridConvertExt as _};
+    use crate::{buf::GridBuf, ops::layout::RowMajor, transform::GridConvertExt as _};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {

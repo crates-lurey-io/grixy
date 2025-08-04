@@ -1,6 +1,6 @@
 use crate::{
-    core::{HasSize as _, Layout, Pos, Rect},
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{HasSize as _, Pos, Rect},
+    ops::{GridRead, layout, unchecked::TrustedSizeGrid},
 };
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -11,7 +11,7 @@ pub trait GridReadUnchecked {
         Self: 'a;
 
     /// The layout of the grid, which determines how elements are stored and accessed.
-    type Layout: Layout;
+    type Layout: layout::Layout;
 
     /// Returns an element, without doing bounds checking.
     ///
@@ -38,8 +38,9 @@ pub trait GridReadUnchecked {
     /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
-    unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        Self::Layout::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
+    unsafe fn iter_rect_unchecked(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        core::iter::empty()
+        // Self::Layout::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
 
@@ -72,7 +73,7 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::{core::RowMajor, ops::unchecked::TrustedSizeGrid};
+    use crate::ops::{layout::RowMajor, unchecked::TrustedSizeGrid};
     use alloc::vec::Vec;
 
     struct UncheckedTestGrid {

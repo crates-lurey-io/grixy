@@ -13,16 +13,17 @@
 //! assert_eq!(grid.get(Pos::new(3, 0)), Some(false));
 //! ```
 
-mod ops;
-
 use core::marker::PhantomData;
 
-use ixy::index::{Layout, RowMajor};
+mod ops;
 pub use ops::BitOps;
 
 use crate::{
     core::Pos,
-    ops::unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
+    ops::{
+        layout,
+        unchecked::{GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid},
+    },
 };
 
 #[cfg(feature = "alloc")]
@@ -34,10 +35,10 @@ extern crate alloc;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
-pub struct GridBits<T, B, L = RowMajor>
+pub struct GridBits<T, B, L = layout::RowMajor>
 where
     T: BitOps,
-    L: Layout,
+    L: layout::Linear,
 {
     buffer: B,
     width: usize,
@@ -50,7 +51,7 @@ impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     /// Returns a grid from an existing buffer with a given width in columns.
     ///
@@ -92,7 +93,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
-impl<T> GridBits<T, alloc::vec::Vec<T>, RowMajor>
+impl<T> GridBits<T, alloc::vec::Vec<T>, layout::RowMajor>
 where
     T: BitOps + Default,
 {
@@ -124,7 +125,7 @@ where
 impl<T, L> GridBits<T, alloc::vec::Vec<T>, L>
 where
     T: BitOps,
-    L: Layout,
+    L: layout::Linear,
 {
     /// Creates a new grid with the specified width, height, and layout, filled with the default value.
     ///
@@ -149,7 +150,7 @@ impl<T, B, L> AsRef<[T]> for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     fn as_ref(&self) -> &[T] {
         self.buffer.as_ref()
@@ -160,7 +161,7 @@ impl<T, B, L> AsMut<[T]> for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsMut<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     fn as_mut(&mut self) -> &mut [T] {
         self.buffer.as_mut()
@@ -171,7 +172,7 @@ impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     /// Consumes the `GridBits`, returning the underlying buffer, width, and height.
     #[must_use]
@@ -193,7 +194,7 @@ impl<T, B, L> GridReadUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     type Element<'a>
         = bool
@@ -202,11 +203,12 @@ where
 
     type Layout = L;
 
-    unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
-        let index = L::to_1d(pos, self.width);
-        let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
-        let byte = unsafe { self.buffer.as_ref().get_unchecked(byte_index) };
-        (byte.to_usize() >> bit_index) & 1 != 0
+    unsafe fn get_unchecked(&self, _pos: Pos) -> Self::Element<'_> {
+        todo!()
+        // let index = L::to_1d(pos, self.width);
+        // let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
+        // let byte = unsafe { self.buffer.as_ref().get_unchecked(byte_index) };
+        // (byte.to_usize() >> bit_index) & 1 != 0
     }
 }
 
@@ -214,20 +216,21 @@ impl<T, B, L> GridWriteUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsMut<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     type Element = bool;
     type Layout = L;
 
-    unsafe fn set_unchecked(&mut self, pos: Pos, value: bool) {
-        let index = L::to_1d(pos, self.width);
-        let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
-        let byte = unsafe { self.buffer.as_mut().get_unchecked_mut(byte_index) };
-        if value {
-            *byte |= T::from_usize(1 << bit_index);
-        } else {
-            *byte &= !T::from_usize(1 << bit_index);
-        }
+    unsafe fn set_unchecked(&mut self, _pos: Pos, _value: bool) {
+        todo!()
+        // let index = L::to_1d(pos, self.width);
+        // let (byte_index, bit_index) = (index / T::MAX_WIDTH, index % T::MAX_WIDTH);
+        // let byte = unsafe { self.buffer.as_mut().get_unchecked_mut(byte_index) };
+        // if value {
+        //     *byte |= T::from_usize(1 << bit_index);
+        // } else {
+        //     *byte &= !T::from_usize(1 << bit_index);
+        // }
     }
 }
 
@@ -235,7 +238,7 @@ unsafe impl<T, B, L> TrustedSizeGrid for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     fn width(&self) -> usize {
         self.width
@@ -250,12 +253,10 @@ where
 mod tests {
     extern crate alloc;
 
-    use ixy::index::RowMajor;
-
     use crate::{
         buf::bits::GridBits,
         core::{GridError, Pos},
-        ops::{GridRead, GridWrite, unchecked::GridReadUnchecked as _},
+        ops::{GridRead, GridWrite, layout::RowMajor, unchecked::GridReadUnchecked as _},
     };
 
     #[test]

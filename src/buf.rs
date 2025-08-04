@@ -13,7 +13,6 @@
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
-use crate::core::{Layout, RowMajor};
 use core::marker::PhantomData;
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
@@ -22,12 +21,12 @@ pub mod bits;
 
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
+use crate::ops::layout;
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
-
-mod impl_slice;
 
 mod impl_grid;
 mod impl_new;
+mod impl_slice;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
 ///
@@ -35,9 +34,9 @@ mod impl_new;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
-pub struct GridBuf<T, B, L = RowMajor>
+pub struct GridBuf<T, B, L = layout::RowMajor>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     buffer: B,
     width: usize,
@@ -48,7 +47,7 @@ where
 
 impl<T, B, L> GridBuf<T, B, L>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
     #[must_use]
@@ -62,9 +61,10 @@ mod tests {
     extern crate alloc;
     use super::*;
     use crate::{
-        core::{ColMajor, Pos, Rect},
+        core::{Pos, Rect},
         ops::{
             GridRead as _,
+            layout::{ColumnMajor, RowMajor},
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = GridBuf::<_, _, ColMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
+        let buffer = GridBuf::<_, _, ColumnMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));

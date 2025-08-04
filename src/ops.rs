@@ -48,6 +48,7 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
+pub mod layout;
 pub mod unchecked;
 
 #[cfg(feature = "alloc")]

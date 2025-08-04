@@ -11,6 +11,9 @@
 
 #[cfg(feature = "buffer")]
 pub use crate::buf::GridBuf;
-pub use crate::core::{HasSize as _, Pos, Rect, RowMajor, Size};
-pub use crate::ops::{GridIter as _, GridRead as _, GridWrite as _};
+pub use crate::core::{HasSize as _, Pos, Rect, Size};
+pub use crate::ops::{
+    GridIter as _, GridRead as _, GridWrite as _,
+    layout::{Block, ColumnMajor, Layout as _, Linear as _, RowMajor},
+};
 pub use crate::transform::GridConvertExt as _;

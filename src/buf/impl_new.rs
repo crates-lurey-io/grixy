@@ -1,16 +1,13 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use crate::{
-    buf::GridBuf,
-    core::{Layout, RowMajor},
-};
+use crate::{buf::GridBuf, ops::layout};
 use core::marker::PhantomData;
 
 impl<T, B, L> GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     /// Returns a grid from an existing buffer with a given width in columns.
     ///
@@ -54,7 +51,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
-impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
+impl<T> GridBuf<T, alloc::vec::Vec<T>, layout::RowMajor> {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
     /// This creates a grid with a row-major layout; see [`new_filled_with_layout`][] to customize.
@@ -114,7 +111,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
 #[cfg(feature = "alloc")]
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
@@ -125,7 +122,7 @@ where
     pub fn new_filled_with_layout(width: usize, height: usize, value: T) -> Self
     where
         T: Copy,
-        L: Layout,
+        L: layout::Linear,
     {
         let buffer = alloc::vec![value; width * height];
         Self {
@@ -143,7 +140,7 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::{core::Pos, ops::GridRead as _};
+    use crate::{core::Pos, ops::GridRead as _, ops::layout::RowMajor};
     use alloc::vec;
 
     #[test]

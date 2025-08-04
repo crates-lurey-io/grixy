@@ -5,8 +5,8 @@ extern crate alloc;
 use alloc::{vec, vec::Vec};
 
 use crate::{
-    core::{GridError, RowMajor},
-    ops::{GridRead, GridWrite},
+    core::GridError,
+    ops::{GridRead, GridWrite, layout},
 };
 
 /// A grid implementation that does not optimize any operations.
@@ -53,7 +53,7 @@ impl<T> GridRead for NaiveGrid<T> {
     where
         Self: 'a;
 
-    type Layout = RowMajor;
+    type Layout = layout::RowMajor;
 
     fn get(&self, pos: crate::core::Pos) -> Option<Self::Element<'_>> {
         if pos.x < self.width && pos.y < self.height {
@@ -66,7 +66,7 @@ impl<T> GridRead for NaiveGrid<T> {
 
 impl<T> GridWrite for NaiveGrid<T> {
     type Element = T;
-    type Layout = RowMajor;
+    type Layout = layout::RowMajor;
 
     fn set(&mut self, pos: crate::core::Pos, value: Self::Element) -> Result<(), GridError> {
         if pos.x < self.width && pos.y < self.height {

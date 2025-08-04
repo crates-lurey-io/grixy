@@ -202,7 +202,7 @@ pub trait GridConvertExt: GridRead {
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```
     #[cfg(feature = "buffer")]
-    fn collect<'a, B>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, Self::Layout>
+    fn collect<'a, B>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B>
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
         Self: Sized,
