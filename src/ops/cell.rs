@@ -43,3 +43,35 @@ use core::cell::{Cell, RefCell, UnsafeCell};
 impl_grid_write!(Cell<T>);
 impl_grid_write!(RefCell<T>);
 impl_grid_write!(UnsafeCell<T>);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::test::NaiveGrid;
+
+    fn test_grid_write<'a>(grid: &mut (impl GridWrite<Element = u8> + 'a)) {
+        grid.set(Pos::new(1, 1), 42).unwrap();
+        grid.fill_rect(Rect::from_ltwh(0, 0, 3, 3), |_| 0);
+        grid.fill_rect_iter(Rect::from_ltwh(0, 0, 3, 3), [1, 2, 3]);
+        grid.fill_rect_solid(Rect::from_ltwh(0, 0, 3, 3), 99);
+    }
+
+    #[test]
+    fn test_cell_grid_write() {
+        let mut grid = Cell::new(NaiveGrid::new(3, 3));
+        test_grid_write(&mut grid);
+    }
+
+    #[test]
+    fn test_refcell_grid_write() {
+        let mut grid = RefCell::new(NaiveGrid::new(3, 3));
+        test_grid_write(&mut grid);
+    }
+
+    #[test]
+    fn test_unsafecell_grid_write() {
+        let mut grid = UnsafeCell::new(NaiveGrid::new(3, 3));
+        test_grid_write(&mut grid);
+    }
+}

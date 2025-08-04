@@ -7,7 +7,7 @@ use crate::{
 ///
 /// See [`GridConvertExt::view`][] for usage.
 ///
-/// [`GridConvertExt::view`]: crate::convert::GridConvertExt::view
+/// [`GridConvertExt::view`]: crate::transform::GridConvertExt::view
 pub struct Viewed<G> {
     pub(super) source: G,
     pub(super) bounds: Rect,

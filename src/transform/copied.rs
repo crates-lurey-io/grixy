@@ -9,7 +9,7 @@ use crate::{
 ///
 /// See [`GridConvertExt::copied`][] for usage.
 ///
-/// [`GridConvertExt::copied`]: crate::convert::GridConvertExt::copied
+/// [`GridConvertExt::copied`]: crate::transform::GridConvertExt::copied
 pub struct Copied<T, G> {
     pub(super) source: G,
     pub(super) _element: PhantomData<T>,

@@ -56,7 +56,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{buf::GridBuf, convert::GridConvertExt as _, core::RowMajor};
+    use crate::{buf::GridBuf, core::RowMajor, transform::GridConvertExt as _};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {

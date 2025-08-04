@@ -7,7 +7,7 @@ use crate::{
 ///
 /// See [`GridConvertExt::scale`][] for usage.
 ///
-/// [`GridConvertExt::scale`]: crate::convert::GridConvertExt::scale
+/// [`GridConvertExt::scale`]: crate::transform::GridConvertExt::scale
 pub struct Scaled<G> {
     pub(super) source: G,
     pub(super) scale: usize,

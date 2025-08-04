@@ -2,9 +2,9 @@
 
 use grixy::{
     buf::bits::GridBits,
-    convert::GridConvertExt as _,
     core::{Pos, Rect},
     ops::{copy_rect, unchecked::TrustedSizeGrid as _},
+    transform::GridConvertExt as _,
 };
 use temp_dir::TempDir;
 

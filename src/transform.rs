@@ -1,3 +1,60 @@
+//! Transformation operations for grids.
+//!
+//! [`GridConvertExt`] is automatically implemented for all types that implement reading, or in the
+//! case of [`blend`][GridConvertExt::blend], reading _and_ writing from a grid, and provides
+//! additional methods for lazily transforming grids (leaving the original grid unchanged, and
+//! without any allocations).
+//!
+//! Operations include:
+//!
+//! - [`blend`](GridConvertExt::blend): Creates a blended version of the grid, applying a blend function when setting elements.
+//! - [`collect`](GridConvertExt::collect): Collects the elements of the grid into a new buffer.
+//! - [`copied`](GridConvertExt::copied): Creates a grid that copies all of its elements.
+//! - [`map`](GridConvertExt::map): Creates a grid that applies a mapping function to its elements.
+//! - [`scale`](GridConvertExt::scale): Creates a scaled version of the grid.
+//! - [`view`](GridConvertExt::view): Creates a view of the grid over a specified rectangular region.
+//!
+//! ## Chaining transformations
+//!
+//! Methods on [`GridConvertExt`] can be chained together to create complex transformations, as
+//! they consume the grid and return a new one. This allows for a functional style of programming
+//! where each transformation is applied in sequence, without modifying the original grid:
+//!
+//! ```rust
+//! use grixy::prelude::*;
+//!
+//! let grid = GridBuf::new_filled(3, 3, 1)
+//!   .copied()
+//!   .map(|x| x * 2)
+//!   .view(Rect::from_ltwh(0, 0, 2, 2))
+//!   .scale(2);
+//!
+//! assert_eq!(grid.get(Pos::new(1, 1)), Some(2));
+//! ```
+//!
+//! ## Sharing a grid
+//!
+//! To share the original grid, you can use `Rc` or `Arc` to wrap it:
+//!
+//! ```rust
+//! // Or alloc::rc::Rc;
+//! use std::rc::Rc;
+//! use grixy::prelude::*;
+//!
+//! let rc = Rc::new(GridBuf::new_filled(3, 3, 1));
+//!
+//! let rf = Rc::clone(&rc);
+//! let chained = rf
+//!   .copied()
+//!   .map(|x| x * 2)
+//!   .view(Rect::from_ltwh(0, 0, 2, 2))
+//!   .scale(2);
+//! assert_eq!(chained.get(Pos::new(1, 1)), Some(2));
+//!
+//! // Original grid is still accessible
+//! assert_eq!(rc.get(Pos::new(1, 1)), Some(&1));
+//! ```
+
 use core::marker::PhantomData;
 
 use crate::{
@@ -31,7 +88,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// // By default, `GridBuf` returns references to its elements (similar to `Vec`).
     /// let grid = GridBuf::new_filled(3, 3, 1);
@@ -59,7 +116,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let mapped = grid.map(|&x| x * 2);
@@ -84,7 +141,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf, core::Rect};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
@@ -110,7 +167,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos,convert::GridConvertExt as _,  ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(2, 2, 1);
     /// let scaled = grid.scale(2);
@@ -137,7 +194,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let collected = grid.copied().collect::<Vec<_>>();
@@ -166,7 +223,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::{GridRead, GridWrite}, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let mut grid = GridBuf::new_filled(3, 3, 1);
     /// let blend_fn = |current: &i32, new: i32| current + new;

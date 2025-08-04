@@ -1,13 +1,19 @@
-//! Zero-cost 2D grids for Rust.
+//! Zero-cost 2D grids focused on memory consumption and performance.
 //!
-//! _Powerful enough for embedded systems, convenient enough for game development._
+//! Grixy provides a set of traits and types for working with 2D grids, including traits for reading
+//! and writing to grids, as well as implementations for common buffer types based on linear arrays
+//! or vectors. The crate is `no_std` compatible, and operates without a dynamic memory allocator;
+//! as a result _most_[^1] APIs are lazily evaluated, returning or operating on iterators or
+//! references rather than copying data around.
 //!
-//! ## Overview
+//! [^1]: The [`alloc`](#alloc) feature enables additional functionality based on `alloc`.
 //!
-//! This crate provides traits and implementations for working with 2-dimensional grids that are
-//! indexed by `usize`'d coordinates, i.e. for projects such as 2D games, simulations, pixel
-//! rasterization, and more, with a focus on compatibility with embedded use-cases, performance, and
-//! safety.
+//! Possible use-cases include:
+//!
+//! - 2D games, where grids can represent tile maps, collision detection, or game state
+//! - Simulations, where grids can represent physical systems, cellular automata, or spatial data
+//! - Pixel rasterization, where grids can represent images, textures, or graphical data
+//! - Any other 2D grid-based data structure, such as matrices, graphs, or spatial indexing
 //!
 //! ## Examples
 //!
@@ -33,19 +39,13 @@
 //!
 //! ### `alloc`
 //!
-//! _Enabled by default._
-//!
 //! Provides additional (but optional) functionality that uses `alloc`.
-//!
-//! If you are just using traits and types, this feature can be safely disabled.
 //!
 //! ### `buffer`
 //!
-//! _Enabled by default._
-//!
 //! Provides the linear `GridBuf` type (and convenience types) through `grixy::buf`.
 //!
-//! If you are just using traits and types, this feature can be safely disabled.
+//! If enabled in combination with `alloc`, `Vec`-based grids are available.
 //!
 //! ### `cell`
 //!
@@ -57,10 +57,10 @@ pub(crate) mod internal;
 
 #[cfg(feature = "buffer")]
 pub mod buf;
-pub mod convert;
 pub mod core;
 pub mod ops;
 pub mod prelude;
+pub mod transform;
 
 #[cfg(test)]
 pub mod test;

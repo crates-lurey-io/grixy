@@ -9,7 +9,7 @@ use crate::{
 ///
 /// See [`GridConvertExt::map`][] for usage.
 ///
-/// [`GridConvertExt::map`]: crate::convert::GridConvertExt::map
+/// [`GridConvertExt::map`]: crate::transform::GridConvertExt::map
 pub struct Mapped<F, G, T> {
     pub(super) source: G,
     pub(super) map_fn: F,
