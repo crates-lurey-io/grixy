@@ -1,5 +1,5 @@
 use crate::{
-    core::{HasSize as _, Pos, Rect},
+    core::{Pos, Rect},
     ops::{
         GridRead,
         layout::{self, Layout as _},
@@ -64,12 +64,6 @@ impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
         } else {
             None
         }
-    }
-
-    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        let size = self.size().to_rect();
-        let rect = bounds.intersect(size);
-        unsafe { self.iter_rect_unchecked(rect) }
     }
 }
 
@@ -147,8 +141,13 @@ mod tests {
 
     #[test]
     fn rect_iter_completely_in_bounds_unchecked_impl() {
+        #[rustfmt::skip]
         let grid = UncheckedTestGrid {
-            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+            grid: [
+                [1, 2, 3], 
+                [4, 5, 6], 
+                [7, 8, 9],
+            ],
         };
         let cells = grid
             .iter_rect(Rect::from_ltwh(1, 1, 2, 2))

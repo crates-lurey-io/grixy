@@ -199,7 +199,7 @@ pub trait GridConvertExt: GridRead {
     /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let collected = grid.copied().collect::<Vec<_>>(RowMajor);
+    /// let collected = grid.copied().collect::<Vec<_>, RowMajor>();
     /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```

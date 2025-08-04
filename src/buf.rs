@@ -9,7 +9,7 @@
 //! ```
 //! use grixy::{core::Pos, buf::GridBuf, ops::GridRead};
 //!
-//! let grid = GridBuf::<u8, _>::new_filled(3, 4, 42);
+//! let grid = GridBuf::<u8, _, _>::new_filled(3, 4, 42);
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 

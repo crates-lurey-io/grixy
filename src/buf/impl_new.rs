@@ -26,7 +26,7 @@ where
     /// use grixy::prelude::*;
     ///
     /// let buffer = vec![1, 2, 3, 4, 5, 6];
-    /// let grid = GridBuf::<_, _>::from_buffer(buffer, 3);
+    /// let grid = GridBuf::<_, _, RowMajor>::from_buffer(buffer, 3);
     ///
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
     /// assert_eq!(grid.get(Pos::new(1, 0)), Some(&2));
@@ -63,7 +63,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, layout::RowMajor> {
     /// ```rust
     /// use grixy::prelude::*;
     ///
-    /// let grid = GridBuf::<u8, _>::new(3, 3);
+    /// let grid = GridBuf::<u8, _, _>::new(3, 3);
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&0));
     /// assert_eq!(grid.get(Pos::new(2, 2)), Some(&0));
     /// assert_eq!(grid.get(Pos::new(3, 3)), None); // Out of bounds

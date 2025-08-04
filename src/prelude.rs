@@ -3,7 +3,7 @@
 //! ```rust
 //! use grixy::prelude::*;
 //!
-//! let mut grid = GridBuf::<u8, _>::new(5, 5);
+//! let mut grid = GridBuf::<u8, _, _>::new(5, 5);
 //! grid.set(Pos::new(4, 4), 42);
 //!
 //! assert_eq!(grid.get(Pos::new(4, 4)), Some(&42));

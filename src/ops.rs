@@ -18,7 +18,7 @@
 //! Implementing [`GridWrite`] to write to a grid:
 //!
 //! ```rust
-//! use grixy::{core::{GridError, Pos, RowMajor}, ops::GridWrite};
+//! use grixy::{core::{GridError, Pos}, ops::{GridWrite, layout::RowMajor}};
 //!
 //! struct MyGrid {
 //!    grid: Vec<u8>,

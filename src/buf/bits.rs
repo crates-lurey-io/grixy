@@ -7,7 +7,7 @@
 //!
 //! Creating an owned `GridBits` and accessing an element:
 //! ```
-//! use grixy::{core::{Pos, RowMajor}, buf::bits::GridBits, ops::GridRead};
+//! use grixy::{core::Pos, buf::bits::GridBits, ops::{GridRead, layout::RowMajor}};
 //!
 //! let grid = GridBits::<u8, _, RowMajor>::new(8, 1);
 //! assert_eq!(grid.get(Pos::new(3, 0)), Some(false));
@@ -68,9 +68,9 @@ where
     /// ## Example
     ///
     /// ```rust
-    /// use grixy::{core::Pos, buf::bits::GridBits, ops::GridRead};
+    /// use grixy::{core::Pos, buf::bits::GridBits, ops::{GridRead, layout::RowMajor}};
     ///
-    /// let grid = GridBits::<_, Vec<u8>>::from_buffer(vec![1, 2, 3, 4], 2);
+    /// let grid = GridBits::<_, Vec<u8>, RowMajor>::from_buffer(vec![1, 2, 3, 4], 2);
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(true));
     ///
     /// assert_eq!(grid.get(Pos::new(1, 0)), Some(false));
@@ -109,7 +109,7 @@ where
     /// ```rust
     /// use grixy::{core::Pos, buf::bits::GridBits, ops::GridRead};
     ///
-    /// let grid = GridBits::<u8, _>::new(8, 1);
+    /// let grid = GridBits::<u8, _, _>::new(8, 1);
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
     /// assert_eq!(grid.get(Pos::new(7, 0)), Some(false));
     /// assert_eq!(grid.get(Pos::new(8, 0)), None);
@@ -132,7 +132,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use grixy::{core::{Pos, RowMajor}, buf::bits::GridBits, ops::GridRead};
+    /// use grixy::{core::{Pos}, buf::bits::GridBits, ops::{GridRead, layout::RowMajor}};
     ///
     /// let grid = GridBits::<u8, _, RowMajor>::new_with_layout(8, 1);
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(false));
