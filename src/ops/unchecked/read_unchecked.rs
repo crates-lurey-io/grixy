@@ -34,9 +34,11 @@ pub trait GridReadUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
-    /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
-    /// implementations may optimize this, for example by using a more efficient iteration strategy
+    /// The default implementation iterates over the rectangle in a traversal order defined by
+    /// [`GridReadUnchecked::Layout`], making an individual call to `get_unchecked` for each
+    /// position in the rectangle.
+    ///
+    /// Implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
     unsafe fn iter_rect_unchecked(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         core::iter::empty()

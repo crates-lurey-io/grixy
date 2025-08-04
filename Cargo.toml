@@ -26,7 +26,7 @@ buffer = []
 cell = []
 
 [dependencies]
-ixy = { version = "0.6.0-alpha.1" }
+ixy = { path = "../ixy" } #{ version = "0.6.0-alpha.1" }
 
 [dev-dependencies]
 bytemuck = "1.23.1"
