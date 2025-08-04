@@ -9,3 +9,6 @@
 # LLM outputs
 llms.txt
 llms-full.txt
+
+# cargo-flamegraph output
+flamegraph.svg
