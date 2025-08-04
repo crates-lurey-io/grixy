@@ -4,6 +4,7 @@ use grixy::{
     buf::{GridBuf, bits::GridBits},
     core::{Pos, Rect},
     ops::{copy_rect, unchecked::TrustedSizeGrid as _},
+    prelude::RowMajor,
     transform::GridConvertExt as _,
 };
 use temp_dir::TempDir;
@@ -19,7 +20,7 @@ fn main() {
     let scale: usize = input.trim().parse().unwrap_or(1);
 
     // Creates a 2-dimensional view over the bits of the font.
-    let font = GridBits::<_, _>::from_buffer(IBM_VGA_8X8, 8)
+    let font = GridBits::<_, _, RowMajor>::from_buffer(IBM_VGA_8X8, 8)
         .map(|bit| if bit { 0xFFFF_FFFFu32 } else { 0xFF00_0000u32 })
         .scale(scale);
 

@@ -35,7 +35,7 @@ extern crate alloc;
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
 #[derive(Debug, Clone)]
-pub struct GridBits<T, B, L = layout::RowMajor>
+pub struct GridBits<T, B, L>
 where
     T: BitOps,
     L: layout::Linear,
@@ -43,8 +43,8 @@ where
     buffer: B,
     width: usize,
     height: usize,
-    _element: PhantomData<T>,
     _layout: PhantomData<L>,
+    _element: PhantomData<T>,
 }
 
 impl<T, B, L> GridBits<T, B, L>
@@ -86,8 +86,8 @@ where
             buffer,
             width,
             height,
-            _element: PhantomData,
             _layout: PhantomData,
+            _element: PhantomData,
         }
     }
 }
@@ -213,7 +213,7 @@ where
 
     unsafe fn iter_rect_unchecked(
         &self,
-        _bounds: crate::prelude::Rect,
+        bounds: crate::prelude::Rect,
     ) -> impl Iterator<Item = Self::Element<'_>> {
         core::iter::empty()
     }

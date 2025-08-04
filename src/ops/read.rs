@@ -1,7 +1,42 @@
 use crate::{
     core::{Pos, Rect},
-    ops::{layout, unchecked::TrustedSizeGrid},
+    ops::{layout, layout::Layout as _, unchecked::TrustedSizeGrid},
 };
+
+/// The result of iterating over a rectangular region of a grid.
+pub enum IterRect<'a, A, U>
+where
+    A: Iterator<Item = &'a U> + 'a,
+    U: Iterator<Item = &'a U> + 'a,
+{
+    /// The region is aligned, meaning the grid's layout matches the region's layout.
+    Aligned(&'a mut A),
+
+    /// The region is unaligned, meaning the grid's layout does not match the region's layout.
+    Unaligned(&'a mut U),
+}
+
+impl<'a, A, U> Iterator for IterRect<'a, A, U>
+where
+    A: Iterator<Item = &'a U> + 'a,
+    U: Iterator<Item = &'a U> + 'a,
+{
+    type Item = &'a U;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            IterRect::Aligned(iter) => iter.next(),
+            IterRect::Unaligned(iter) => iter.next(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            IterRect::Aligned(iter) => iter.size_hint(),
+            IterRect::Unaligned(iter) => iter.size_hint(),
+        }
+    }
+}
 
 /// Read elements from a 2-dimensional grid position.
 pub trait GridRead {
@@ -30,9 +65,8 @@ pub trait GridRead {
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
-    fn iter_rect(&self, _bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        // Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
-        core::iter::empty()
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        Self::Layout::iter_pos(bounds).filter_map(move |pos| self.get(pos))
     }
 }
 
@@ -123,7 +157,7 @@ mod tests {
     #[test]
     fn collect() {
         let grid = GridBuf::new_filled(3, 3, 1);
-        let collected = grid.copied().collect::<Vec<_>, _>(RowMajor);
+        let collected = grid.copied().collect::<Vec<_>, RowMajor>();
         assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(collected.get(Pos::new(3, 3)), None);
     }

@@ -34,7 +34,7 @@ where
     /// assert_eq!(grid.get(Pos::new(3, 1)), None); // Out of bounds
     /// ```
     #[must_use]
-    pub fn from_buffer(buffer: B, layout: L, width: usize) -> Self {
+    pub fn from_buffer(buffer: B, width: usize) -> Self {
         let height = buffer.as_ref().len() / width;
         assert!(
             height * width == buffer.as_ref().len(),
@@ -44,7 +44,7 @@ where
             buffer,
             width,
             height,
-            layout,
+            _layout: PhantomData,
             _element: PhantomData,
         }
     }
@@ -102,7 +102,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, layout::RowMajor> {
             buffer,
             width,
             height,
-            layout: layout::RowMajor,
+            _layout: PhantomData,
             _element: PhantomData,
         }
     }
@@ -119,7 +119,7 @@ where
     ///
     /// ## Example
     #[must_use]
-    pub fn new_filled_with_layout(width: usize, height: usize, layout: L, value: T) -> Self
+    pub fn new_filled_with_layout(width: usize, height: usize, value: T) -> Self
     where
         T: Copy,
         L: layout::Linear,
@@ -129,7 +129,7 @@ where
             buffer,
             width,
             height,
-            layout,
+            _layout: PhantomData,
             _element: PhantomData,
         }
     }
@@ -147,12 +147,12 @@ mod tests {
     #[should_panic(expected = "Buffer length must be a multiple of width")]
     fn test_from_buffer_panics_on_invalid_length() {
         let buffer = vec![1, 2, 3];
-        let _grid = GridBuf::from_buffer(buffer, RowMajor, 2);
+        let _grid = GridBuf::<_, _, RowMajor>::from_buffer(buffer, 2);
     }
 
     #[test]
     fn new_filled_with_layout() {
-        let grid = GridBuf::new_filled_with_layout(3, 2, RowMajor, 42);
+        let grid = GridBuf::<_, _, RowMajor>::new_filled_with_layout(3, 2, 42);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
         assert_eq!(grid.get(Pos::new(2, 1)), Some(&42));
         assert_eq!(grid.get(Pos::new(3, 1)), None); // Out of bounds

@@ -28,6 +28,10 @@ where
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos / self.scale)
     }
+
+    fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        core::iter::empty()
+    }
 }
 
 unsafe impl<G> TrustedSizeGrid for Scaled<G>

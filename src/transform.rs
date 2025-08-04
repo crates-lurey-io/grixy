@@ -204,7 +204,7 @@ pub trait GridConvertExt: GridRead {
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```
     #[cfg(feature = "buffer")]
-    fn collect<'a, B, L>(&'a self, layout: L) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
+    fn collect<'a, B, L>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
         L: layout::Linear,
@@ -216,7 +216,7 @@ pub trait GridConvertExt: GridRead {
 
         let iter = self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()));
         let elem = iter.collect::<B>();
-        crate::buf::GridBuf::from_buffer(elem, layout, self.width())
+        crate::buf::GridBuf::from_buffer(elem, self.width())
     }
 
     /// Creates a blended version of this grid, applying a blend function when setting elements.
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn grid_scaled_get() {
-        let grid = GridBuf::from_buffer(vec![1, 2, 3, 4], RowMajor, 2);
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(scaled.get(Pos::new(2, 2)), Some(&4));
@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn grid_scaled_iter_rect() {
-        let grid = GridBuf::from_buffer(vec![1, 2, 3, 4], RowMajor, 2);
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         let elements: Vec<_> = scaled.iter_rect(Rect::from_ltwh(0, 0, 4, 4)).collect();
 

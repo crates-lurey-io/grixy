@@ -6,7 +6,10 @@ use alloc::{vec, vec::Vec};
 
 use crate::{
     core::GridError,
-    ops::{GridRead, GridWrite, layout},
+    ops::{
+        GridRead, GridWrite,
+        layout::{self, Layout as _},
+    },
 };
 
 /// A grid implementation that does not optimize any operations.
@@ -61,6 +64,10 @@ impl<T> GridRead for NaiveGrid<T> {
         } else {
             None
         }
+    }
+
+    fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        layout::RowMajor::iter_pos(bounds).filter_map(move |pos| self.get(pos))
     }
 }
 

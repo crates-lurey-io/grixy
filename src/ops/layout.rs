@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use crate::core::{Pos, Rect};
 
 use ixy::layout::{self, Traversal as _};
@@ -5,14 +7,11 @@ use ixy::layout::{self, Traversal as _};
 /// Crate-internal trait for mapping to [`ixy::layout`].
 trait InternalLayout {
     type Traversal: layout::Traversal;
-
-    /// Returns the layout traversal for this grid layout.
-    fn as_traversal(&self) -> &Self::Traversal;
 }
 
 impl<T: InternalLayout> Layout for T {
-    fn iter_pos(&self, rect: Rect) -> impl Iterator<Item = Pos> {
-        self.as_traversal().iter_pos(rect)
+    fn iter_pos(rect: Rect) -> impl Iterator<Item = Pos> {
+        T::Traversal::iter_pos(rect)
     }
 }
 
@@ -21,59 +20,38 @@ pub trait Layout {
     /// Returns an iterator over positions in the given rectangle.
     ///
     /// The order of the positions is determined by the layout's traversal order.
-    fn iter_pos(&self, rect: Rect) -> impl Iterator<Item = Pos>;
+    fn iter_pos(rect: Rect) -> impl Iterator<Item = Pos>;
 }
 
 /// Sparse layout for grids, where elements are not stored in a contiguous block of memory.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Sparse<T = RowMajor>
-where
-    T: Layout,
-{
-    inner: T,
+pub struct Sparse<T = RowMajor> {
+    inner: PhantomData<T>,
 }
 
 /// Defines the layout of a grid in linear (contiguous) memory.
 pub trait Linear: Layout {}
 
 /// Top-to-bottom, left-to-right traversal order for 2D layouts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ColumnMajor;
+pub enum ColumnMajor {}
 
 impl InternalLayout for ColumnMajor {
     type Traversal = layout::ColumnMajor;
-
-    fn as_traversal(&self) -> &Self::Traversal {
-        &layout::ColumnMajor
-    }
 }
 
 impl Linear for ColumnMajor {}
 
 /// Left-to-right, top-to-bottom traversal order for 2D layouts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RowMajor;
+pub enum RowMajor {}
 
 impl InternalLayout for RowMajor {
     type Traversal = layout::RowMajor;
-
-    fn as_traversal(&self) -> &Self::Traversal {
-        &layout::RowMajor
-    }
 }
 
 impl Linear for RowMajor {}
 
 /// 2D space divided into blocks, each containing a grid of cells.
 ///
-/// Each block has a fixed size (that may be defined at runtime), and is traversed using layout `G`
-/// for each block, and layout `C` for each cell within the block; by default, both are `RowMajor`
-/// but can be customized using the [`with_grid`] and [`with_cell`] methods.
-///
-/// [`with_grid`]: Block::with_grid
-/// [`with_cell`]: Block::with_cell
-///
-/// For example, `Block<RowMajor, RowMajor>` with a block-size of 2x2:
+/// For example, `Block<2, 2>` (a 2x2 block with row-major layout) would look like this:
 ///
 /// ```txt
 /// B0:   B1:
@@ -87,24 +65,19 @@ impl Linear for RowMajor {}
 /// | AB | EF |
 /// +----+----+
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Block<I> {
-    inner: I,
+pub struct Block<const W: usize, const H: usize, I> {
+    inner: PhantomData<I>,
 }
 
-impl<G, C> InternalLayout for Block<layout::Block<G, C>>
+impl<const W: usize, const H: usize, G, C> InternalLayout for Block<W, H, layout::Block<W, H, G, C>>
 where
     G: layout::Traversal,
     C: layout::Traversal,
 {
-    type Traversal = layout::Block<G, C>;
-
-    fn as_traversal(&self) -> &Self::Traversal {
-        &self.inner
-    }
+    type Traversal = layout::Block<W, H, G, C>;
 }
 
-impl<G, C> Linear for Block<layout::Block<G, C>>
+impl<const W: usize, const H: usize, G, C> Linear for Block<W, H, layout::Block<W, H, G, C>>
 where
     G: layout::Traversal,
     C: layout::Traversal,

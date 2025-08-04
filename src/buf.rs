@@ -41,7 +41,7 @@ where
     buffer: B,
     width: usize,
     height: usize,
-    layout: L,
+    _layout: PhantomData<L>,
     _element: PhantomData<T>,
 }
 
@@ -49,10 +49,10 @@ impl<T, B, L> GridBuf<T, B, L>
 where
     L: layout::Linear,
 {
-    /// Consumes the `GridBuf`, returning the underlying buffer, layout, width, and height.
+    /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
     #[must_use]
-    pub fn into_inner(self) -> (B, L, usize, usize) {
-        (self.buffer, self.layout, self.width, self.height)
+    pub fn into_inner(self) -> (B, usize, usize) {
+        (self.buffer, self.width, self.height)
     }
 }
 
@@ -64,7 +64,7 @@ mod tests {
         core::{Pos, Rect},
         ops::{
             GridRead as _,
-            layout::{ColumnMajor, RowMajor},
+            layout::RowMajor,
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };
@@ -73,9 +73,8 @@ mod tests {
     #[test]
     fn into_inner() {
         let grid = GridBuf::<u8, _, _>::new(5, 4);
-        let (buffer, layout, width, height) = grid.into_inner();
+        let (buffer, width, height) = grid.into_inner();
         assert_eq!(buffer.len(), width * height);
-        assert_eq!(layout, RowMajor);
     }
 
     #[test]
@@ -102,7 +101,8 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = GridBuf::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], ColumnMajor, 3);
+        let buffer =
+            GridBuf::<_, _, layout::ColumnMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
@@ -112,11 +112,11 @@ mod tests {
     #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = GridBuf::from_buffer(vec![
+        let buffer = GridBuf::<_, _, layout::RowMajor>::from_buffer(vec![
             1, 2, 3,
             4, 5, 6,
             7, 8, 9,
-        ], RowMajor, 3);
+        ], 3);
 
         assert_eq!(
             unsafe {
