@@ -2,7 +2,7 @@ use crate::{
     core::{GridError, HasSize, Pos, Rect},
     ops::{
         GridBase, GridWrite,
-        layout::{self, Layout as _},
+        layout::{self, Traversal as _},
         unchecked::TrustedSizeGrid,
     },
 };
@@ -13,7 +13,7 @@ pub trait GridWriteUnchecked {
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: layout::Layout;
+    type Layout: layout::Traversal;
 
     /// Sets the element at a specified position without bounds checking.
     ///

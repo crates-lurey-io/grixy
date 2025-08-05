@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "grixy"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "bytemuck",
  "criterion",
@@ -407,7 +407,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "ixy"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "688e0abab84f6b737cbbd6d80be3e2a028bb8802acec9d9d15481b470047de51"
 
 [[package]]
 name = "js-sys"

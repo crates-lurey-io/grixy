@@ -8,7 +8,7 @@ use crate::{
     core::{GridError, Size},
     ops::{
         GridBase, GridRead, GridWrite,
-        layout::{self, Layout as _},
+        layout::{self, Traversal as _},
     },
 };
 

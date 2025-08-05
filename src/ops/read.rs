@@ -2,7 +2,7 @@ use crate::{
     core::{Pos, Rect},
     ops::{
         ExactSizeGrid, GridBase,
-        layout::{self, Layout as _},
+        layout::{self, Traversal as _},
     },
 };
 
@@ -22,7 +22,7 @@ pub trait GridRead: GridBase {
     /// traversal order defined by this layout.
     ///
     /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
-    type Layout: layout::Layout;
+    type Layout: layout::Traversal;
 
     /// Returns a reference to an element at a specified position.
     ///

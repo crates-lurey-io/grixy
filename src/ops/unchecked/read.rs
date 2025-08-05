@@ -2,7 +2,7 @@ use crate::{
     core::{Pos, Rect},
     ops::{
         GridBase, GridRead,
-        layout::{self, Layout as _},
+        layout::{self, Traversal as _},
         unchecked::TrustedSizeGrid,
     },
 };
@@ -15,7 +15,7 @@ pub trait GridReadUnchecked {
         Self: 'a;
 
     /// The layout of the grid, which determines how elements are stored and accessed.
-    type Layout: layout::Layout;
+    type Layout: layout::Traversal;
 
     /// Returns an element, without doing bounds checking.
     ///

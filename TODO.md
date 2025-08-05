@@ -14,7 +14,7 @@ _Nothing as of now_.
 - [x] Add an example of noise generation (`examples/noise.rs`)
 - [x] Add an example of pathfinding (`examples/pathfinding.rs`)
 - [x] Add an example of a grid with a custom layout (`examples/z-order.rs`)
-- [ ] Benchmark heavily and adjust as needed
+- [x] Benchmark heavily and adjust as needed
 
 ## 0.6.0 (Stable)
 
@@ -23,6 +23,7 @@ _Nothing as of now_.
 
 ## Future
 
+- [ ] Add alignment guarnateed methods
 - [ ] Directions (in `Ixy`)
 - [ ] Add rotate
 - [ ] Add flip

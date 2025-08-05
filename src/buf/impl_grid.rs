@@ -46,7 +46,7 @@ where
     type Layout = L;
 
     unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
-        let index = L::to_1d(pos, self.width);
+        let index = L::pos_to_index(pos, self.width);
         unsafe { self.buffer.as_ref().get_unchecked(index) }
     }
 
@@ -75,7 +75,7 @@ where
     type Layout = L;
 
     unsafe fn set_unchecked(&mut self, pos: Pos, value: Self::Element) {
-        let index = L::to_1d(pos, self.width);
+        let index = L::pos_to_index(pos, self.width);
         unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
     }
 
