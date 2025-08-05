@@ -47,7 +47,8 @@ fn expand(bits: &[u8]) -> Vec<u32> {
 }
 
 #[inline]
-fn blit_vec(pixels: &[u32]) -> Vec<u32> {
+#[allow(clippy::needless_pass_by_value)]
+fn blit_vec(pixels: Vec<u32>) -> Vec<u32> {
     // Create a Vec-based output buffer.
     let mut canvas = Vec::<u32>::with_capacity(8 * 16 * 8 * 16);
 
@@ -65,21 +66,21 @@ fn blit_vec(pixels: &[u32]) -> Vec<u32> {
 }
 
 #[inline]
-fn blit_grid(pixels: &[u32]) -> Vec<u32> {
+fn blit_grid(pixels: Vec<u32>) -> Vec<u32> {
     // Create a Grid-based output buffer.
     let mut dst = GridBuf::<u32, _, RowMajor>::new(8 * 16, 8 * 16);
 
     // Create a Grid-based view over the font data.
-    let src = GridBuf::<u32, _, RowMajor>::from_buffer(pixels, 8);
+    let src = GridBuf::<u32, _, RowMajor>::from_buffer(pixels, 8).copied();
 
     // Read each glyph from the font and copy it to the canvas in reverse order.
     for i in (0..256).rev() {
-        // copy_rect(
-        //     &src.copied(),
-        //     &mut dst,
-        //     Rect::from_ltwh(0, i * 8, 8, 8),
-        //     Pos::new((i % 16) * 8, (i / 16) * 8),
-        // );
+        copy_rect(
+            &src,
+            &mut dst,
+            Rect::from_ltwh(0, i * 8, 8, 8),
+            Pos::new((i % 16) * 8, (i / 16) * 8),
+        );
     }
 
     dst.into_inner().0
@@ -90,17 +91,19 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let pixels = expand(IBM_VGA_8X8);
 
     group.bench_function("blit_vec IBM_VGA_8X8", |b| {
-        b.iter(|| {
-            let r = blit_vec(&pixels);
-            black_box(r);
-        });
+        b.iter_batched(
+            || pixels.clone(),
+            |pixels| black_box(blit_vec(pixels)),
+            criterion::BatchSize::SmallInput,
+        );
     });
 
     group.bench_function("blit_grid IBM_VGA_8X8", |b| {
-        b.iter(|| {
-            let r = blit_grid(&pixels);
-            black_box(r);
-        });
+        b.iter_batched(
+            || pixels.clone(),
+            |pixels| black_box(blit_grid(pixels)),
+            criterion::BatchSize::SmallInput,
+        );
     });
     group.finish();
 }

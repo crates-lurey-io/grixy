@@ -38,7 +38,7 @@
 //!
 //!    fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
 //!        if pos.x >= self.width || pos.y >= self.grid.len() / self.width {
-//!          return Err(GridError);
+//!          return Err(GridError::OutOfBounds { pos });
 //!        }
 //!        let index = pos.y * self.width + pos.x;
 //!        self.grid[index] = value;

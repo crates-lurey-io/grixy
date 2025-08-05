@@ -84,16 +84,21 @@ where
         bounds: crate::core::Rect,
         iter: impl IntoIterator<Item = Self::Element>,
     ) {
-        let slice = self.buffer.as_mut();
-        let width = self.width;
-        let mut iter = iter.into_iter();
-        for y in bounds.top()..bounds.bottom() {
-            let x_xtart = L::to_1d(Pos::new(bounds.left(), y), width);
-            let x_end = x_xtart + bounds.width();
-            slice[x_xtart..x_end]
+        let size = self.size();
+        if let Some(aligned) = L::slice_rect_aligned_mut(self.as_mut(), size, bounds) {
+            aligned
                 .iter_mut()
-                .zip(&mut iter)
+                .zip(iter)
                 .for_each(|(cell, value)| *cell = value);
+        } else {
+            let mut iter = iter.into_iter();
+            for pos in L::iter_pos(bounds) {
+                if let Some(value) = iter.next() {
+                    unsafe { self.set_unchecked(pos, value) }
+                } else {
+                    break;
+                }
+            }
         }
     }
 
@@ -101,12 +106,13 @@ where
     where
         Self::Element: Copy,
     {
-        let slice = self.buffer.as_mut();
-        let width = self.width;
-        for y in bounds.top()..bounds.bottom() {
-            let x_start = L::to_1d(Pos::new(bounds.left(), y), width);
-            let x_end = x_start + bounds.width();
-            slice[x_start..x_end].fill(value);
+        let size = self.size();
+        if let Some(aligned) = L::slice_rect_aligned_mut(self.as_mut(), size, bounds) {
+            aligned.fill(value);
+        } else {
+            for pos in L::iter_pos(bounds) {
+                unsafe { self.set_unchecked(pos, value) }
+            }
         }
     }
 }

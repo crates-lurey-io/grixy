@@ -42,6 +42,10 @@ impl<T: InternalLayout<Traversal: layout::Linear>> Linear for T {
     fn slice_rect_aligned<E>(slice: &[E], size: Size, rect: Rect) -> Option<&[E]> {
         T::Traversal::slice_rect_aligned(slice, size, rect)
     }
+
+    fn slice_rect_aligned_mut<E>(slice: &mut [E], size: Size, rect: Rect) -> Option<&mut [E]> {
+        T::Traversal::slice_rect_aligned_mut(slice, size, rect)
+    }
 }
 
 /// Defines the layout of a grid in linear (contiguous) memory.
@@ -52,10 +56,15 @@ pub trait Linear: Layout {
     /// Converts a 1D index to a 2D position based on the grid's width.
     fn to_2d(index: usize, width: usize) -> Pos;
 
-    /// Returns an iterator over positions in a rectangular region of the grid.
+    /// Returns an aligned slice of the grid's elements within a rectangular region.
     ///
     /// If the rectangle is not aligned with the grid's layout, returns `None`.
     fn slice_rect_aligned<E>(slice: &[E], size: Size, rect: Rect) -> Option<&[E]>;
+
+    /// Returns an aligned slice of the grid's elements within a rectangular region.
+    ///
+    /// If the rectangle is not aligned with the grid's layout, returns `None`.
+    fn slice_rect_aligned_mut<E>(slice: &mut [E], size: Size, rect: Rect) -> Option<&mut [E]>;
 }
 
 /// Top-to-bottom, left-to-right traversal order for 2D layouts.

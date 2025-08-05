@@ -64,6 +64,17 @@ impl Linear for ZOrderCurve {
 
         Some(&slice[start..end])
     }
+
+    fn slice_rect_aligned_mut<E>(slice: &mut [E], size: Size, rect: Rect) -> Option<&mut [E]> {
+        let start = Self::to_1d(rect.top_left(), size.width);
+        let end = Self::to_1d(rect.bottom_right(), size.width);
+
+        if start >= slice.len() || end > slice.len() {
+            return None;
+        }
+
+        Some(&mut slice[start..end])
+    }
 }
 
 fn main() {

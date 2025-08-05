@@ -113,13 +113,6 @@ mod tests {
         unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_> {
             self.grid[pos.y][pos.x]
         }
-
-        unsafe fn iter_rect_unchecked(
-            &self,
-            _bounds: Rect,
-        ) -> impl Iterator<Item = Self::Element<'_>> {
-            core::iter::empty()
-        }
     }
 
     #[test]
