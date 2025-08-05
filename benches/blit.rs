@@ -59,7 +59,7 @@ fn blit_vec(pixels: Vec<u32>) -> Vec<u32> {
         let glyph = &pixels[offset_start..offset_end];
 
         // Copy the glyph to the canvas.
-        canvas.extend_from_slice(glyph);
+        canvas[(i % 16) * 8 + (i / 16) * 8 * 16..][..8 * 8].copy_from_slice(glyph);
     }
 
     canvas

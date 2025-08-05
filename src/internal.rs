@@ -3,6 +3,7 @@
 pub trait Sealed {}
 
 /// The result of iterating over a rectangular region of a grid.
+#[allow(dead_code)]
 pub(crate) enum IterRect<T, A, U>
 where
     A: Iterator<Item = T>,
