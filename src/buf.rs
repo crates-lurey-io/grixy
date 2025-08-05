@@ -35,9 +35,10 @@ mod impl_slice;
 ///
 /// ## Layout
 ///
-/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+/// The grid is stored in a linear buffer, with elements accessed in an order defined by
+/// [`Traversal`].
 ///
-/// [`Layout`]: layout::Layout
+/// [`Traversal`]: layout::Traversal
 #[derive(Debug, Clone)]
 pub struct GridBuf<T, B, L>
 where

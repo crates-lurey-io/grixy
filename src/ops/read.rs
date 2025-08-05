@@ -37,12 +37,12 @@ pub trait GridRead: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         Self::Layout::iter_pos(self.trim_rect(bounds)).filter_map(move |pos| self.get(pos))
     }

@@ -36,12 +36,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
     ///
-    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
@@ -64,12 +64,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
     ///
-    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
         dst: Rect,
@@ -94,12 +94,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_solid_unchecked(&mut self, bounds: Rect, value: Self::Element)
     where
         Self::Element: Copy,
