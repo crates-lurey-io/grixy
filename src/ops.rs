@@ -18,11 +18,18 @@
 //! Implementing [`GridWrite`] to write to a grid:
 //!
 //! ```rust
-//! use grixy::{core::{GridError, Pos, RowMajor}, ops::GridWrite};
+//! use grixy::prelude::*;
 //!
 //! struct MyGrid {
 //!    grid: Vec<u8>,
 //!    width: usize,
+//! }
+//!
+//! impl GridBase for MyGrid {
+//!   fn size_hint(&self) -> (Size, Option<Size>) {
+//!     let size = Size::new(self.width, self.grid.len() / self.width);
+//!     (size, Some(size))
+//!   }
 //! }
 //!
 //! impl GridWrite for MyGrid {
@@ -31,7 +38,7 @@
 //!
 //!    fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
 //!        if pos.x >= self.width || pos.y >= self.grid.len() / self.width {
-//!          return Err(GridError);
+//!          return Err(GridError::OutOfBounds { pos });
 //!        }
 //!        let index = pos.y * self.width + pos.x;
 //!        self.grid[index] = value;
@@ -48,6 +55,7 @@
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 
+pub mod layout;
 pub mod unchecked;
 
 #[cfg(feature = "alloc")]
@@ -56,10 +64,12 @@ mod alloc;
 #[cfg(feature = "cell")]
 mod cell;
 
+mod base;
 mod draw;
 mod read;
 mod write;
 
+pub use base::{ExactSizeGrid, GridBase};
 pub use draw::copy_rect;
 pub use read::{GridIter, GridRead};
 pub use write::GridWrite;

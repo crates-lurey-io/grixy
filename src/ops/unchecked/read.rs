@@ -1,6 +1,10 @@
 use crate::{
-    core::{HasSize as _, Layout, Pos, Rect},
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{Pos, Rect},
+    ops::{
+        GridBase, GridRead,
+        layout::{self, Traversal as _},
+        unchecked::TrustedSizeGrid,
+    },
 };
 
 /// Read elements from a 2-dimensional grid position without bounds checking.
@@ -11,7 +15,7 @@ pub trait GridReadUnchecked {
         Self: 'a;
 
     /// The layout of the grid, which determines how elements are stored and accessed.
-    type Layout: Layout;
+    type Layout: layout::Traversal;
 
     /// Returns an element, without doing bounds checking.
     ///
@@ -24,9 +28,9 @@ pub trait GridReadUnchecked {
 
     /// Returns an iterator over elements in a rectangular region of the grid.
     ///
-    /// Elements are returned in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
+    /// Elements are returned in an order agreeable to the grid's internal layout.
+    ///
+    /// The bounding rectangle is treated as _exclusive_ of the right and bottom edges.
     ///
     /// ## Safety
     ///
@@ -34,17 +38,19 @@ pub trait GridReadUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
-    /// involving a call to [`GridReadUnchecked::get_unchecked`] for each element. Other
-    /// implementations may optimize this, for example by using a more efficient iteration strategy
+    /// The default implementation iterates over the rectangle in a traversal order defined by
+    /// [`GridReadUnchecked::Layout`], making an individual call to `get_unchecked` for each
+    /// position in the rectangle.
+    ///
+    /// Implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear reads, etc.).
     unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        Self::Layout::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
+        layout::RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
 }
 
 /// Automatically implement `GridRead` when `GridReadUnchecked` + `TrustedSizeGrid` are implemented.
-impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
+impl<T: GridBase + GridReadUnchecked + TrustedSizeGrid> GridRead for T {
     type Element<'a>
         = T::Element<'a>
     where
@@ -61,9 +67,7 @@ impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead for T {
     }
 
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        let size = self.size().to_rect();
-        let rect = bounds.intersect(size);
-        unsafe { self.iter_rect_unchecked(rect) }
+        unsafe { self.iter_rect_unchecked(self.trim_rect(bounds)) }
     }
 }
 
@@ -72,14 +76,24 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::{core::RowMajor, ops::unchecked::TrustedSizeGrid};
+    use crate::{
+        core::Size,
+        ops::{ExactSizeGrid, layout::RowMajor, unchecked::TrustedSizeGrid},
+    };
     use alloc::vec::Vec;
 
     struct UncheckedTestGrid {
         grid: [[u8; 3]; 3],
     }
 
-    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
+    impl GridBase for UncheckedTestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
+    }
+
+    impl ExactSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
@@ -88,6 +102,8 @@ mod tests {
             3
         }
     }
+
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {}
 
     impl GridReadUnchecked for UncheckedTestGrid {
         type Element<'a> = u8;
@@ -134,8 +150,13 @@ mod tests {
 
     #[test]
     fn rect_iter_completely_in_bounds_unchecked_impl() {
+        #[rustfmt::skip]
         let grid = UncheckedTestGrid {
-            grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+            grid: [
+                [1, 2, 3], 
+                [4, 5, 6], 
+                [7, 8, 9],
+            ],
         };
         let cells = grid
             .iter_rect(Rect::from_ltwh(1, 1, 2, 2))

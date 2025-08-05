@@ -5,7 +5,7 @@ license = "MIT"
 
 description = "Zero-cost 2D grids for embedded systems and graphics"
 repository = "https://github.com/crates-lurey-io/grixy"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 
 [lints.clippy]
 pedantic = "deny"
@@ -16,20 +16,33 @@ members = ["tools/cargo-bin"]
 [workspace.metadata.bin]
 cargo-nextest = { version = "0.9.98", locked = true }
 cargo-llvm-cov = { version = "0.6.16", locked = true }
+flamegraph = { version = "0.6.8", locked = true, bins = ["cargo-flamegraph"] }
 just = { version = "1.40.0" }
 taplo-cli = { version = "0.10.0", bins = ["taplo"] }
 
 [features]
-default = ["alloc", "buffer"]
+default = []
 alloc = []
 buffer = []
 cell = []
 
 [dependencies]
-ixy = { version = "0.5.7" }
+ixy = { version = "0.6.0-alpha.2" }
 
 [dev-dependencies]
 bytemuck = "1.23.1"
+criterion = { version = "0.7.0", features = ["html_reports"] }
 open = "5.3.2"
 png = "0.17.16"
 temp-dir = "0.1.16"
+
+[profile.bench]
+debug = true
+
+[[bench]]
+name = "blit"
+harness = false
+
+[[bench]]
+name = "iter"
+harness = false

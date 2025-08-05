@@ -1,19 +1,41 @@
 use core::marker::PhantomData;
 
 use crate::{
-    core::Pos,
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    core::{Pos, Size},
+    ops::{ExactSizeGrid, GridBase, GridRead},
 };
 
 /// Transforms elements.
 ///
 /// See [`GridConvertExt::map`][] for usage.
 ///
-/// [`GridConvertExt::map`]: crate::convert::GridConvertExt::map
+/// [`GridConvertExt::map`]: crate::transform::GridConvertExt::map
 pub struct Mapped<F, G, T> {
     pub(super) source: G,
     pub(super) map_fn: F,
     pub(super) _element: PhantomData<T>,
+}
+
+impl<F, G, T> GridBase for Mapped<F, G, T>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        self.source.size_hint()
+    }
+}
+
+impl<F, G, T> ExactSizeGrid for Mapped<F, G, T>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
+    }
 }
 
 impl<F, G, T> GridRead for Mapped<F, G, T>
@@ -34,18 +56,5 @@ where
 
     fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds).map(&self.map_fn)
-    }
-}
-
-unsafe impl<F, G, T> TrustedSizeGrid for Mapped<F, G, T>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.source.width()
-    }
-
-    fn height(&self) -> usize {
-        self.source.height()
     }
 }

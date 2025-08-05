@@ -1,11 +1,6 @@
 //! Loads a monospace font and renders an RGBA PNG based on every glyph in the font.
 
-use grixy::{
-    buf::bits::GridBits,
-    convert::GridConvertExt as _,
-    core::{Pos, Rect},
-    ops::{copy_rect, unchecked::TrustedSizeGrid as _},
-};
+use grixy::prelude::*;
 use temp_dir::TempDir;
 
 fn main() {
@@ -19,11 +14,11 @@ fn main() {
     let scale: usize = input.trim().parse().unwrap_or(1);
 
     // Creates a 2-dimensional view over the bits of the font.
-    let font = GridBits::<_, _>::from_buffer(IBM_VGA_8X8, 8)
+    let font = GridBits::<_, _, RowMajor>::from_buffer(IBM_VGA_8X8, 8)
         .map(|bit| if bit { 0xFFFF_FFFFu32 } else { 0xFF00_0000u32 })
         .scale(scale);
 
-    let mut canvas = grixy::buf::GridBuf::<u32, _>::new(8 * 16 * scale, 8 * 16 * scale);
+    let mut canvas = GridBuf::new(8 * 16 * scale, 8 * 16 * scale);
 
     // Draws each glyph from the font onto the canvas, with 32 (different) glyphs per row.
     for i in 0..256 {

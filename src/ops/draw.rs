@@ -12,7 +12,7 @@ use crate::{
 /// ## Examples
 ///
 /// ```rust
-/// use grixy::{core::{Pos, Rect}, convert::GridConvertExt as _, ops::{copy_rect, GridRead, GridWrite}, buf::GridBuf};
+/// use grixy::{core::{Pos, Rect}, transform::GridConvertExt as _, ops::{copy_rect, GridRead, GridWrite}, buf::GridBuf};
 ///
 /// let src = GridBuf::new_filled(3, 3, 1);
 /// let mut dst = GridBuf::new(5, 5);
@@ -22,8 +22,9 @@ use crate::{
 /// assert_eq!(dst.get(Pos::new(4, 4)), Some(&1));
 /// assert_eq!(dst.get(Pos::new(5, 5)), None);
 /// ```
-pub fn copy_rect<'s, E>(
-    src: &'s impl GridRead<Element<'s> = E>,
+#[inline]
+pub fn copy_rect<'a, E>(
+    src: &'a impl GridRead<Element<'a> = E>,
     dst: &mut impl GridWrite<Element = E>,
     from: Rect,
     to: Pos,
@@ -38,7 +39,7 @@ pub fn copy_rect<'s, E>(
 mod tests {
     extern crate alloc;
 
-    use crate::{convert::GridConvertExt as _, test::NaiveGrid};
+    use crate::{test::NaiveGrid, transform::GridConvertExt as _};
     use alloc::vec::Vec;
 
     use super::*;

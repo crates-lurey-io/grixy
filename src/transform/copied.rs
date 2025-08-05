@@ -2,14 +2,14 @@ use core::marker::PhantomData;
 
 use crate::{
     core::Pos,
-    ops::{GridRead, unchecked::TrustedSizeGrid},
+    ops::{ExactSizeGrid, GridBase, GridRead},
 };
 
 /// Copies elements from another grid that returns copyable references.
 ///
 /// See [`GridConvertExt::copied`][] for usage.
 ///
-/// [`GridConvertExt::copied`]: crate::convert::GridConvertExt::copied
+/// [`GridConvertExt::copied`]: crate::transform::GridConvertExt::copied
 pub struct Copied<T, G> {
     pub(super) source: G,
     pub(super) _element: PhantomData<T>,
@@ -36,9 +36,18 @@ where
     }
 }
 
-unsafe impl<T, G> TrustedSizeGrid for Copied<T, G>
+impl<T, G> GridBase for Copied<T, G>
 where
-    G: TrustedSizeGrid,
+    G: GridBase,
+{
+    fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
+        self.source.size_hint()
+    }
+}
+
+impl<T, G> ExactSizeGrid for Copied<T, G>
+where
+    G: ExactSizeGrid,
 {
     fn width(&self) -> usize {
         self.source.width()

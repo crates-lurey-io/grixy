@@ -1,16 +1,38 @@
 use crate::{
-    core::{GridError, Pos, Rect},
-    ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
+    core::{GridError, Pos, Rect, Size},
+    ops::{ExactSizeGrid, GridBase, GridRead, GridWrite},
 };
 
 /// Blends write operations to a grid.
 ///
 /// See [`GridConvertExt::blend`][] for usage.
 ///
-/// [`GridConvertExt::blend`]: crate::convert::GridConvertExt::blend
+/// [`GridConvertExt::blend`]: crate::transform::GridConvertExt::blend
 pub struct Blended<'a, G, F> {
     pub(super) source: &'a mut G,
     pub(super) blend_fn: F,
+}
+
+impl<G, F> GridBase for Blended<'_, G, F>
+where
+    G: GridBase,
+{
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        self.source.size_hint()
+    }
+}
+
+impl<G, F> ExactSizeGrid for Blended<'_, G, F>
+where
+    G: ExactSizeGrid,
+{
+    fn width(&self) -> usize {
+        self.source.width()
+    }
+
+    fn height(&self) -> usize {
+        self.source.height()
+    }
 }
 
 impl<G, F> GridWrite for Blended<'_, G, F>
@@ -23,7 +45,7 @@ where
     type Layout = <G as GridWrite>::Layout;
 
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError> {
-        let current = self.source.get(pos).ok_or(GridError)?;
+        let current = self.source.get(pos).ok_or(GridError::OutOfBounds { pos })?;
         self.source.set(pos, (self.blend_fn)(current, value))
     }
 }
@@ -45,18 +67,5 @@ where
 
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds)
-    }
-}
-
-unsafe impl<G, F> TrustedSizeGrid for Blended<'_, G, F>
-where
-    G: TrustedSizeGrid,
-{
-    fn width(&self) -> usize {
-        self.source.width()
-    }
-
-    fn height(&self) -> usize {
-        self.source.height()
     }
 }

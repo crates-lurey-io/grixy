@@ -1,12 +1,28 @@
-use crate::core::{GridError, Layout, Pos, Rect};
+use ixy::HasSize;
+
+use crate::{
+    core::{GridError, Pos, Rect},
+    ops::{
+        ExactSizeGrid, GridBase,
+        layout::{self, Traversal as _},
+    },
+};
 
 /// Write elements to a 2-dimensional grid position.
-pub trait GridWrite {
+pub trait GridWrite: GridBase {
     /// The type of elements in the grid.
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: Layout;
+    ///
+    /// ## Implementation
+    ///
+    /// It is not guaranteed that the internal storage of the grid matches this layout, but methods
+    /// that return iterators over the grid's elements or positions should return them in the
+    /// traversal order defined by this layout.
+    ///
+    /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
+    type Layout: layout::Traversal;
 
     /// Sets the element at a specified position.
     ///
@@ -14,6 +30,69 @@ pub trait GridWrite {
     ///
     /// Returns an error if the position is out of bounds.
     fn set(&mut self, pos: Pos, value: Self::Element) -> Result<(), GridError>;
+
+    /// Clears the grid, setting all elements to their default value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn clear(&mut self)
+    where
+        Self::Element: Default,
+        Self: ExactSizeGrid,
+    {
+        self.clear_rect(self.size().to_rect());
+    }
+
+    /// Sets elements within the grid.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill(&mut self, f: impl FnMut(Pos) -> Self::Element)
+    where
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect(self.size().to_rect(), f);
+    }
+
+    /// Sets elements within the grid from an iterator.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill_iter(&mut self, iter: impl Iterator<Item = Self::Element>)
+    where
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect_iter(self.size().to_rect(), iter);
+    }
+
+    /// Sets elements within the grid to a single value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill_solid(&mut self, value: Self::Element)
+    where
+        Self::Element: Copy,
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect_solid(self.size().to_rect(), value);
+    }
+
+    /// Clears a rectangular region of the grid, setting all elements to their default value.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right
+    /// and bottom edges.
+    ///
+    /// ## Performance
+    ///
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// involving bounds checking for each element. Other implementations may optimize this, for
+    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
+    /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    fn clear_rect(&mut self, bounds: Rect)
+    where
+        Self::Element: Default,
+    {
+        self.fill_rect(bounds, |_| Default::default());
+    }
 
     /// Sets elements within a rectangular region of the grid.
     ///
@@ -23,12 +102,14 @@ pub trait GridWrite {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
-        Self::Layout::iter_pos(bounds).for_each(|pos| {
+        Self::Layout::iter_pos(self.trim_rect(bounds)).for_each(|pos| {
             let _ = self.set(pos, f(pos));
         });
     }
@@ -44,12 +125,14 @@ pub trait GridWrite {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-        Self::Layout::iter_pos(dst)
+        Self::Layout::iter_pos(self.trim_rect(dst))
             .zip(iter)
             .for_each(|(pos, value)| {
                 let _ = self.set(pos, value);
@@ -64,15 +147,17 @@ pub trait GridWrite {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {
-        self.fill_rect(dst, |_| value);
+        self.fill_rect(self.trim_rect(dst), |_| value);
     }
 }
 
@@ -80,12 +165,20 @@ pub trait GridWrite {
 mod tests {
     extern crate alloc;
 
+    use crate::{core::Size, ops::layout::RowMajor};
+
     use super::*;
-    use crate::core::RowMajor;
     use alloc::vec;
 
     struct TestGrid {
         grid: [[u8; 3]; 3],
+    }
+
+    impl GridBase for TestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
     }
 
     impl GridWrite for TestGrid {
@@ -98,7 +191,7 @@ mod tests {
                 self.grid[pos.y][pos.x] = value;
                 Ok(())
             } else {
-                Err(GridError)
+                Err(GridError::OutOfBounds { pos })
             }
         }
     }

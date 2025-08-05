@@ -5,8 +5,11 @@ extern crate alloc;
 use alloc::{vec, vec::Vec};
 
 use crate::{
-    core::{GridError, RowMajor},
-    ops::{GridRead, GridWrite},
+    core::{GridError, Size},
+    ops::{
+        GridBase, GridRead, GridWrite,
+        layout::{self, Traversal as _},
+    },
 };
 
 /// A grid implementation that does not optimize any operations.
@@ -47,13 +50,20 @@ impl<T> NaiveGrid<T> {
     }
 }
 
+impl<T> GridBase for NaiveGrid<T> {
+    fn size_hint(&self) -> (Size, Option<Size>) {
+        let size = Size::new(self.width, self.height);
+        (size, Some(size))
+    }
+}
+
 impl<T> GridRead for NaiveGrid<T> {
     type Element<'a>
         = &'a T
     where
         Self: 'a;
 
-    type Layout = RowMajor;
+    type Layout = layout::RowMajor;
 
     fn get(&self, pos: crate::core::Pos) -> Option<Self::Element<'_>> {
         if pos.x < self.width && pos.y < self.height {
@@ -62,18 +72,22 @@ impl<T> GridRead for NaiveGrid<T> {
             None
         }
     }
+
+    fn iter_rect(&self, bounds: crate::prelude::Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        layout::RowMajor::iter_pos(bounds).filter_map(move |pos| self.get(pos))
+    }
 }
 
 impl<T> GridWrite for NaiveGrid<T> {
     type Element = T;
-    type Layout = RowMajor;
+    type Layout = layout::RowMajor;
 
     fn set(&mut self, pos: crate::core::Pos, value: Self::Element) -> Result<(), GridError> {
         if pos.x < self.width && pos.y < self.height {
             self.cells[pos.y * self.width + pos.x] = value;
             Ok(())
         } else {
-            Err(GridError)
+            Err(GridError::OutOfBounds { pos })
         }
     }
 }

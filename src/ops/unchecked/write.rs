@@ -1,6 +1,10 @@
 use crate::{
-    core::{GridError, HasSize, Layout, Pos, Rect},
-    ops::{GridWrite, unchecked::TrustedSizeGrid},
+    core::{GridError, HasSize, Pos, Rect},
+    ops::{
+        GridBase, GridWrite,
+        layout::{self, Traversal as _},
+        unchecked::TrustedSizeGrid,
+    },
 };
 
 /// Write elements to a 2-dimensional grid position without bounds checking.
@@ -9,7 +13,7 @@ pub trait GridWriteUnchecked {
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: Layout;
+    type Layout: layout::Traversal;
 
     /// Sets the element at a specified position without bounds checking.
     ///
@@ -32,10 +36,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
@@ -58,10 +64,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
     /// implementations may optimize this, for example by using a more efficient iteration strategy
     /// (for linear writes, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
         dst: Rect,
@@ -86,10 +94,12 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_solid_unchecked(&mut self, bounds: Rect, value: Self::Element)
     where
         Self::Element: Copy,
@@ -99,7 +109,7 @@ pub trait GridWriteUnchecked {
 }
 
 /// Automatically implement `GridWrite` when `GridWriteUnchecked` + `TrustedSizeGrid` are implemented.
-impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
+impl<T: GridBase + GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
     type Element = T::Element;
     type Layout = T::Layout;
 
@@ -110,7 +120,7 @@ impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
             }
             Ok(())
         } else {
-            Err(GridError)
+            Err(GridError::OutOfBounds { pos })
         }
     }
 
@@ -140,15 +150,26 @@ impl<T: GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
 mod tests {
     extern crate alloc;
 
+    use crate::{
+        core::Size,
+        ops::{ExactSizeGrid, layout::RowMajor},
+    };
+
     use super::*;
-    use crate::core::RowMajor;
     use alloc::vec;
 
     struct UncheckedTestGrid {
         grid: [[u8; 3]; 3],
     }
 
-    unsafe impl TrustedSizeGrid for UncheckedTestGrid {
+    impl GridBase for UncheckedTestGrid {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
+    }
+
+    impl ExactSizeGrid for UncheckedTestGrid {
         fn width(&self) -> usize {
             3
         }
@@ -157,6 +178,8 @@ mod tests {
             3
         }
     }
+
+    unsafe impl TrustedSizeGrid for UncheckedTestGrid {}
 
     impl GridWriteUnchecked for UncheckedTestGrid {
         type Element = u8;

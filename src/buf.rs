@@ -9,12 +9,14 @@
 //! ```
 //! use grixy::{core::Pos, buf::GridBuf, ops::GridRead};
 //!
-//! let grid = GridBuf::<u8, _>::new_filled(3, 4, 42);
+//! let grid = GridBuf::<u8, _, _>::new_filled(3, 4, 42);
 //! assert_eq!(grid.get(Pos::new(2, 3)), Some(&42));
 //! ```
 
-use crate::core::{Layout, RowMajor};
-use core::marker::PhantomData;
+use core::{
+    marker::PhantomData,
+    ops::{Index, IndexMut},
+};
 
 // IMPLEMENATIONS ----------------------------------------------------------------------------------
 
@@ -23,32 +25,35 @@ pub mod bits;
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
-
-mod impl_slice;
+use crate::{core::Pos, ops::layout};
 
 mod impl_grid;
 mod impl_new;
+mod impl_slice;
 
 /// A 2-dimensional grid implemented by a linear data buffer.
 ///
 /// ## Layout
 ///
-/// The grid is stored in a linear buffer, with elements accessed in an order defined by [`Layout`].
+/// The grid is stored in a linear buffer, with elements accessed in an order defined by
+/// [`Traversal`].
+///
+/// [`Traversal`]: layout::Traversal
 #[derive(Debug, Clone)]
-pub struct GridBuf<T, B, L = RowMajor>
+pub struct GridBuf<T, B, L>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     buffer: B,
     width: usize,
     height: usize,
-    _element: PhantomData<T>,
     _layout: PhantomData<L>,
+    _element: PhantomData<T>,
 }
 
 impl<T, B, L> GridBuf<T, B, L>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
     #[must_use]
@@ -57,14 +62,37 @@ where
     }
 }
 
+impl<T, B, L> Index<Pos> for GridBuf<T, B, L>
+where
+    L: layout::Linear,
+    B: AsRef<[T]>,
+{
+    type Output = T;
+
+    fn index(&self, index: Pos) -> &Self::Output {
+        &self.buffer.as_ref()[index.y * self.width + index.x]
+    }
+}
+
+impl<T, B, L> IndexMut<Pos> for GridBuf<T, B, L>
+where
+    L: layout::Linear,
+    B: AsRef<[T]> + AsMut<[T]>,
+{
+    fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
+        &mut self.buffer.as_mut()[index.y * self.width + index.x]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
     use super::*;
     use crate::{
-        core::{ColMajor, Pos, Rect},
+        core::{Pos, Rect},
         ops::{
-            GridRead as _,
+            ExactSizeGrid as _, GridRead as _,
+            layout::RowMajor,
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };
@@ -72,14 +100,14 @@ mod tests {
 
     #[test]
     fn into_inner() {
-        let grid = GridBuf::<u8, _>::new(5, 4);
+        let grid = GridBuf::<u8, _, _>::new(5, 4);
         let (buffer, width, height) = grid.into_inner();
         assert_eq!(buffer.len(), width * height);
     }
 
     #[test]
     fn impl_bounded_grid() {
-        let grid = GridBuf::<u8, _>::new(5, 4);
+        let grid = GridBuf::<u8, _, _>::new(5, 4);
         assert_eq!(grid.width(), 5);
         assert_eq!(grid.height(), 4);
     }
@@ -93,7 +121,7 @@ mod tests {
 
     #[test]
     fn impl_set_unchecked() {
-        let mut grid = GridBuf::<u8, _>::new(5, 4);
+        let mut grid = GridBuf::new(5, 4);
         let pos = Pos::new(2, 3);
         unsafe { grid.set_unchecked(pos, 99) };
         assert_eq!(*unsafe { grid.get_unchecked(pos) }, 99);
@@ -101,7 +129,8 @@ mod tests {
 
     #[test]
     fn with_buffer_col_major() {
-        let buffer = GridBuf::<_, _, ColMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
+        let buffer =
+            GridBuf::<_, _, layout::ColumnMajor>::from_buffer(vec![1, 2, 3, 4, 5, 6, 7, 8, 9], 3);
         assert_eq!(buffer.width(), 3);
         assert_eq!(buffer.height(), 3);
         assert_eq!(buffer.get(Pos::new(0, 0)), Some(&1));
@@ -111,7 +140,7 @@ mod tests {
     #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = GridBuf::<_, _, RowMajor>::from_buffer(vec![
+        let buffer = GridBuf::<_, _, layout::RowMajor>::from_buffer(vec![
             1, 2, 3,
             4, 5, 6,
             7, 8, 9,
@@ -162,5 +191,14 @@ mod tests {
             42, 42, 0,
             0, 0, 0,
         ]);
+    }
+
+    #[test]
+    fn index_ops() {
+        let mut grid = GridBuf::<u8, _, _>::new(3, 3);
+        grid[Pos::new(1, 1)] = 42;
+        assert_eq!(grid[Pos::new(1, 1)], 42);
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(&42));
+        assert_eq!(grid.get(Pos::new(3, 3)), None); // Out of bounds
     }
 }

@@ -1,17 +1,28 @@
 use crate::{
-    core::{Layout, Pos, Rect},
-    ops::unchecked::TrustedSizeGrid,
+    core::{Pos, Rect},
+    ops::{
+        ExactSizeGrid, GridBase,
+        layout::{self, Traversal as _},
+    },
 };
 
 /// Read elements from a 2-dimensional grid position.
-pub trait GridRead {
+pub trait GridRead: GridBase {
     /// The type of elements in the grid.
     type Element<'a>: 'a
     where
         Self: 'a;
 
-    /// The layout of the grid.
-    type Layout: Layout;
+    /// The type of layout used for the grid.
+    ///
+    /// ## Implementation
+    ///
+    /// It is not guaranteed that the internal storage of the grid matches this layout, but methods
+    /// that return iterators over the grid's elements or positions should return them in the
+    /// traversal order defined by this layout.
+    ///
+    /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
+    type Layout: layout::Traversal;
 
     /// Returns a reference to an element at a specified position.
     ///
@@ -26,12 +37,14 @@ pub trait GridRead {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
+    ///
+    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        Self::Layout::iter_pos(bounds).filter_map(|pos| self.get(pos))
+        Self::Layout::iter_pos(self.trim_rect(bounds)).filter_map(move |pos| self.get(pos))
     }
 }
 
@@ -43,7 +56,7 @@ pub trait GridIter: GridRead {
 
 impl<T> GridIter for T
 where
-    T: GridRead + TrustedSizeGrid,
+    T: GridRead + ExactSizeGrid,
 {
     fn iter(&self) -> impl Iterator<Item = Self::Element<'_>> {
         self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()))
@@ -56,11 +69,18 @@ mod tests {
 
     use super::*;
 
-    use crate::{buf::GridBuf, convert::GridConvertExt as _, core::RowMajor};
+    use crate::{buf::GridBuf, core::Size, ops::layout::RowMajor, transform::GridConvertExt as _};
     use alloc::vec::Vec;
 
     struct CheckedGridTest {
         grid: [[u8; 3]; 3],
+    }
+
+    impl GridBase for CheckedGridTest {
+        fn size_hint(&self) -> (Size, Option<Size>) {
+            let size = Size::new(3, 3);
+            (size, Some(size))
+        }
     }
 
     impl GridRead for CheckedGridTest {
@@ -122,7 +142,7 @@ mod tests {
     #[test]
     fn collect() {
         let grid = GridBuf::new_filled(3, 3, 1);
-        let collected = grid.copied().collect::<Vec<_>>();
+        let collected = grid.copied().flatten::<Vec<_>, RowMajor>();
         assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(collected.get(Pos::new(3, 3)), None);
     }

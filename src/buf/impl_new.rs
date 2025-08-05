@@ -1,16 +1,13 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use crate::{
-    buf::GridBuf,
-    core::{Layout, RowMajor},
-};
+use crate::{buf::GridBuf, ops::layout};
 use core::marker::PhantomData;
 
 impl<T, B, L> GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
-    L: Layout,
+    L: layout::Linear,
 {
     /// Returns a grid from an existing buffer with a given width in columns.
     ///
@@ -29,7 +26,7 @@ where
     /// use grixy::prelude::*;
     ///
     /// let buffer = vec![1, 2, 3, 4, 5, 6];
-    /// let grid = GridBuf::<_, _>::from_buffer(buffer, 3);
+    /// let grid = GridBuf::<_, _, RowMajor>::from_buffer(buffer, 3);
     ///
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));
     /// assert_eq!(grid.get(Pos::new(1, 0)), Some(&2));
@@ -47,14 +44,14 @@ where
             buffer,
             width,
             height,
-            _element: PhantomData,
             _layout: PhantomData,
+            _element: PhantomData,
         }
     }
 }
 
 #[cfg(feature = "alloc")]
-impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
+impl<T> GridBuf<T, alloc::vec::Vec<T>, layout::RowMajor> {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
     /// This creates a grid with a row-major layout; see [`new_filled_with_layout`][] to customize.
@@ -66,7 +63,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
     /// ```rust
     /// use grixy::prelude::*;
     ///
-    /// let grid = GridBuf::<u8, _>::new(3, 3);
+    /// let grid = GridBuf::<u8, _, _>::new(3, 3);
     /// assert_eq!(grid.get(Pos::new(0, 0)), Some(&0));
     /// assert_eq!(grid.get(Pos::new(2, 2)), Some(&0));
     /// assert_eq!(grid.get(Pos::new(3, 3)), None); // Out of bounds
@@ -105,8 +102,8 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
             buffer,
             width,
             height,
-            _element: PhantomData,
             _layout: PhantomData,
+            _element: PhantomData,
         }
     }
 }
@@ -114,7 +111,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, RowMajor> {
 #[cfg(feature = "alloc")]
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
-    L: Layout,
+    L: layout::Linear,
 {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
@@ -125,15 +122,15 @@ where
     pub fn new_filled_with_layout(width: usize, height: usize, value: T) -> Self
     where
         T: Copy,
-        L: Layout,
+        L: layout::Linear,
     {
         let buffer = alloc::vec![value; width * height];
         Self {
             buffer,
             width,
             height,
-            _element: PhantomData,
             _layout: PhantomData,
+            _element: PhantomData,
         }
     }
 }
@@ -143,19 +140,19 @@ mod tests {
     extern crate alloc;
 
     use super::*;
-    use crate::{core::Pos, ops::GridRead as _};
+    use crate::{core::Pos, ops::GridRead as _, ops::layout::RowMajor};
     use alloc::vec;
 
     #[test]
     #[should_panic(expected = "Buffer length must be a multiple of width")]
     fn test_from_buffer_panics_on_invalid_length() {
         let buffer = vec![1, 2, 3];
-        let _grid: GridBuf<_, _> = GridBuf::from_buffer(buffer, 2);
+        let _grid = GridBuf::<_, _, RowMajor>::from_buffer(buffer, 2);
     }
 
     #[test]
     fn new_filled_with_layout() {
-        let grid = GridBuf::<u8, alloc::vec::Vec<u8>, RowMajor>::new_filled_with_layout(3, 2, 42);
+        let grid = GridBuf::<_, _, RowMajor>::new_filled_with_layout(3, 2, 42);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
         assert_eq!(grid.get(Pos::new(2, 1)), Some(&42));
         assert_eq!(grid.get(Pos::new(3, 1)), None); // Out of bounds

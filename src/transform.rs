@@ -1,8 +1,67 @@
+//! Transformation operations for grids.
+//!
+//! [`GridConvertExt`] is automatically implemented for all types that implement reading, or in the
+//! case of [`blend`][GridConvertExt::blend], reading _and_ writing from a grid, and provides
+//! additional methods for lazily transforming grids (leaving the original grid unchanged, and
+//! without any allocations).
+//!
+//! Operations include:
+//!
+//! - [`blend`](GridConvertExt::blend): Creates a blended version of the grid, applying a blend function when setting elements.
+//! - [`copied`](GridConvertExt::copied): Creates a grid that copies all of its elements.
+//! - [`flatten`](GridConvertExt::flatten): Collects the elements of the grid into a new buffer.
+//! - [`map`](GridConvertExt::map): Creates a grid that applies a mapping function to its elements.
+//! - [`scale`](GridConvertExt::scale): Creates a scaled version of the grid.
+//! - [`view`](GridConvertExt::view): Creates a view of the grid over a specified rectangular region.
+//!
+//! ## Chaining transformations
+//!
+//! Methods on [`GridConvertExt`] can be chained together to create complex transformations, as
+//! they consume the grid and return a new one. This allows for a functional style of programming
+//! where each transformation is applied in sequence, without modifying the original grid:
+//!
+//! ```rust
+//! use grixy::prelude::*;
+//!
+//! let grid = GridBuf::new_filled(3, 3, 1)
+//!   .copied()
+//!   .map(|x| x * 2)
+//!   .view(Rect::from_ltwh(0, 0, 2, 2))
+//!   .scale(2);
+//!
+//! assert_eq!(grid.get(Pos::new(1, 1)), Some(2));
+//! ```
+//!
+//! ## Sharing a grid
+//!
+//! To share the original grid, you can use `Rc` or `Arc` to wrap it:
+//!
+//! ```rust
+//! // Or alloc::rc::Rc;
+//! use std::rc::Rc;
+//! use grixy::prelude::*;
+//!
+//! let rc = Rc::new(GridBuf::new_filled(3, 3, 1));
+//!
+//! let rf = Rc::clone(&rc);
+//! let chained = rf
+//!   .copied()
+//!   .map(|x| x * 2)
+//!   .view(Rect::from_ltwh(0, 0, 2, 2))
+//!   .scale(2);
+//! assert_eq!(chained.get(Pos::new(1, 1)), Some(2));
+//!
+//! // Original grid is still accessible
+//! assert_eq!(rc.get(Pos::new(1, 1)), Some(&1));
+//! ```
+
 use core::marker::PhantomData;
 
+#[cfg(feature = "buffer")]
+use crate::ops::{ExactSizeGrid, layout};
 use crate::{
     core::Rect,
-    ops::{GridRead, GridWrite, unchecked::TrustedSizeGrid},
+    ops::{GridRead, GridWrite},
 };
 
 mod blended;
@@ -31,7 +90,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// // By default, `GridBuf` returns references to its elements (similar to `Vec`).
     /// let grid = GridBuf::new_filled(3, 3, 1);
@@ -59,7 +118,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let mapped = grid.map(|&x| x * 2);
@@ -84,7 +143,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf, core::Rect};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
     /// let view = grid.view(Rect::from_ltwh(0, 0, 2, 2));
@@ -110,7 +169,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos,convert::GridConvertExt as _,  ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(2, 2, 1);
     /// let scaled = grid.scale(2);
@@ -137,19 +196,20 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::GridRead, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let grid = GridBuf::new_filled(3, 3, 1);
-    /// let collected = grid.copied().collect::<Vec<_>>();
+    /// let collected = grid.copied().flatten::<Vec<_>, RowMajor>();
     /// assert_eq!(collected.get(Pos::new(1, 1)), Some(&1));
     /// assert_eq!(collected.get(Pos::new(3, 3)), None);
     /// ```
     #[cfg(feature = "buffer")]
-    fn collect<'a, B>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, Self::Layout>
+    fn flatten<'a, B, L>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
+        L: layout::Linear,
         Self: Sized,
-        Self: TrustedSizeGrid,
+        Self: ExactSizeGrid,
         Self::Element<'a>: Copy,
     {
         use crate::core::Rect;
@@ -166,7 +226,7 @@ pub trait GridConvertExt: GridRead {
     /// ## Examples
     ///
     /// ```rust
-    /// use grixy::{core::Pos, convert::GridConvertExt as _, ops::{GridRead, GridWrite}, buf::GridBuf};
+    /// use grixy::prelude::*;
     ///
     /// let mut grid = GridBuf::new_filled(3, 3, 1);
     /// let blend_fn = |current: &i32, new: i32| current + new;
@@ -199,16 +259,19 @@ mod tests {
     use crate::{
         buf::GridBuf,
         core::{Pos, Rect},
+        ops::{GridBase as _, layout::RowMajor},
     };
     use alloc::{vec, vec::Vec};
+    use ixy::HasSize as _;
 
     use super::*;
 
     #[test]
     fn grid_copied_size() {
         let grid = GridBuf::<u8, _, _>::new(10, 10).copied();
-        assert_eq!(grid.width(), 10);
-        assert_eq!(grid.height(), 10);
+        let (size, _) = grid.size_hint();
+        assert_eq!(size.width(), 10);
+        assert_eq!(size.height(), 10);
     }
 
     #[test]
@@ -231,8 +294,9 @@ mod tests {
     fn grid_mapped_size() {
         let grid = GridBuf::<u8, _, _>::new(10, 10);
         let mapped = grid.map(|x| x * 2);
-        assert_eq!(mapped.width(), 10);
-        assert_eq!(mapped.height(), 10);
+        let (size, _) = mapped.size_hint();
+        assert_eq!(size.width(), 10);
+        assert_eq!(size.height(), 10);
     }
 
     #[test]
@@ -255,8 +319,9 @@ mod tests {
     fn grid_view_size() {
         let grid = GridBuf::<u8, _, _>::new(10, 10);
         let view = grid.view(Rect::from_ltwh(0, 0, 5, 5));
-        assert_eq!(view.width(), 5);
-        assert_eq!(view.height(), 5);
+        let (size, _) = view.size_hint();
+        assert_eq!(size.width(), 5);
+        assert_eq!(size.height(), 5);
     }
 
     #[test]
@@ -279,13 +344,14 @@ mod tests {
     fn grid_scaled_size() {
         let grid = GridBuf::<u8, _, _>::new(10, 10);
         let scaled = grid.scale(2);
-        assert_eq!(scaled.width(), 20);
-        assert_eq!(scaled.height(), 20);
+        let (size, _) = scaled.size_hint();
+        assert_eq!(size.width(), 20);
+        assert_eq!(size.height(), 20);
     }
 
     #[test]
     fn grid_scaled_get() {
-        let grid = GridBuf::<_, _>::from_buffer(vec![1, 2, 3, 4], 2);
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         assert_eq!(scaled.get(Pos::new(1, 1)), Some(&1));
         assert_eq!(scaled.get(Pos::new(2, 2)), Some(&4));
@@ -295,7 +361,7 @@ mod tests {
 
     #[test]
     fn grid_scaled_iter_rect() {
-        let grid = GridBuf::<_, _>::from_buffer(vec![1, 2, 3, 4], 2);
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![1, 2, 3, 4], 2);
         let scaled = grid.scale(2);
         let elements: Vec<_> = scaled.iter_rect(Rect::from_ltwh(0, 0, 4, 4)).collect();
 
@@ -313,8 +379,9 @@ mod tests {
         let mut grid = GridBuf::<u8, _, _>::new(10, 10);
         let mut blended = grid.blend(|current, new| current + new);
         blended.set(Pos::new(1, 1), 5).unwrap();
-        assert_eq!(blended.width(), 10);
-        assert_eq!(blended.height(), 10);
+        let (size, _) = blended.size_hint();
+        assert_eq!(size.width(), 10);
+        assert_eq!(size.height(), 10);
     }
 
     #[test]
