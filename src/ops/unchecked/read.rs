@@ -65,6 +65,10 @@ impl<T: GridBase + GridReadUnchecked + TrustedSizeGrid> GridRead for T {
             None
         }
     }
+
+    fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
+        unsafe { self.iter_rect_unchecked(self.trim_rect(bounds)) }
+    }
 }
 
 #[cfg(test)]

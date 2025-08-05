@@ -16,6 +16,7 @@ members = ["tools/cargo-bin"]
 [workspace.metadata.bin]
 cargo-nextest = { version = "0.9.98", locked = true }
 cargo-llvm-cov = { version = "0.6.16", locked = true }
+flamegraph = { version = "0.6.8", locked = true, bins = ["cargo-flamegraph"] }
 just = { version = "1.40.0" }
 taplo-cli = { version = "0.10.0", bins = ["taplo"] }
 
@@ -43,13 +44,5 @@ name = "blit"
 harness = false
 
 [[bench]]
-name = "chain"
-harness = false
-
-[[bench]]
 name = "iter"
-harness = false
-
-[[bench]]
-name = "random_access"
 harness = false

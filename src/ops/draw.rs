@@ -22,8 +22,8 @@ use crate::{
 /// assert_eq!(dst.get(Pos::new(4, 4)), Some(&1));
 /// assert_eq!(dst.get(Pos::new(5, 5)), None);
 /// ```
-pub fn copy_rect<'s, E>(
-    src: &'s impl GridRead<Element<'s> = E>,
+pub fn copy_rect<'a, E>(
+    src: &'a impl GridRead<Element<'a> = E>,
     dst: &mut impl GridWrite<Element = E>,
     from: Rect,
     to: Pos,

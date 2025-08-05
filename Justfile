@@ -31,6 +31,12 @@ check:
     cargo just lint
     cargo just doc-check
 
+bench *ARGS:
+    cargo bench --all-features {{ARGS}}
+
+profile *ARGS:
+    cargo tool flamegraph --bench {{ARGS}} -- --bench
+
 doc:
     cargo doc --all-features --no-deps --open --lib
 
