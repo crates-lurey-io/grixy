@@ -50,7 +50,7 @@ fn expand(bits: &[u8]) -> Vec<u32> {
 #[allow(clippy::needless_pass_by_value)]
 fn blit_vec(pixels: Vec<u32>) -> Vec<u32> {
     // Create a Vec-based output buffer.
-    let mut canvas = Vec::<u32>::with_capacity(8 * 16 * 8 * 16);
+    let mut canvas = vec![0; 8 * 16 * 8 * 16];
 
     // Read each glyph from the font and copy it to the canvas in reverse order.
     for i in (0..256).rev() {
@@ -68,7 +68,7 @@ fn blit_vec(pixels: Vec<u32>) -> Vec<u32> {
 #[inline]
 fn blit_grid(pixels: Vec<u32>) -> Vec<u32> {
     // Create a Grid-based output buffer.
-    let mut dst = GridBuf::<u32, _, RowMajor>::new(8 * 16, 8 * 16);
+    let mut dst = GridBuf::<u32, _, Block<8, 8>>::new_filled_with_layout(8 * 16, 8 * 16, 0);
 
     // Create a Grid-based view over the font data.
     let src = GridBuf::<u32, _, RowMajor>::from_buffer(pixels, 8).copied();

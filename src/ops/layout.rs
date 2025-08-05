@@ -97,14 +97,19 @@ impl InternalLayout for RowMajor {
 /// | AB | EF |
 /// +----+----+
 /// ```
-pub struct Block<const W: usize, const H: usize, I> {
-    inner: PhantomData<I>,
+#[allow(private_bounds)]
+pub struct Block<const W: usize, const H: usize, G = RowMajor, C = G>
+where
+    G: InternalLayout<Traversal: layout::Traversal>,
+    C: InternalLayout<Traversal: layout::Traversal>,
+{
+    inner: PhantomData<(G, C)>,
 }
 
-impl<const W: usize, const H: usize, G, C> InternalLayout for Block<W, H, layout::Block<W, H, G, C>>
+impl<const W: usize, const H: usize, G, C> InternalLayout for Block<W, H, G, C>
 where
-    G: layout::Traversal,
-    C: layout::Traversal,
+    G: InternalLayout<Traversal: layout::Traversal>,
+    C: InternalLayout<Traversal: layout::Traversal>,
 {
-    type Traversal = layout::Block<W, H, G, C>;
+    type Traversal = layout::Block<W, H, G::Traversal, C::Traversal>;
 }
