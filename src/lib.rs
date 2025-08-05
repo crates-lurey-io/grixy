@@ -51,6 +51,7 @@
 //!
 //! Provides `GridWrite` when a mutable cell is wrapping a `GridWrite` type.
 
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![no_std]
 
 pub(crate) mod internal;
