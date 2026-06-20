@@ -327,6 +327,7 @@ dependencies = [
  "ixy",
  "open",
  "png",
+ "serde",
  "temp-dir",
 ]
 
@@ -410,6 +411,9 @@ name = "ixy"
 version = "0.6.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38c7555014e6b3d1416a5541b1a38f195b261eeded4e391cafb18484c8a293f4"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "js-sys"

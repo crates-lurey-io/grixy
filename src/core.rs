@@ -24,7 +24,10 @@ pub type Size = ixy::Size;
 #[non_exhaustive]
 pub enum GridError {
     /// Could not access an element at a specified position due to it being out of bounds.
-    OutOfBounds { pos: Pos },
+    OutOfBounds {
+        /// The position that was out of bounds.
+        pos: Pos,
+    },
 }
 
 impl Display for GridError {
