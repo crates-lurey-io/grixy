@@ -28,10 +28,7 @@ pub trait GridDiff: GridRead + ExactSizeGrid {
     /// If the grids have different dimensions, all positions in `self` are
     /// considered changed. This matches the rg double-buffering contract: resize
     /// both buffers before diffing.
-    fn diff<'a>(
-        &'a self,
-        other: &'a Self,
-    ) -> impl Iterator<Item = (Pos, Self::Element<'a>)> + 'a
+    fn diff<'a>(&'a self, other: &'a Self) -> impl Iterator<Item = (Pos, Self::Element<'a>)> + 'a
     where
         Self::Element<'a>: PartialEq;
 }
@@ -40,10 +37,7 @@ impl<G> GridDiff for G
 where
     G: GridRead + ExactSizeGrid,
 {
-    fn diff<'a>(
-        &'a self,
-        other: &'a Self,
-    ) -> impl Iterator<Item = (Pos, Self::Element<'a>)> + 'a
+    fn diff<'a>(&'a self, other: &'a Self) -> impl Iterator<Item = (Pos, Self::Element<'a>)> + 'a
     where
         Self::Element<'a>: PartialEq,
     {
@@ -70,7 +64,7 @@ mod tests {
     use crate::{
         buf::GridBuf,
         core::Pos,
-        ops::{ExactSizeGrid as _, GridRead as _, GridDiff as _},
+        ops::{ExactSizeGrid as _, GridDiff as _, GridRead as _},
     };
     use alloc::vec::Vec;
 

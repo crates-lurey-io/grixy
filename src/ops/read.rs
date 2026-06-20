@@ -63,14 +63,9 @@ pub trait GridRead: GridBase {
     ///     .collect();
     /// assert_eq!(pairs[0], (Pos::new(1, 1), &42u8));
     /// ```
-    fn iter_rect_with_pos(
-        &self,
-        bounds: Rect,
-    ) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
+    fn iter_rect_with_pos(&self, bounds: Rect) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
         let trimmed = self.trim_rect(bounds);
-        Self::Layout::iter_pos(trimmed).filter_map(move |pos| {
-            self.get(pos).map(|elem| (pos, elem))
-        })
+        Self::Layout::iter_pos(trimmed).filter_map(move |pos| self.get(pos).map(|elem| (pos, elem)))
     }
 }
 

@@ -44,7 +44,10 @@ pub fn pos_from_u16(p: ixy::Pos<u16>) -> Pos {
 /// Returns `None` if either coordinate exceeds `u16::MAX`.
 #[must_use]
 pub fn pos_to_u16(p: Pos) -> Option<ixy::Pos<u16>> {
-    Some(ixy::Pos::new(u16::try_from(p.x).ok()?, u16::try_from(p.y).ok()?))
+    Some(ixy::Pos::new(
+        u16::try_from(p.x).ok()?,
+        u16::try_from(p.y).ok()?,
+    ))
 }
 
 /// Lossless `Rect` conversion from `u16` to `usize` coordinates.

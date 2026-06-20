@@ -25,9 +25,9 @@ pub mod bits;
 
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
+use crate::ops::ExactSizeGrid as _;
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
 use crate::{core::Pos, ops::layout};
-use crate::ops::ExactSizeGrid as _;
 
 mod impl_grid;
 mod impl_new;
@@ -129,12 +129,13 @@ mod tests {
     use super::*;
     use crate::{
         core::{Pos, Rect},
-        ops::{GridRead as _,
+        ops::{
+            GridRead as _,
             layout::RowMajor,
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };
-    use alloc::{vec, vec::Vec, format};
+    use alloc::{format, vec, vec::Vec};
 
     #[test]
     fn into_inner() {

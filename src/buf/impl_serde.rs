@@ -83,10 +83,7 @@ where
                 f.write_str("struct GridBuf")
             }
 
-            fn visit_map<V: de::MapAccess<'de>>(
-                self,
-                mut map: V,
-            ) -> Result<Self::Value, V::Error> {
+            fn visit_map<V: de::MapAccess<'de>>(self, mut map: V) -> Result<Self::Value, V::Error> {
                 let mut width = None;
                 let mut height = None;
                 let mut data = None;

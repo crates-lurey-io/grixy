@@ -1,11 +1,7 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use crate::{
-    buf::GridBuf,
-    core::Pos,
-    ops::layout,
-};
+use crate::{buf::GridBuf, core::Pos, ops::layout};
 
 #[cfg(feature = "alloc")]
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
@@ -112,8 +108,8 @@ mod tests {
         assert_eq!(grid.width(), 4);
         assert_eq!(grid.height(), 4);
         assert_eq!(grid.get(Pos::new(0, 0)), Some(&99)); // preserved
-        assert_eq!(grid.get(Pos::new(1, 1)), Some(&1));  // preserved
-        assert_eq!(grid.get(Pos::new(3, 3)), Some(&0));  // new, default
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(&1)); // preserved
+        assert_eq!(grid.get(Pos::new(3, 3)), Some(&0)); // new, default
     }
 
     #[test]
@@ -124,9 +120,9 @@ mod tests {
 
         assert_eq!(grid.width(), 2);
         assert_eq!(grid.height(), 2);
-        assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));  // preserved
-        assert_eq!(grid.get(Pos::new(1, 1)), Some(&1));  // preserved
-        assert_eq!(grid.get(Pos::new(3, 3)), None);      // out of bounds
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(&1)); // preserved
+        assert_eq!(grid.get(Pos::new(1, 1)), Some(&1)); // preserved
+        assert_eq!(grid.get(Pos::new(3, 3)), None); // out of bounds
     }
 
     #[test]
@@ -148,8 +144,8 @@ mod tests {
 
         assert_eq!(grid.width(), 5);
         assert_eq!(grid.height(), 2);
-        assert_eq!(grid.get(Pos::new(2, 2)), None);      // out of bounds (height shrunk)
-        assert_eq!(grid.get(Pos::new(4, 1)), Some(&0));  // new, default
+        assert_eq!(grid.get(Pos::new(2, 2)), None); // out of bounds (height shrunk)
+        assert_eq!(grid.get(Pos::new(4, 1)), Some(&0)); // new, default
     }
 
     #[test]
@@ -157,7 +153,7 @@ mod tests {
         let mut grid = GridBuf::<_, _, RowMajor>::new_filled(2, 2, 1u8);
         grid.resize_filled(4, 4, 42);
 
-        assert_eq!(grid.get(Pos::new(0, 0)), Some(&1));  // preserved
+        assert_eq!(grid.get(Pos::new(0, 0)), Some(&1)); // preserved
         assert_eq!(grid.get(Pos::new(3, 3)), Some(&42)); // new, filled with 42
     }
 }
