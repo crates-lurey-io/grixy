@@ -21,6 +21,7 @@ pub type Size = ixy::Size;
 
 /// An error type for operations on or creating a `Grid`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]
 pub enum GridError {
     /// Could not access an element at a specified position due to it being out of bounds.

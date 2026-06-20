@@ -32,6 +32,7 @@ use crate::ops::ExactSizeGrid as _;
 mod impl_grid;
 mod impl_new;
 mod impl_resize;
+mod impl_serde;
 mod impl_slice;
 
 /// A 2-dimensional grid implemented by a linear data buffer.

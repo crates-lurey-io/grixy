@@ -39,6 +39,7 @@ serde = { version = "1.0", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 bytemuck = "1.23.1"
+serde_json = "1.0"
 criterion = { version = "0.7.0", features = ["html_reports"] }
 open = "5.3.2"
 png = "0.17.16"

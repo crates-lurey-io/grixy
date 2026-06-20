@@ -328,6 +328,7 @@ dependencies = [
  "open",
  "png",
  "serde",
+ "serde_json",
  "temp-dir",
 ]
 
