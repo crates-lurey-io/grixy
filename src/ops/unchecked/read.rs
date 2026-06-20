@@ -47,7 +47,7 @@ pub trait GridReadUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`layout::Traversal::iter_pos`] to iterate over the rectangle,
     /// calling [`get_unchecked`](GridReadUnchecked::get_unchecked) for each position.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html

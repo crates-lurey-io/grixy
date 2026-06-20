@@ -106,7 +106,7 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation delegates to [`fill_rect_unchecked`], wrapping the value in a
+    /// The default implementation delegates to [`Self::fill_rect_unchecked`], wrapping the value in a
     /// closure. Specialized implementations may use `memset`-style operations for `Copy` types.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
