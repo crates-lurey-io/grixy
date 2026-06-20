@@ -42,7 +42,7 @@ pub trait GridBase {
     fn trim_rect(&self, rect: Rect) -> Rect {
         let (_, max) = self.size_hint();
         if let Some(max) = max {
-            rect.intersect(Rect::new(Pos::ORIGIN, max))
+            rect.intersect(Rect::from_tl_size(Pos::ORIGIN, max))
         } else {
             rect
         }

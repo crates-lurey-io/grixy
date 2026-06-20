@@ -30,7 +30,7 @@ cell = []
 all-features = true
 
 [dependencies]
-ixy = { version = "0.6.0-alpha.2" }
+ixy = { version = "0.6.0-alpha.5" }
 
 [dev-dependencies]
 bytemuck = "1.23.1"
