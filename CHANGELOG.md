@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - Unreleased
+
+### Added
+
+- `GridDiff` trait with `diff()` method for comparing two grids (§5.1)
+- `resize()` and `resize_filled()` on `GridBuf<T, Vec<T>, L>` (§5.2)
+- `iter_rect_with_pos()` on `GridRead` — position-paired rect iteration (§5.3)
+- `iter_with_pos()` and `cells()` on `GridIter` (§5.3)
+- `get_mut()` on `GridBuf` — mutable checked accessor (§5.4)
+- `Display` for `GridBuf<T: Display + Default + PartialEq, ...>` (§5.6)
+- Coordinate conversion functions: `pos_from_u16`, `pos_to_u16`, `rect_from_u16`
+- Optional `serde` feature for `Serialize`/`Deserialize` on `GridBuf` and `GridError`
+- `missing_docs = "warn"` lint and docs for all public items
+
+### Changed
+
+- `L: layout::Linear` removed from `GridBuf` struct definition (C-STRUCT-BOUNDS)
+- License changed from `MIT` to `MIT OR Apache-2.0`
+- Updated `ixy` dependency from `0.6.0-alpha.2` to `0.6.0-alpha.5`
+
+### Removed
+
+- `transform::blend` submodule (`clear`, `source`, `destination` functions)
+  — trivially expressible as closures
+
 ## [0.6.0] - Unreleased
 
 ### Added

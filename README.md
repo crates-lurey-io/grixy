@@ -23,7 +23,39 @@ Possible use-cases include:
 - Pixel rasterization, where grids can represent images, textures, or graphical data
 - Any other 2D grid-based data structure, such as matrices, graphs, or spatial indexing
 
-## Example
+## Features
+
+| Feature | Description | Default |
+|---------|-------------|---------|
+| `alloc` | `Vec`-backed grid buffers (`new`, `new_filled`, `resize`, etc.) | No |
+| `buffer` | `GridBuf` type and related grid types | No |
+| `cell` | `GridWrite` impls for `Cell`, `RefCell`, `UnsafeCell` | No |
+| `serde` | `Serialize`/`Deserialize` for `GridBuf` and `GridError` | No |
+
+## Quick start
+
+```rust
+use grixy::prelude::*;
+
+// Create a grid, read and write cells.
+let mut grid = GridBuf::<u8, _, _>::new(5, 5);
+grid[Pos::new(0, 0)] = 42;
+assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
+
+// Compare two grids with diff().
+let other = GridBuf::new_filled(5, 5, 0u8);
+let changes: Vec<_> = grid.diff(&other).collect();
+assert_eq!(changes, [(Pos::new(0, 0), &42u8)]);
+
+// Resize preserving content overlap.
+grid.resize(10, 10);
+assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
+
+// Iterate with position context.
+for (pos, cell) in grid.cells() {
+    println!("({}, {}): {}", pos.x, pos.y, cell);
+}
+```
 
 ### Drawing glyphs
 
