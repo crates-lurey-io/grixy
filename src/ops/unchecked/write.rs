@@ -19,28 +19,36 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Safety
     ///
-    /// Calling this method with an out-of-bounds position is _[undefined behavior][]_.
+    /// The caller must ensure `pos` is a valid position within this grid. A position is valid
+    /// if `pos.x < width()` and `pos.y < height()`.
+    ///
+    /// Calling this method with an out-of-bounds position is _[undefined behavior][]_,
+    /// regardless of whether the written value is subsequently read.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn set_unchecked(&mut self, pos: Pos, value: Self::Element);
 
     /// Sets elements within a rectangular region of the grid without bounds checking.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
+    /// Each position in `dst` is filled with the value returned by `f(pos)`. Elements are set
+    /// in an order agreeable to the grid's internal layout.
+    ///
+    /// The bounding rectangle is treated as _exclusive_ of the right and bottom edges.
     ///
     /// ## Safety
     ///
-    /// The caller must ensure that all positions in the rectangle are valid positions in the grid.
+    /// The caller must ensure that **every position** in `dst` is a valid position in the
+    /// grid. A position `(x, y)` is valid if `x < width()` and `y < height()`. This means the
+    /// rectangle must satisfy `dst.right() <= width()` and `dst.bottom() <= height()`.
+    ///
+    /// Writing to memory outside the grid's allocated storage is _[undefined behavior][]_.
     ///
     /// ## Performance
     ///
     /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
-    /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
-    /// implementations may optimize this, for example by using a more efficient iteration strategy
-    /// (for linear writes, etc.).
+    /// calling [`set_unchecked`](GridWriteUnchecked::set_unchecked) for each position.
     ///
+    /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
@@ -50,24 +58,26 @@ pub trait GridWriteUnchecked {
 
     /// Sets elements within a rectangular region of the grid without bounds checking.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
+    /// Each position in `dst` is filled from the iterator in traversal order. If the iterator
+    /// yields fewer elements than the rectangle contains, remaining positions are left unchanged.
     ///
-    /// If the provided iterator has fewer elements than the rectangle, the remaining elements will
-    /// not be set. If the iterator has more elements than the rectangle, the behavior is undefined.
+    /// The bounding rectangle is treated as _exclusive_ of the right and bottom edges.
     ///
     /// ## Safety
     ///
-    /// The caller must ensure that all positions in the rectangle are valid positions in the grid
-    /// and that the iterator does not yield more elements than the rectangle can hold.
+    /// The caller must ensure that **every position** in `dst` is a valid position in the
+    /// grid (see [`fill_rect_unchecked`](GridWriteUnchecked::fill_rect_unchecked)).
+    ///
+    /// Additionally, if the iterator **yields more elements** than the number of positions in
+    /// `dst`, the excess elements are silently dropped. If the iterator is an exact-size iterator
+    /// whose reported length exceeds the rectangle area, this is _not_ undefined behavior on its
+    /// own — but implementations may rely on the length for buffer sizing, so callers should
+    /// ensure the iterator does not report a size larger than `dst.area()`.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
-    /// involving a call to [`GridWriteUnchecked::set_unchecked`] for each element. Other
-    /// implementations may optimize this, for example by using a more efficient iteration strategy
-    /// (for linear writes, etc.).
+    /// The default implementation zips the iterator with [`Traversal::iter_pos`], calling
+    /// [`set_unchecked`](GridWriteUnchecked::set_unchecked) for each yielded pair.
     ///
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
     unsafe fn fill_rect_iter_unchecked(
@@ -82,24 +92,24 @@ pub trait GridWriteUnchecked {
             });
     }
 
-    /// Sets elements within a rectangular region of the grid without bounds checking.
+    /// Fills a rectangular region of the grid with a single value without bounds checking.
     ///
-    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
+    /// All positions in `bounds` are set to `value`. The bounding rectangle is treated as
+    /// _exclusive_ of the right and bottom edges.
     ///
     /// ## Safety
     ///
-    /// The caller must ensure that all positions in the rectangle are valid positions in the grid.
+    /// The caller must ensure that **every position** in `bounds` is a valid position in the
+    /// grid (see [`fill_rect_unchecked`](GridWriteUnchecked::fill_rect_unchecked)).
+    ///
+    /// Writing to memory outside the grid's allocated storage is _[undefined behavior][]_.
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
-    /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
-    /// checking, etc.).
+    /// The default implementation delegates to [`fill_rect_unchecked`], wrapping the value in a
+    /// closure. Specialized implementations may use `memset`-style operations for `Copy` types.
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn fill_rect_solid_unchecked(&mut self, bounds: Rect, value: Self::Element)
     where
         Self::Element: Copy,

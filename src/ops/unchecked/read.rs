@@ -21,7 +21,11 @@ pub trait GridReadUnchecked {
     ///
     /// ## Safety
     ///
-    /// Calling this method with an out-of-bounds position is _[undefined behavior][]_.
+    /// The caller must ensure `pos` is a valid position within this grid. A position is valid
+    /// if `pos.x < width()` and `pos.y < height()`.
+    ///
+    /// Calling this method with an out-of-bounds position is _[undefined behavior][]_,
+    /// regardless of whether the returned reference is used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn get_unchecked(&self, pos: Pos) -> Self::Element<'_>;
@@ -34,16 +38,19 @@ pub trait GridReadUnchecked {
     ///
     /// ## Safety
     ///
-    /// The caller must ensure that all positions in the rectangle are valid positions in the grid.
+    /// The caller must ensure that **every position** in `bounds` is a valid position in the
+    /// grid. A position `(x, y)` is valid if `x < width()` and `y < height()`. This means the
+    /// rectangle must satisfy `bounds.right() <= width()` and `bounds.bottom() <= height()`.
+    ///
+    /// The iterator may read from memory outside the grid's allocated storage if this invariant
+    /// is violated, which is _[undefined behavior][]_.
     ///
     /// ## Performance
     ///
-    /// The default implementation iterates over the rectangle in a traversal order defined by
-    /// [`GridReadUnchecked::Layout`], making an individual call to `get_unchecked` for each
-    /// position in the rectangle.
+    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// calling [`get_unchecked`](GridReadUnchecked::get_unchecked) for each position.
     ///
-    /// Implementations may optimize this, for example by using a more efficient iteration strategy
-    /// (for linear reads, etc.).
+    /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn iter_rect_unchecked(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         layout::RowMajor::iter_pos(bounds).map(move |pos| unsafe { self.get_unchecked(pos) })
     }
