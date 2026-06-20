@@ -65,11 +65,13 @@ mod alloc;
 mod cell;
 
 mod base;
+mod diff;
 mod draw;
 mod read;
 mod write;
 
 pub use base::{ExactSizeGrid, GridBase};
+pub use diff::GridDiff;
 pub use draw::copy_rect;
 pub use read::{GridIter, GridRead};
 pub use write::GridWrite;

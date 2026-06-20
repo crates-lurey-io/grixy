@@ -13,7 +13,7 @@
 pub use crate::buf::{GridBuf, bits::GridBits};
 pub use crate::core::{GridError, HasSize as _, Pos, Rect, Size};
 pub use crate::ops::{
-    ExactSizeGrid as _, GridBase, GridIter as _, GridRead, GridWrite, copy_rect,
+    ExactSizeGrid as _, GridBase, GridDiff as _, GridIter as _, GridRead, GridWrite, copy_rect,
     layout::{Block, ColumnMajor, Linear as _, RowMajor, Traversal as _},
 };
 pub use crate::transform::GridConvertExt as _;
