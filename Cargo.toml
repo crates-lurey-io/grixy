@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 description = "Zero-cost 2D grids for embedded systems and graphics"
 repository = "https://github.com/crates-lurey-io/grixy"
 homepage = "https://github.com/crates-lurey-io/grixy"
+rust-version = "1.87"
 documentation = "https://docs.rs/grixy"
 keywords = ["2d", "grid", "embedded", "no-std", "gamedev"]
 categories = ["game-development", "mathematics", "embedded", "no-std"]
