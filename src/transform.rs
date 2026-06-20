@@ -79,8 +79,6 @@ pub use scaled::Scaled;
 mod viewed;
 pub use viewed::Viewed;
 
-pub mod blend;
-
 /// Extension trait for converting grids into different forms.
 pub trait GridConvertExt: GridRead {
     /// Creates a grid that copies all of its elements.
