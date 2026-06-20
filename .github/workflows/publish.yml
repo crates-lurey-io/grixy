@@ -1,0 +1,68 @@
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Validate tag matches Cargo.toml
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION="$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == "grixy") | .version')"
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "::error::Tag v$TAG_VERSION doesn't match Cargo.toml $CARGO_VERSION"
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+        id: version
+
+      - name: Install Tools
+        uses: cargo-bins/cargo-binstall@v1.13.0
+
+      - name: Check
+        run: cargo just check
+
+      - name: Test
+        run: cargo just test-all
+
+      - name: Semver Checks
+        run: cargo just semver-checks
+
+      - name: MSRV Check
+        run: cargo just msrv
+
+      - name: Extract changelog for this version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v ver="[$VERSION]" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, ver)) found=1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+
+      - name: Publish to crates.io
+        uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+
+      - name: cargo publish
+        run: cargo publish --allow-dirty
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
