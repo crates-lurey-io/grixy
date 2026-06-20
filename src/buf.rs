@@ -27,6 +27,7 @@ pub mod bits;
 
 pub use crate::ops::unchecked::TrustedSizeGrid as _;
 use crate::{core::Pos, ops::layout};
+use crate::ops::ExactSizeGrid as _;
 
 mod impl_grid;
 mod impl_new;
@@ -57,6 +58,21 @@ where
     #[must_use]
     pub fn into_inner(self) -> (B, usize, usize) {
         (self.buffer, self.width, self.height)
+    }
+
+    /// Returns a mutable reference to the element at `pos`, or `None` if out of bounds.
+    #[must_use]
+    pub fn get_mut(&mut self, pos: Pos) -> Option<&mut T>
+    where
+        B: AsMut<[T]>,
+        L: layout::Linear,
+    {
+        if self.contains(pos) {
+            let idx = L::pos_to_index(pos, self.width);
+            self.buffer.as_mut().get_mut(idx)
+        } else {
+            None
+        }
     }
 }
 
@@ -219,6 +235,21 @@ mod tests {
         let grid = GridBuf::new_filled(2, 2, 0u8);
         let output = format!("{grid}");
         assert_eq!(output, "··\n··\n");
+    }
+
+    #[test]
+    fn get_mut_in_bounds() {
+        let mut grid = GridBuf::new_filled(3, 3, 0u8);
+        let cell = grid.get_mut(Pos::new(1, 1));
+        assert!(cell.is_some());
+        *cell.unwrap() = 42;
+        assert_eq!(grid[Pos::new(1, 1)], 42);
+    }
+
+    #[test]
+    fn get_mut_out_of_bounds() {
+        let mut grid = GridBuf::new_filled(3, 3, 0u8);
+        assert!(grid.get_mut(Pos::new(3, 3)).is_none());
     }
 
     #[test]

@@ -46,12 +46,51 @@ pub trait GridRead: GridBase {
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         Self::Layout::iter_pos(self.trim_rect(bounds)).filter_map(move |pos| self.get(pos))
     }
+
+    /// Returns an iterator over `(position, element)` pairs in a rectangular region.
+    ///
+    /// Positions and elements are yielded in the traversal order defined by `Self::Layout`.
+    /// Out-of-bounds positions are skipped.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use grixy::prelude::*;
+    ///
+    /// let grid = GridBuf::new_filled(3, 3, 42u8);
+    /// let pairs: Vec<_> = grid
+    ///     .iter_rect_with_pos(Rect::from_ltwh(1, 1, 2, 2))
+    ///     .collect();
+    /// assert_eq!(pairs[0], (Pos::new(1, 1), &42u8));
+    /// ```
+    fn iter_rect_with_pos(
+        &self,
+        bounds: Rect,
+    ) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
+        let trimmed = self.trim_rect(bounds);
+        Self::Layout::iter_pos(trimmed).filter_map(move |pos| {
+            self.get(pos).map(|elem| (pos, elem))
+        })
+    }
 }
 
 /// A trait for grids that can be iterated over.
 pub trait GridIter: GridRead {
     /// Returns an iterator over the elements of the grid.
     fn iter(&self) -> impl Iterator<Item = Self::Element<'_>>;
+
+    /// Returns an iterator over `(position, element)` pairs for the entire grid.
+    ///
+    /// This is the grixy equivalent of `rg::Grid::cells()`.
+    fn iter_with_pos(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)>;
+
+    /// Alias for [`iter_with_pos`](GridIter::iter_with_pos).
+    ///
+    /// Matches the naming convention of `ndarray::indexed_iter()` and
+    /// `image::ImageBuffer::enumerate_pixels()`.
+    fn cells(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
+        self.iter_with_pos()
+    }
 }
 
 impl<T> GridIter for T
@@ -60,6 +99,10 @@ where
 {
     fn iter(&self) -> impl Iterator<Item = Self::Element<'_>> {
         self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()))
+    }
+
+    fn iter_with_pos(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
+        self.iter_rect_with_pos(Rect::from_ltwh(0, 0, self.width(), self.height()))
     }
 }
 
