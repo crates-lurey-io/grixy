@@ -6,7 +6,7 @@ use crate::{buf::GridBuf, core::Pos, ops::layout};
 #[cfg(feature = "alloc")]
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
-    T: Copy + Default,
+    T: Clone + Default,
     L: layout::Linear,
 {
     /// Resizes the grid to the new dimensions.
@@ -42,7 +42,7 @@ where
                 let src_pos = Pos::new(col, row);
                 let dst_idx = L::pos_to_index(src_pos, new_width);
                 let src_idx = L::pos_to_index(src_pos, self.width);
-                new_buf[dst_idx] = self.buffer[src_idx];
+                new_buf[dst_idx] = self.buffer[src_idx].clone();
             }
         }
 
@@ -78,7 +78,7 @@ where
                 let src_pos = Pos::new(col, row);
                 let dst_idx = L::pos_to_index(src_pos, new_width);
                 let src_idx = L::pos_to_index(src_pos, self.width);
-                new_buf[dst_idx] = self.buffer[src_idx];
+                new_buf[dst_idx] = self.buffer[src_idx].clone();
             }
         }
 
