@@ -5,17 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0-alpha.5] - 2026-06-19
+## [0.6.0-alpha.6] - 2026-06-19
 
 ### Added
 
-- `GridDiff` trait with `diff()` method for comparing two grids (§5.1)
-- `resize()` and `resize_filled()` on `GridBuf<T, Vec<T>, L>` (§5.2)
-- `iter_rect_with_pos()` on `GridRead` — position-paired rect iteration (§5.3)
-- `iter_with_pos()` and `cells()` on `GridIter` (§5.3)
-- `get_mut()` on `GridBuf` — mutable checked accessor (§5.4)
-- `Display` for `GridBuf<T: Display + Default + PartialEq, ...>` (§5.6)
-- Coordinate conversion functions: `pos_from_u16`, `pos_to_u16`, `rect_from_u16`
+- `GridDiff` trait with `diff()` method for comparing two grids
+- `resize()` and `resize_filled()` on `GridBuf<T, Vec<T>, L>`
+- `iter_rect_with_pos()` on `GridRead` — position-paired rect iteration
+- `iter_with_pos()` and `cells()` on `GridIter`
+- `get_mut()` on `GridBuf` — mutable checked accessor
+- `Display` for `GridBuf<T: Display + Default + PartialEq, ...>`
 - Optional `serde` feature for `Serialize`/`Deserialize` on `GridBuf` and `GridError`
 - `missing_docs = "warn"` lint and docs for all public items
 
@@ -24,11 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `L: layout::Linear` removed from `GridBuf` struct definition (C-STRUCT-BOUNDS)
 - License changed from `MIT` to `MIT OR Apache-2.0`
 - Updated `ixy` dependency from `0.6.0-alpha.2` to `0.6.0-alpha.5`
+- Fixed `feature(doc_auto_cfg)` → `feature(doc_cfg)` for docs.rs compatibility
 
 ### Removed
 
 - `transform::blend` submodule (`clear`, `source`, `destination` functions)
   — trivially expressible as closures
+- Bridge functions `pos_from_u16`, `pos_to_u16`, `rect_from_u16`
+  — unnecessary; rg can cast inline with `usize::from()`
 
 ## [0.6.0] - Unreleased
 

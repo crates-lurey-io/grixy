@@ -31,36 +31,6 @@ pub enum GridError {
     },
 }
 
-/// Converts a `u16`-based position to a `usize`-based position.
-///
-/// This conversion is always lossless on all supported platforms (`usize >= 16 bits`).
-#[must_use]
-pub fn pos_from_u16(p: ixy::Pos<u16>) -> Pos {
-    Pos::new(usize::from(p.x), usize::from(p.y))
-}
-
-/// Tries to convert a `usize`-based position to a `u16`-based position.
-///
-/// Returns `None` if either coordinate exceeds `u16::MAX`.
-#[must_use]
-pub fn pos_to_u16(p: Pos) -> Option<ixy::Pos<u16>> {
-    Some(ixy::Pos::new(
-        u16::try_from(p.x).ok()?,
-        u16::try_from(p.y).ok()?,
-    ))
-}
-
-/// Lossless `Rect` conversion from `u16` to `usize` coordinates.
-#[must_use]
-pub fn rect_from_u16(r: ixy::Rect<u16>) -> Rect {
-    Rect::from_ltwh(
-        usize::from(r.left()),
-        usize::from(r.top()),
-        r.width_usize(),
-        r.height_usize(),
-    )
-}
-
 impl Display for GridError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
