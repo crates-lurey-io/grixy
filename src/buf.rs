@@ -14,6 +14,7 @@
 //! ```
 
 use core::{
+    fmt,
     marker::PhantomData,
     ops::{Index, IndexMut},
 };
@@ -81,6 +82,29 @@ where
     }
 }
 
+impl<T, B, L> fmt::Display for GridBuf<T, B, L>
+where
+    T: fmt::Display + Default + PartialEq,
+    B: AsRef<[T]>,
+    L: layout::Linear,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let pos = Pos::new(col, row);
+                let elem = &self[pos];
+                if *elem == T::default() {
+                    f.write_str("·")?;
+                } else {
+                    write!(f, "{elem}")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -93,7 +117,7 @@ mod tests {
             unchecked::{GridReadUnchecked as _, GridWriteUnchecked as _},
         },
     };
-    use alloc::{vec, vec::Vec};
+    use alloc::{vec, vec::Vec, format};
 
     #[test]
     fn into_inner() {
@@ -188,6 +212,21 @@ mod tests {
             42, 42, 0,
             0, 0, 0,
         ]);
+    }
+
+    #[test]
+    fn display() {
+        let grid = GridBuf::new_filled(2, 2, 0u8);
+        let output = format!("{grid}");
+        assert_eq!(output, "··\n··\n");
+    }
+
+    #[test]
+    fn display_non_default() {
+        let mut grid = GridBuf::new_filled(2, 2, 0u8);
+        grid[Pos::new(0, 0)] = 42;
+        let output = format!("{grid}");
+        assert_eq!(output, "42·\n··\n");
     }
 
     #[test]
