@@ -1,5 +1,7 @@
 //! Defines a trait for generating 2-dimensional patterns, such as for noise generation.
 
+#![allow(missing_docs)]
+
 use grixy::prelude::*;
 
 pub trait Pattern2D {
@@ -14,7 +16,7 @@ pub struct Checkerboard {
 
 impl Pattern2D for Checkerboard {
     fn generate(&self, pos: Pos) -> f32 {
-        if (pos.x + pos.y) % 2 == 0 {
+        if (pos.x + pos.y).is_multiple_of(2) {
             self.even
         } else {
             self.odd

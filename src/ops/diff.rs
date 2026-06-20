@@ -61,11 +61,7 @@ where
 mod tests {
     extern crate alloc;
 
-    use crate::{
-        buf::GridBuf,
-        core::Pos,
-        ops::{ExactSizeGrid as _, GridDiff as _, GridRead as _},
-    };
+    use crate::{buf::GridBuf, core::Pos, ops::GridDiff as _};
     use alloc::vec::Vec;
 
     #[test]

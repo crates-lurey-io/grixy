@@ -1,5 +1,7 @@
 //! Loads a monospace font and renders an RGBA PNG based on every glyph in the font.
 
+#![allow(missing_docs)]
+
 use grixy::prelude::*;
 use temp_dir::TempDir;
 

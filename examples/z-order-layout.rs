@@ -1,5 +1,7 @@
 //! Implements a custom Z-order layout for a grid buffer.
 
+#![allow(missing_docs)]
+
 use grixy::{
     ops::layout::{Linear, Traversal},
     prelude::*,

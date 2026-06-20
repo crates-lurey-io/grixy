@@ -1,5 +1,7 @@
 //! Implements a simple pathfinding algorithm using a grid buffer.
 
+#![allow(missing_docs)]
+
 use std::collections::VecDeque;
 
 use grixy::{ops::ExactSizeGrid, prelude::*};

@@ -93,11 +93,9 @@ where
 mod tests {
     extern crate alloc;
 
-    use crate::{
-        buf::GridBuf,
-        core::Pos,
-        ops::{ExactSizeGrid as _, GridRead as _, layout::RowMajor},
-    };
+    #[allow(unused_imports)]
+    use crate::ops::{ExactSizeGrid as _, GridRead as _};
+    use crate::{buf::GridBuf, core::Pos, ops::layout::RowMajor};
 
     #[test]
     fn resize_grow() {
