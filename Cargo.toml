@@ -10,7 +10,7 @@ rust-version = "1.87"
 documentation = "https://docs.rs/grixy"
 keywords = ["2d", "grid", "embedded", "no-std", "gamedev"]
 categories = ["game-development", "mathematics", "embedded", "no-std"]
-version = "0.6.0-alpha.4"
+version = "0.6.0-alpha.5"
 
 [lints.rust]
 missing_docs = "warn"

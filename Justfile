@@ -42,7 +42,7 @@ doc-check:
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
 
 semver-checks:
-    cargo tool cargo-semver-checks --baseline-version 0.6.0-alpha.3
+    cargo tool cargo-semver-checks --baseline-version 0.6.0-alpha.4
 
 msrv:
     cargo tool cargo-hack check --rust-version --workspace --all-targets --all-features --ignore-private
