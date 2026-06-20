@@ -40,10 +40,7 @@ mod impl_slice;
 ///
 /// [`Traversal`]: layout::Traversal
 #[derive(Debug, Clone)]
-pub struct GridBuf<T, B, L>
-where
-    L: layout::Linear,
-{
+pub struct GridBuf<T, B, L> {
     buffer: B,
     width: usize,
     height: usize,

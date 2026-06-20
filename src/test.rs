@@ -1,5 +1,7 @@
 //! Testing fixtures internal to the crate.
 
+#![allow(missing_docs)]
+
 extern crate alloc;
 
 use alloc::{vec, vec::Vec};

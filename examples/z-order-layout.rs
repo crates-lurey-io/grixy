@@ -101,7 +101,7 @@ impl Linear for ZOrderCurve {
 }
 
 fn main() {
-    let rect = Rect::new(Pos::new(0, 0), Size::new(4, 4));
+    let rect = Rect::from_tl_size(Pos::new(0, 0), Size::new(4, 4));
     for pos in ZOrderCurve::iter_pos(rect) {
         println!("{pos:?}");
     }
