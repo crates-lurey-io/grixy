@@ -2,7 +2,7 @@ use crate::{
     core::{Pos, Rect},
     ops::{
         GridBase, GridRead,
-        layout::{self, Traversal as _},
+        layout::{self, Layout as _},
         unchecked::TrustedSizeGrid,
     },
 };
@@ -15,7 +15,7 @@ pub trait GridReadUnchecked {
         Self: 'a;
 
     /// The layout of the grid, which determines how elements are stored and accessed.
-    type Layout: layout::Traversal;
+    type Layout: layout::Layout;
 
     /// Returns an element, without doing bounds checking.
     ///
@@ -47,7 +47,7 @@ pub trait GridReadUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`layout::Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`layout::Layout::iter_pos`] to iterate over the rectangle,
     /// calling [`get_unchecked`](GridReadUnchecked::get_unchecked) for each position.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html

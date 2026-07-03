@@ -7,7 +7,7 @@ use core::marker::PhantomData;
 impl<T, B, L> GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Returns a grid from an existing buffer with a given width in columns.
     ///
@@ -111,7 +111,7 @@ impl<T> GridBuf<T, alloc::vec::Vec<T>, layout::RowMajor> {
 #[cfg(feature = "alloc")]
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Creates a new grid with the specified width and height, filled with a default value.
     ///
@@ -122,7 +122,7 @@ where
     pub fn new_filled_with_layout(width: usize, height: usize, value: T) -> Self
     where
         T: Copy,
-        L: layout::Linear,
+        L: layout::LinearLayout,
     {
         let buffer = alloc::vec![value; width * height];
         Self {

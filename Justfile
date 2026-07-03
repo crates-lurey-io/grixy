@@ -42,7 +42,13 @@ doc-check:
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
 
 semver-checks:
-    cargo tool cargo-semver-checks --baseline-version 0.6.0-alpha.4
+    # No --baseline-version pin: previously published 0.6.0-alpha.* releases all depend on a
+    # loose (non-exact) ixy requirement, so cargo-semver-checks re-resolves their `ixy` dependency
+    # against whatever is newest on crates.io when building the baseline - which breaks the
+    # instant ixy publishes another breaking prerelease in the same 0.6.0 track (as happened
+    # going from ixy 0.6.0-alpha.5 to 0.6.0-alpha.9). Letting cargo-semver-checks auto-select the
+    # baseline compares against the latest actual stable release instead, which isn't affected.
+    cargo tool cargo-semver-checks
 
 msrv:
     cargo tool cargo-hack check --rust-version --workspace --all-targets --all-features --ignore-private

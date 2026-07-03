@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "grixy"
-version = "0.6.0-alpha.7"
+version = "0.6.0-alpha.8"
 dependencies = [
  "bytemuck",
  "criterion",
@@ -409,9 +409,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "ixy"
-version = "0.6.0-alpha.5"
+version = "0.6.0-alpha.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38c7555014e6b3d1416a5541b1a38f195b261eeded4e391cafb18484c8a293f4"
+checksum = "cf5db685a29892d524bda3513508e53a4949e452ad4112e9ee5bb13794337b59"
 dependencies = [
  "serde",
 ]

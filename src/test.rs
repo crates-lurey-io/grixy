@@ -10,7 +10,7 @@ use crate::{
     core::{GridError, Size},
     ops::{
         GridBase, GridRead, GridWrite,
-        layout::{self, Traversal as _},
+        layout::{self, Layout as _},
     },
 };
 

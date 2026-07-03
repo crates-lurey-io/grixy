@@ -40,9 +40,9 @@ mod impl_slice;
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by
-/// [`Traversal`].
+/// [`Layout`].
 ///
-/// [`Traversal`]: layout::Traversal
+/// [`Layout`]: layout::Layout
 #[derive(Debug, Clone)]
 pub struct GridBuf<T, B, L> {
     buffer: B,
@@ -54,7 +54,7 @@ pub struct GridBuf<T, B, L> {
 
 impl<T, B, L> GridBuf<T, B, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Consumes the `GridBuf`, returning the underlying buffer, width, and height.
     #[must_use]
@@ -67,7 +67,7 @@ where
     pub fn get_mut(&mut self, pos: Pos) -> Option<&mut T>
     where
         B: AsMut<[T]>,
-        L: layout::Linear,
+        L: layout::LinearLayout,
     {
         if self.contains(pos) {
             let idx = L::pos_to_index(pos, self.width);
@@ -80,7 +80,7 @@ where
 
 impl<T, B, L> Index<Pos> for GridBuf<T, B, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
     B: AsRef<[T]>,
 {
     type Output = T;
@@ -92,7 +92,7 @@ where
 
 impl<T, B, L> IndexMut<Pos> for GridBuf<T, B, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
     B: AsRef<[T]> + AsMut<[T]>,
 {
     fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
@@ -104,7 +104,7 @@ impl<T, B, L> fmt::Display for GridBuf<T, B, L>
 where
     T: fmt::Display + Default + PartialEq,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for row in 0..self.height {
