@@ -23,6 +23,11 @@ use core::{
 
 pub mod bits;
 
+mod aliases;
+pub use aliases::{SliceGrid, SliceGridMut};
+#[cfg(feature = "alloc")]
+pub use aliases::{VecGrid, VecGridColMajor};
+
 // TRAIT IMPLS -------------------------------------------------------------------------------------
 
 use crate::ops::ExactSizeGrid as _;
@@ -205,10 +210,10 @@ mod tests {
     }
 
     #[test]
-    fn fill_rect_iter_unchecked() {
+    fn fill_rect_from_iter_unchecked() {
         let mut grid = GridBuf::<_, _, RowMajor>::new(3, 3);
         unsafe {
-            grid.fill_rect_iter_unchecked(Rect::from_ltwh(0, 0, 2, 2), vec![1, 2, 3, 4]);
+            grid.fill_rect_from_iter_unchecked(Rect::from_ltwh(0, 0, 2, 2), vec![1, 2, 3, 4]);
         }
         #[rustfmt::skip]
         assert_eq!(grid.buffer.as_ref() as &[i32], &[
@@ -219,10 +224,10 @@ mod tests {
     }
 
     #[test]
-    fn fill_rect_solid_unchecked() {
+    fn fill_rect_unchecked() {
         let mut grid = GridBuf::<_, _, RowMajor>::new(3, 3);
         unsafe {
-            grid.fill_rect_solid_unchecked(Rect::from_ltwh(0, 0, 2, 2), 42);
+            grid.fill_rect_unchecked(Rect::from_ltwh(0, 0, 2, 2), 42);
         }
         #[rustfmt::skip]
         assert_eq!(grid.buffer.as_ref() as &[i32], &[

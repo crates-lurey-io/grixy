@@ -1,3 +1,5 @@
+use core::ops::Index;
+
 use crate::{
     core::{Pos, Size},
     ops::{ExactSizeGrid, GridBase, GridRead},
@@ -50,5 +52,22 @@ where
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
         self.source.get(pos / self.scale)
+    }
+}
+
+/// Indexes into the scaled grid by position, forwarding to the source grid.
+///
+/// # Panics
+///
+/// Panics if `pos` is out of bounds of the scaled grid. Use [`GridRead::get`] for a
+/// non-panicking alternative.
+impl<G, T> Index<Pos> for Scaled<G>
+where
+    G: for<'a> GridRead<Element<'a> = &'a T> + 'static,
+{
+    type Output = T;
+
+    fn index(&self, pos: Pos) -> &T {
+        self.get(pos).expect("position out of bounds")
     }
 }

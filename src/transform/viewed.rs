@@ -1,3 +1,5 @@
+use core::ops::Index;
+
 use crate::{
     core::{Pos, Rect, Size},
     ops::{ExactSizeGrid, GridBase, GridRead},
@@ -58,5 +60,22 @@ where
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         let bounds = bounds - self.bounds.top_left();
         self.source.iter_rect(bounds)
+    }
+}
+
+/// Indexes into the view by position, forwarding to the source grid.
+///
+/// # Panics
+///
+/// Panics if `pos` is out of bounds of the view. Use [`GridRead::get`] for a non-panicking
+/// alternative.
+impl<G, T> Index<Pos> for Viewed<G>
+where
+    G: for<'a> GridRead<Element<'a> = &'a T> + 'static,
+{
+    type Output = T;
+
+    fn index(&self, pos: Pos) -> &T {
+        self.get(pos).expect("position out of bounds")
     }
 }

@@ -71,7 +71,7 @@ mod read;
 mod write;
 
 pub use base::{ExactSizeGrid, GridBase};
-pub use diff::GridDiff;
+pub use diff::{GridChange, GridDiff};
 pub use draw::copy_rect;
-pub use read::{GridIter, GridRead};
+pub use read::GridRead;
 pub use write::GridWrite;

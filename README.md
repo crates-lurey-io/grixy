@@ -25,12 +25,21 @@ Possible use-cases include:
 
 ## Features
 
-| Feature | Description | Default |
-|---------|-------------|---------|
-| `alloc` | `Vec`-backed grid buffers (`new`, `new_filled`, `resize`, etc.) | No |
-| `buffer` | `GridBuf` type and related grid types | No |
-| `cell` | `GridWrite` impls for `Cell`, `RefCell`, `UnsafeCell` | No |
-| `serde` | `Serialize`/`Deserialize` for `GridBuf` and `GridError` | No |
+| Feature | Enables | Default | Depends on |
+|---------|---------|---------|------------|
+| `alloc` | `Vec`-backed grid buffers (`new`, `new_filled`, `resize`, etc.), `GridRead` for `Rc`/`Arc`/`Box` | No | (none) |
+| `buffer` | `GridBuf` type and related grid types (`GridBits`, aliases) | No | (none) |
+| `cell` | `GridWrite` impls for `Cell`, `RefCell`, `UnsafeCell` | No | (none) |
+| `serde` | `Serialize`/`Deserialize` for `GridBuf` and `GridError` | No | `buffer` (soft) |
+
+### Common combinations
+
+- **Library code / trait definitions only**: no features. Depend on `GridRead`/`GridWrite` without
+  pulling in a concrete buffer type.
+- **Game development / general use**: `buffer` + `alloc`, for `Vec`-backed `GridBuf` and the
+  `VecGrid`/`VecGridColMajor` aliases.
+- **Embedded / `no_std` without an allocator**: `buffer` alone, using `GridBuf` over `&[T]`/`&mut
+  [T]` (see `SliceGrid`/`SliceGridMut`) or a custom fixed-size buffer type.
 
 ## Quick start
 
@@ -42,10 +51,13 @@ let mut grid = GridBuf::<u8, _, _>::new(5, 5);
 grid[Pos::new(0, 0)] = 42;
 assert_eq!(grid.get(Pos::new(0, 0)), Some(&42));
 
-// Compare two grids with diff().
+// Compare two grids with diff_from().
 let other = GridBuf::new_filled(5, 5, 0u8);
-let changes: Vec<_> = grid.diff(&other).collect();
-assert_eq!(changes, [(Pos::new(0, 0), &42u8)]);
+let changes: Vec<_> = grid.diff_from(&other).collect();
+assert_eq!(
+    changes,
+    [(Pos::new(0, 0), GridChange::Modified { from: &0u8, to: &42u8 })]
+);
 
 // Resize preserving content overlap.
 grid.resize(10, 10);

@@ -1,6 +1,31 @@
 use crate::core::{Pos, Rect, Size};
 
 /// A base trait for grids.
+///
+/// # Implementing `GridBase`
+///
+/// Implement `GridBase` alone (without [`ExactSizeGrid`]) when:
+///
+/// - the grid's size is unknown at compile time and cannot be determined cheaply at runtime,
+///   for example a lazily generated or effectively infinite grid (procedural terrain, a fractal,
+///   a stream of tiles);
+///   
+/// - computing an exact size would be expensive relative to the operations you actually need
+///   (e.g. a grid backed by a sparse map where counting occupied cells is O(n)).
+///
+/// A `GridBase`-only grid can still implement [`GridRead`](crate::ops::GridRead) and be read from
+/// via `get()`/`iter_rect()`; it just can't provide the whole-grid conveniences that require
+/// knowing the bounds up front.
+///
+/// Implement [`ExactSizeGrid`] in addition when:
+///
+/// - the grid's size is known precisely and cheaply (`O(1)`);
+/// - you want callers to use the whole-grid convenience methods on
+///   [`GridRead`](crate::ops::GridRead) (`iter()`, `iter_with_pos()`, `cells()`) and
+///   [`GridDiff`](crate::ops::GridDiff) (`diff_from()`), which are gated on `ExactSizeGrid`;
+/// - you want to implement [`TrustedSizeGrid`](crate::ops::unchecked::TrustedSizeGrid) to unlock
+///   unchecked, bounds-check-free access via [`GridReadUnchecked`](crate::ops::unchecked::GridReadUnchecked)
+///   and [`GridWriteUnchecked`](crate::ops::unchecked::GridWriteUnchecked).
 pub trait GridBase {
     /// Returns the size of the grid, if known.
     ///

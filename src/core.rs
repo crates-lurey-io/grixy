@@ -20,6 +20,11 @@ pub type Rect = ixy::Rect<usize>;
 pub type Size = ixy::Size;
 
 /// An error type for operations on or creating a `Grid`.
+///
+/// Marked `#[non_exhaustive]` even though it currently has a single variant: grid operations are
+/// expected to grow additional failure modes over time (for example, buffer/layout mismatches on
+/// construction), and this lets those be added without a breaking change to downstream `match`
+/// expressions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[non_exhaustive]

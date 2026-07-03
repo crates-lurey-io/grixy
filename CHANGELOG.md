@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `GridChange<T>` enum (`Added`/`Modified`) describing a single cell's diff result
+- `VecGrid<T>`, `VecGridColMajor<T>` (alloc), `SliceGrid<'a, T>`, `SliceGridMut<'a, T>`
+  convenience aliases for common `GridBuf` instantiations, in `grixy::buf`
+- `Index<Pos>` impls for `Viewed<G>`, `Scaled<G>`, and `Blended<'_, G, F>` where the
+  source grid's `Element<'a> = &'a T`
+- Safety/unchecked-operations guide in the crate root docs (`grixy::lib`)
+- `GridBase` docs on when to implement it alone vs. with `ExactSizeGrid`
+
+### Changed
+
+- **Breaking:** `GridIter` trait removed; `iter()`, `iter_with_pos()`, and `cells()` are now
+  default methods on `GridRead`, gated on `Self: ExactSizeGrid`
+- **Breaking:** `GridDiff::diff()` renamed to `diff_from()` and now returns
+  `(Pos, GridChange<Element>)` instead of `(Pos, Element)`; cells beyond `other`'s bounds are now
+  reported as `GridChange::Added` instead of unconditionally treated as changed
+- **Breaking:** `GridWrite` methods renamed to follow `std::slice::fill`/`fill_with` convention:
+  - `fill_solid(value)` → `fill(value)`, `fill(f)` → `fill_with(f)`, `fill_iter(iter)` →
+    `fill_from_iter(iter)`
+  - `fill_rect_solid` → `fill_rect`, `fill_rect` (closure) → `fill_rect_with`, `fill_rect_iter` →
+    `fill_rect_from_iter`
+  - Unchecked equivalents in `GridWriteUnchecked` renamed to match
+- `GridRead::get()` is now `#[must_use]`
+
+### Removed
+
+- `GridIter` trait (folded into `GridRead`, see Changed)
+
 ## [0.6.0-alpha.6] - 2026-06-19
 
 ### Added

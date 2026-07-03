@@ -50,7 +50,11 @@ pub trait GridWriteUnchecked {
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
-    unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
+    unsafe fn fill_rect_with_unchecked(
+        &mut self,
+        dst: Rect,
+        mut f: impl FnMut(Pos) -> Self::Element,
+    ) {
         Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
         });
@@ -66,7 +70,7 @@ pub trait GridWriteUnchecked {
     /// ## Safety
     ///
     /// The caller must ensure that **every position** in `dst` is a valid position in the
-    /// grid (see [`fill_rect_unchecked`](GridWriteUnchecked::fill_rect_unchecked)).
+    /// grid (see [`fill_rect_with_unchecked`](GridWriteUnchecked::fill_rect_with_unchecked)).
     ///
     /// Additionally, if the iterator **yields more elements** than the number of positions in
     /// `dst`, the excess elements are silently dropped. If the iterator is an exact-size iterator
@@ -80,7 +84,7 @@ pub trait GridWriteUnchecked {
     /// [`set_unchecked`](GridWriteUnchecked::set_unchecked) for each yielded pair.
     ///
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
-    unsafe fn fill_rect_iter_unchecked(
+    unsafe fn fill_rect_from_iter_unchecked(
         &mut self,
         dst: Rect,
         iter: impl IntoIterator<Item = Self::Element>,
@@ -100,21 +104,21 @@ pub trait GridWriteUnchecked {
     /// ## Safety
     ///
     /// The caller must ensure that **every position** in `bounds` is a valid position in the
-    /// grid (see [`fill_rect_unchecked`](GridWriteUnchecked::fill_rect_unchecked)).
+    /// grid (see [`fill_rect_with_unchecked`](GridWriteUnchecked::fill_rect_with_unchecked)).
     ///
     /// Writing to memory outside the grid's allocated storage is _[undefined behavior][]_.
     ///
     /// ## Performance
     ///
-    /// The default implementation delegates to [`Self::fill_rect_unchecked`], wrapping the value in a
+    /// The default implementation delegates to [`Self::fill_rect_with_unchecked`], wrapping the value in a
     /// closure. Specialized implementations may use `memset`-style operations for `Copy` types.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    unsafe fn fill_rect_solid_unchecked(&mut self, bounds: Rect, value: Self::Element)
+    unsafe fn fill_rect_unchecked(&mut self, bounds: Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {
-        unsafe { self.fill_rect_unchecked(bounds, |_| value) };
+        unsafe { self.fill_rect_with_unchecked(bounds, |_| value) };
     }
 }
 
@@ -134,25 +138,25 @@ impl<T: GridBase + GridWriteUnchecked + TrustedSizeGrid> GridWrite for T {
         }
     }
 
-    fn fill_rect(&mut self, bounds: Rect, f: impl FnMut(Pos) -> Self::Element) {
+    fn fill_rect_with(&mut self, bounds: Rect, f: impl FnMut(Pos) -> Self::Element) {
         let size = self.size().to_rect();
         let rect = bounds.intersect(size);
-        unsafe { self.fill_rect_unchecked(rect, f) }
+        unsafe { self.fill_rect_with_unchecked(rect, f) }
     }
 
-    fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+    fn fill_rect_from_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         let size = self.size().to_rect();
         let rect = dst.intersect(size);
-        unsafe { self.fill_rect_iter_unchecked(rect, iter) }
+        unsafe { self.fill_rect_from_iter_unchecked(rect, iter) }
     }
 
-    fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
+    fn fill_rect(&mut self, dst: Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {
         let size = self.size().to_rect();
         let rect = dst.intersect(size);
-        unsafe { self.fill_rect_solid_unchecked(rect, value) }
+        unsafe { self.fill_rect_unchecked(rect, value) }
     }
 }
 
@@ -238,7 +242,7 @@ mod tests {
     fn impl_unsafe_fill_rect_complete() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect(bounds, |_| 42);
+        grid.fill_rect_with(bounds, |_| 42);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 
@@ -246,7 +250,7 @@ mod tests {
     fn impl_unsafe_fill_rect_partial_in_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 2).unwrap();
-        grid.fill_rect(bounds, |pos| if pos.x == 1 && pos.y == 1 { 99 } else { 42 });
+        grid.fill_rect_with(bounds, |pos| if pos.x == 1 && pos.y == 1 { 99 } else { 42 });
         assert_eq!(grid.grid, [[42, 42, 0], [42, 99, 0], [0, 0, 0]]);
     }
 
@@ -254,7 +258,7 @@ mod tests {
     fn impl_unsafe_fill_rect_partial_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(1, 1, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect(bounds, |_| 42);
+        grid.fill_rect_with(bounds, |_| 42);
         assert_eq!(grid.grid, [[0, 0, 0], [0, 42, 42], [0, 42, 42]]);
     }
 
@@ -262,7 +266,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_complete() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_iter(bounds, vec![42; 9]);
+        grid.fill_rect_from_iter(bounds, vec![42; 9]);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 
@@ -270,7 +274,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 2).unwrap();
-        grid.fill_rect_iter(bounds, vec![42, 99]);
+        grid.fill_rect_from_iter(bounds, vec![42, 99]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -284,7 +288,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_in_bounds_with_extra() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 2, 1).unwrap();
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -298,7 +302,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_partial_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(1, 1, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -312,7 +316,7 @@ mod tests {
     fn impl_unsafe_fill_rect_iter_out_of_bounds() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(3, 3, 4, 4).unwrap(); // Out of bounds on the right and bottom
-        grid.fill_rect_iter(bounds, vec![42, 99, 100]);
+        grid.fill_rect_from_iter(bounds, vec![42, 99, 100]);
 
         #[rustfmt::skip]
         assert_eq!(grid.grid, [
@@ -323,10 +327,10 @@ mod tests {
     }
 
     #[test]
-    fn impl_unsafe_fill_rect_solid() {
+    fn impl_unsafe_fill_rect() {
         let mut grid = UncheckedTestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_solid(bounds, 42);
+        grid.fill_rect(bounds, 42);
 
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }

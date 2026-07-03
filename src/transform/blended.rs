@@ -1,3 +1,5 @@
+use core::ops::Index;
+
 use crate::{
     core::{GridError, Pos, Rect, Size},
     ops::{ExactSizeGrid, GridBase, GridRead, GridWrite},
@@ -67,5 +69,21 @@ where
 
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         self.source.iter_rect(bounds)
+    }
+}
+
+/// Indexes into the underlying grid by position, forwarding to the source grid's read side.
+///
+/// # Panics
+///
+/// Panics if `pos` is out of bounds. Use [`GridRead::get`] for a non-panicking alternative.
+impl<G, F, T> Index<Pos> for Blended<'_, G, F>
+where
+    G: for<'a> GridRead<Element<'a> = &'a T> + 'static,
+{
+    type Output = T;
+
+    fn index(&self, pos: Pos) -> &T {
+        self.get(pos).expect("position out of bounds")
     }
 }

@@ -9,6 +9,13 @@ use crate::{
 };
 
 /// Write elements to a 2-dimensional grid position.
+///
+/// # Naming convention
+///
+/// Method names follow `std::slice`'s `fill`/`fill_with` convention: [`fill`](GridWrite::fill)
+/// and [`fill_rect`](GridWrite::fill_rect) take a single `Copy` value, while the `_with` suffix
+/// (e.g. [`fill_with`](GridWrite::fill_with)) takes a position-driven closure, and
+/// `_from_iter` (e.g. [`fill_from_iter`](GridWrite::fill_from_iter)) consumes an iterator.
 pub trait GridWrite: GridBase {
     /// The type of elements in the grid.
     type Element;
@@ -42,35 +49,35 @@ pub trait GridWrite: GridBase {
         self.clear_rect(self.size().to_rect());
     }
 
-    /// Sets elements within the grid.
+    /// Sets every element in the grid to `value`.
     ///
     /// Elements are set in an order agreeable to the grid's internal layout.
-    fn fill(&mut self, f: impl FnMut(Pos) -> Self::Element)
+    fn fill(&mut self, value: Self::Element)
+    where
+        Self::Element: Copy,
+        Self: ExactSizeGrid,
+    {
+        self.fill_rect(self.size().to_rect(), value);
+    }
+
+    /// Sets every element in the grid using a position-driven closure.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout.
+    fn fill_with(&mut self, f: impl FnMut(Pos) -> Self::Element)
     where
         Self: ExactSizeGrid,
     {
-        self.fill_rect(self.size().to_rect(), f);
+        self.fill_rect_with(self.size().to_rect(), f);
     }
 
     /// Sets elements within the grid from an iterator.
     ///
     /// Elements are set in an order agreeable to the grid's internal layout.
-    fn fill_iter(&mut self, iter: impl Iterator<Item = Self::Element>)
+    fn fill_from_iter(&mut self, iter: impl Iterator<Item = Self::Element>)
     where
         Self: ExactSizeGrid,
     {
-        self.fill_rect_iter(self.size().to_rect(), iter);
-    }
-
-    /// Sets elements within the grid to a single value.
-    ///
-    /// Elements are set in an order agreeable to the grid's internal layout.
-    fn fill_solid(&mut self, value: Self::Element)
-    where
-        Self::Element: Copy,
-        Self: ExactSizeGrid,
-    {
-        self.fill_rect_solid(self.size().to_rect(), value);
+        self.fill_rect_from_iter(self.size().to_rect(), iter);
     }
 
     /// Clears a rectangular region of the grid, setting all elements to their default value.
@@ -91,10 +98,27 @@ pub trait GridWrite: GridBase {
     where
         Self::Element: Default,
     {
-        self.fill_rect(bounds, |_| Default::default());
+        self.fill_rect_with(bounds, |_| Default::default());
     }
 
-    /// Sets elements within a rectangular region of the grid.
+    /// Sets every element within a rectangular region of the grid to `value`.
+    ///
+    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
+    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
+    /// bottom edges.
+    ///
+    /// ## Performance
+    ///
+    /// The default implementation delegates to [`Self::fill_rect_with`], wrapping the value in a
+    /// closure. Specialized implementations may use `memset`-style operations for `Copy` types.
+    fn fill_rect(&mut self, dst: Rect, value: Self::Element)
+    where
+        Self::Element: Copy,
+    {
+        self.fill_rect_with(dst, |_| value);
+    }
+
+    /// Sets elements within a rectangular region of the grid using a position-driven closure.
     ///
     /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
     /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
@@ -108,13 +132,13 @@ pub trait GridWrite: GridBase {
     /// checking, etc.).
     ///
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
-    fn fill_rect(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
+    fn fill_rect_with(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(self.trim_rect(bounds)).for_each(|pos| {
             let _ = self.set(pos, f(pos));
         });
     }
 
-    /// Sets elements within a rectangular region of the grid.
+    /// Sets elements within a rectangular region of the grid from an iterator.
     ///
     /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
     /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
@@ -131,33 +155,12 @@ pub trait GridWrite: GridBase {
     /// checking, etc.).
     ///
     /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
-    fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
+    fn fill_rect_from_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         Self::Layout::iter_pos(self.trim_rect(dst))
             .zip(iter)
             .for_each(|(pos, value)| {
                 let _ = self.set(pos, value);
             });
-    }
-
-    /// Sets elements within a rectangular region of the grid.
-    ///
-    /// Elements are set in an order agreeable to the grid's internal layout. Out-of-bounds
-    /// elements are skipped, and the bounding rectangle is treated as _exclusive_ of the right and
-    /// bottom edges.
-    ///
-    /// ## Performance
-    ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
-    /// involving bounds checking for each element. Other implementations may optimize this, for
-    /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
-    /// checking, etc.).
-    ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
-    fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
-    where
-        Self::Element: Copy,
-    {
-        self.fill_rect(self.trim_rect(dst), |_| value);
     }
 }
 
@@ -221,26 +224,26 @@ mod tests {
     }
 
     #[test]
+    fn impl_checked_fill_rect_with() {
+        let mut grid = TestGrid { grid: [[0; 3]; 3] };
+        let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
+        grid.fill_rect_with(bounds, |_| 42);
+        assert_eq!(grid.grid, [[42; 3]; 3]);
+    }
+
+    #[test]
+    fn impl_checked_fill_rect_from_iter() {
+        let mut grid = TestGrid { grid: [[0; 3]; 3] };
+        let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
+        grid.fill_rect_from_iter(bounds, vec![42; 9]);
+        assert_eq!(grid.grid, [[42; 3]; 3]);
+    }
+
+    #[test]
     fn impl_checked_fill_rect() {
         let mut grid = TestGrid { grid: [[0; 3]; 3] };
         let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect(bounds, |_| 42);
-        assert_eq!(grid.grid, [[42; 3]; 3]);
-    }
-
-    #[test]
-    fn impl_checked_fill_rect_iter() {
-        let mut grid = TestGrid { grid: [[0; 3]; 3] };
-        let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_iter(bounds, vec![42; 9]);
-        assert_eq!(grid.grid, [[42; 3]; 3]);
-    }
-
-    #[test]
-    fn impl_checked_fill_rect_solid() {
-        let mut grid = TestGrid { grid: [[0; 3]; 3] };
-        let bounds = Rect::from_ltrb(0, 0, 3, 3).unwrap();
-        grid.fill_rect_solid(bounds, 42);
+        grid.fill_rect(bounds, 42);
         assert_eq!(grid.grid, [[42; 3]; 3]);
     }
 }

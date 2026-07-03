@@ -20,7 +20,7 @@ Key points:
 - `cargo just semver-checks` to verify no accidental breaking changes
 - All public items must have doc examples
 - `#[must_use]` on all methods returning a value
-- Blanket trait impls over `GridRead + ExactSizeGrid` are preferred for extension traits (see `GridDiff`, `GridIter`)
+- Blanket trait impls over `GridRead + ExactSizeGrid` are preferred for extension traits (see `GridDiff`)
 
 ## Architecture
 
@@ -42,9 +42,9 @@ src/
 ├── ops.rs          # Module declarations for ops
 ├── ops/
 │   ├── base.rs     # GridBase, ExactSizeGrid traits
-│   ├── read.rs     # GridRead, GridIter traits (get, iter_rect, iter_rect_with_pos, etc.)
-│   ├── write.rs    # GridWrite trait (set, fill_*, clear_*)
-│   ├── diff.rs     # GridDiff trait (grid comparison via diff())
+│   ├── read.rs     # GridRead trait (get, iter_rect, iter_rect_with_pos, iter, iter_with_pos, cells)
+│   ├── write.rs    # GridWrite trait (set, fill/fill_with/fill_from_iter, clear_*)
+│   ├── diff.rs     # GridDiff trait + GridChange enum (grid comparison via diff_from())
 │   ├── draw.rs     # copy_rect() standalone function
 │   ├── layout.rs   # Re-exports from ixy (RowMajor, ColumnMajor, Block, Linear, Traversal)
 │   ├── cell.rs     # GridWrite for Cell/RefCell/UnsafeCell wrappers

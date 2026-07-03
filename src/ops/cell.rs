@@ -20,19 +20,23 @@ macro_rules! impl_grid_write {
                 self.get_mut().set(pos, value)
             }
 
-            fn fill_rect(&mut self, bounds: Rect, f: impl FnMut(Pos) -> Self::Element) {
-                self.get_mut().fill_rect(bounds, f);
+            fn fill_rect_with(&mut self, bounds: Rect, f: impl FnMut(Pos) -> Self::Element) {
+                self.get_mut().fill_rect_with(bounds, f);
             }
 
-            fn fill_rect_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
-                self.get_mut().fill_rect_iter(dst, iter);
+            fn fill_rect_from_iter(
+                &mut self,
+                dst: Rect,
+                iter: impl IntoIterator<Item = Self::Element>,
+            ) {
+                self.get_mut().fill_rect_from_iter(dst, iter);
             }
 
-            fn fill_rect_solid(&mut self, dst: Rect, value: Self::Element)
+            fn fill_rect(&mut self, dst: Rect, value: Self::Element)
             where
                 Self::Element: Copy,
             {
-                self.get_mut().fill_rect_solid(dst, value);
+                self.get_mut().fill_rect(dst, value);
             }
         }
     };
@@ -83,9 +87,9 @@ mod tests {
 
     fn test_grid_write<'a>(grid: &mut (impl GridWrite<Element = u8> + 'a)) {
         grid.set(Pos::new(1, 1), 42).unwrap();
-        grid.fill_rect(Rect::from_ltwh(0, 0, 3, 3), |_| 0);
-        grid.fill_rect_iter(Rect::from_ltwh(0, 0, 3, 3), [1, 2, 3]);
-        grid.fill_rect_solid(Rect::from_ltwh(0, 0, 3, 3), 99);
+        grid.fill_rect_with(Rect::from_ltwh(0, 0, 3, 3), |_| 0);
+        grid.fill_rect_from_iter(Rect::from_ltwh(0, 0, 3, 3), [1, 2, 3]);
+        grid.fill_rect(Rect::from_ltwh(0, 0, 3, 3), 99);
     }
 
     // #[test]

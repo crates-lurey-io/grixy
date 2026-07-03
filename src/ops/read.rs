@@ -27,6 +27,7 @@ pub trait GridRead: GridBase {
     /// Returns a reference to an element at a specified position.
     ///
     /// If the position is out of bounds, it returns `None`.
+    #[must_use]
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>>;
 
     /// Returns an iterator over elements in a rectangular region of the grid.
@@ -67,37 +68,37 @@ pub trait GridRead: GridBase {
         let trimmed = self.trim_rect(bounds);
         Self::Layout::iter_pos(trimmed).filter_map(move |pos| self.get(pos).map(|elem| (pos, elem)))
     }
-}
 
-/// A trait for grids that can be iterated over.
-pub trait GridIter: GridRead {
     /// Returns an iterator over the elements of the grid.
-    fn iter(&self) -> impl Iterator<Item = Self::Element<'_>>;
-
-    /// Returns an iterator over `(position, element)` pairs for the entire grid.
     ///
-    /// This is the grixy equivalent of `rg::Grid::cells()`.
-    fn iter_with_pos(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)>;
-
-    /// Alias for [`iter_with_pos`](GridIter::iter_with_pos).
-    ///
-    /// Matches the naming convention of `ndarray::indexed_iter()` and
-    /// `image::ImageBuffer::enumerate_pixels()`.
-    fn cells(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
-        self.iter_with_pos()
-    }
-}
-
-impl<T> GridIter for T
-where
-    T: GridRead + ExactSizeGrid,
-{
-    fn iter(&self) -> impl Iterator<Item = Self::Element<'_>> {
+    /// Requires [`ExactSizeGrid`] to determine the grid's bounds.
+    fn iter(&self) -> impl Iterator<Item = Self::Element<'_>>
+    where
+        Self: ExactSizeGrid,
+    {
         self.iter_rect(Rect::from_ltwh(0, 0, self.width(), self.height()))
     }
 
-    fn iter_with_pos(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)> {
+    /// Returns an iterator over `(position, element)` pairs for the entire grid.
+    ///
+    /// This is the grixy equivalent of `rg::Grid::cells()`. Requires [`ExactSizeGrid`] to
+    /// determine the grid's bounds.
+    fn iter_with_pos(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)>
+    where
+        Self: ExactSizeGrid,
+    {
         self.iter_rect_with_pos(Rect::from_ltwh(0, 0, self.width(), self.height()))
+    }
+
+    /// Alias for [`iter_with_pos`](GridRead::iter_with_pos).
+    ///
+    /// Matches the naming convention of `ndarray::indexed_iter()` and
+    /// `image::ImageBuffer::enumerate_pixels()`.
+    fn cells(&self) -> impl Iterator<Item = (Pos, Self::Element<'_>)>
+    where
+        Self: ExactSizeGrid,
+    {
+        self.iter_with_pos()
     }
 }
 

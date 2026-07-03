@@ -29,7 +29,7 @@ pub fn copy_rect<'a, E>(
     from: Rect,
     to: Pos,
 ) {
-    dst.fill_rect_iter(
+    dst.fill_rect_from_iter(
         Rect::from_ltwh(to.x, to.y, from.width(), from.height()),
         src.iter_rect(from),
     );

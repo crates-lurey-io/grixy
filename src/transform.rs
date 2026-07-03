@@ -54,6 +54,18 @@
 //! // Original grid is still accessible
 //! assert_eq!(rc.get(Pos::new(1, 1)), Some(&1));
 //! ```
+//!
+//! ## A note on monomorphization
+//!
+//! Each transform (`Copied<T, G>`, `Mapped<F, G, T>`, `Viewed<G>`, `Scaled<G>`, `Blended<G, F>`)
+//! is its own distinct generic type, and chaining them nests one inside another
+//! (`Scaled<Viewed<Mapped<F, Copied<T, G>, U>>>`, etc). This is the usual zero-cost-abstraction
+//! trade-off: no vtables or dynamic dispatch at runtime, but every distinct chain shape is a
+//! separate monomorphized instantiation at compile time. For a handful of transforms used in a
+//! few call sites this is inconsequential; if a very long or widely-instantiated chain becomes a
+//! compile-time or code-size concern, use [`flatten`](GridConvertExt::flatten) to collapse the
+//! chain into a concrete [`GridBuf`](crate::buf::GridBuf) at the point where you no longer need
+//! further lazy composition.
 
 use core::marker::PhantomData;
 

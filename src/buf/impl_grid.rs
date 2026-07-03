@@ -94,7 +94,7 @@ where
         unsafe { *self.buffer.as_mut().get_unchecked_mut(index) = value }
     }
 
-    unsafe fn fill_rect_iter_unchecked(
+    unsafe fn fill_rect_from_iter_unchecked(
         &mut self,
         bounds: crate::core::Rect,
         iter: impl IntoIterator<Item = Self::Element>,
@@ -121,7 +121,7 @@ where
         }
     }
 
-    unsafe fn fill_rect_solid_unchecked(&mut self, bounds: crate::core::Rect, value: Self::Element)
+    unsafe fn fill_rect_unchecked(&mut self, bounds: crate::core::Rect, value: Self::Element)
     where
         Self::Element: Copy,
     {

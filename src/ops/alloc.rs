@@ -45,6 +45,12 @@ use alloc::{rc::Rc, sync::Arc};
 impl_grid_read!(Arc);
 impl_grid_read!(Rc);
 
+// Note: `Box<T>` intentionally does *not* get a `GridRead` impl here. `Box` is `#[fundamental]`,
+// which means the compiler can't rule out a downstream `impl GridReadUnchecked + TrustedSizeGrid
+// for Box<X>` overlapping with the blanket `impl<T: GridReadUnchecked + TrustedSizeGrid> GridRead
+// for T` in `ops::unchecked::read`. `Rc`/`Arc` aren't fundamental, so they don't hit this. If you
+// need `GridRead` through a `Box`, deref it (`&*boxed_grid`) or use `Rc`/`Arc` instead.
+
 #[cfg(test)]
 mod tests {
     use super::*;
