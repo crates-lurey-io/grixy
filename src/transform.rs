@@ -205,7 +205,7 @@ pub trait GridConvertExt: GridRead {
     fn flatten<'a, B, L>(&'a self) -> crate::buf::GridBuf<Self::Element<'a>, B, L>
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
-        L: layout::Linear,
+        L: layout::LinearLayout,
         Self: Sized,
         Self: ExactSizeGrid,
         Self::Element<'a>: Copy,

@@ -10,7 +10,7 @@ use crate::{
 
 impl<T, B, L> GridBase for GridBuf<T, B, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
         let size = Size::new(self.width, self.height);
@@ -20,7 +20,7 @@ where
 
 impl<T, B, L> ExactSizeGrid for GridBuf<T, B, L>
 where
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn width(&self) -> usize {
         self.width
@@ -35,12 +35,12 @@ where
 // and those dimensions match `ExactSizeGrid::width()`/`height()`. The buffer length is always
 // `width * height` (enforced by `from_buffer` and constructors), so unchecked indexing into
 // the buffer at `L::pos_to_index(pos, width)` for any pos within `(0..width, 0..height)` is safe.
-unsafe impl<T, B, L> TrustedSizeGrid for GridBuf<T, B, L> where L: layout::Linear {}
+unsafe impl<T, B, L> TrustedSizeGrid for GridBuf<T, B, L> where L: layout::LinearLayout {}
 
 impl<T, B, L> GridReadUnchecked for GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     type Element<'a>
         = &'a T
@@ -82,7 +82,7 @@ where
 impl<T, B, L> GridWriteUnchecked for GridBuf<T, B, L>
 where
     B: AsMut<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     type Element = T;
     type Layout = L;

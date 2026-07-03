@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0-alpha.8] - 2026-07-03
+
+### Dependencies
+
+- Bumped `ixy` from `0.6.0-alpha.5` to `0.6.0-alpha.9`. Mechanical rename to follow ixy's own
+  breaking rename in that range:
+  - `layout::Traversal` → `layout::Layout`
+  - `layout::Linear` → `layout::LinearLayout`
+  - `LinearLayout::pos_to_index()`/`index_to_pos()`'s second parameter is now named `stride`
+    (was `width`); semantics unchanged
+  - No grixy-visible behavior change; `core::Size`/`core::Rect`/`HasSize` stay source-compatible
+    since ixy's new generic `Int` parameters default to `usize`, matching grixy's existing usage
+- `ixy` is now pinned with an exact requirement (`=0.6.0-alpha.9`) instead of a caret requirement.
+  Previously published `grixy` versions used a loose `ixy = "0.6.0-alpha.5"` requirement, which,
+  because both are pre-1.0 versions on the same `0.6.0` track, let Cargo silently resolve to any
+  newer `0.6.0-alpha.N` release of `ixy` - including ones with breaking renames. Exact-pinning
+  avoids repeating this for future `ixy` prereleases.
+
+### Fixed
+
+- `just semver-checks` no longer hardcodes an old baseline version (previously
+  `0.6.0-alpha.4`). That baseline's own loose `ixy` requirement made it re-resolve to newer,
+  incompatible `ixy` prereleases and fail to build entirely, unrelated to any actual API change.
+  The recipe now lets `cargo-semver-checks` auto-select the baseline (the latest true stable
+  release), which isn't affected by `ixy`'s alpha-track churn.
+
 ## [0.6.0-alpha.6] - 2026-06-19
 
 ### Added

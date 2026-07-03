@@ -2,7 +2,7 @@ use crate::{
     core::{Pos, Rect},
     ops::{
         ExactSizeGrid, GridBase,
-        layout::{self, Traversal as _},
+        layout::{self, Layout as _},
     },
 };
 
@@ -22,7 +22,7 @@ pub trait GridRead: GridBase {
     /// traversal order defined by this layout.
     ///
     /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
-    type Layout: layout::Traversal;
+    type Layout: layout::Layout;
 
     /// Returns a reference to an element at a specified position.
     ///
@@ -37,12 +37,12 @@ pub trait GridRead: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
         Self::Layout::iter_pos(self.trim_rect(bounds)).filter_map(move |pos| self.get(pos))
     }

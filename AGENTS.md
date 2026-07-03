@@ -46,7 +46,7 @@ src/
 │   ├── write.rs    # GridWrite trait (set, fill_*, clear_*)
 │   ├── diff.rs     # GridDiff trait (grid comparison via diff())
 │   ├── draw.rs     # copy_rect() standalone function
-│   ├── layout.rs   # Re-exports from ixy (RowMajor, ColumnMajor, Block, Linear, Traversal)
+│   ├── layout.rs   # Re-exports from ixy (RowMajor, ColumnMajor, Block, LinearLayout, Layout)
 │   ├── cell.rs     # GridWrite for Cell/RefCell/UnsafeCell wrappers
 │   ├── alloc.rs    # GridRead for Rc/Arc
 │   └── unchecked/  # GridReadUnchecked, GridWriteUnchecked, TrustedSizeGrid

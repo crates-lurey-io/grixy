@@ -3,7 +3,7 @@
 #![allow(missing_docs)]
 
 use grixy::{
-    ops::layout::{Linear, Traversal},
+    ops::layout::{Layout, LinearLayout},
     prelude::*,
 };
 
@@ -30,7 +30,7 @@ const fn unspread_bits(n: u32) -> u32 {
     x
 }
 
-impl Traversal for ZOrderCurve {
+impl Layout for ZOrderCurve {
     fn iter_pos<T: ixy::int::Int>(rect: ixy::Rect<T>) -> impl Iterator<Item = ixy::Pos<T>> {
         RowMajor::iter_pos(rect)
     }
@@ -43,8 +43,8 @@ impl Traversal for ZOrderCurve {
     }
 }
 
-impl Linear for ZOrderCurve {
-    fn pos_to_index(pos: Pos, _width: usize) -> usize {
+impl LinearLayout for ZOrderCurve {
+    fn pos_to_index(pos: Pos, _stride: usize) -> usize {
         let x: u16 = pos.x.try_into().expect("Coordinates must fit in a u16");
         let y: u16 = pos.y.try_into().expect("Coordinates must fit in a u16");
         let x: u32 = x.into();
@@ -56,7 +56,7 @@ impl Linear for ZOrderCurve {
         index as usize
     }
 
-    fn index_to_pos(index: usize, _width: usize) -> Pos {
+    fn index_to_pos(index: usize, _stride: usize) -> Pos {
         let index: u32 = index.try_into().expect("Index must fit in a u32");
         let x = unspread_bits(index);
         let y = unspread_bits(index >> 1);

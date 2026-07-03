@@ -18,7 +18,7 @@ impl<T, B, L> Serialize for GridBuf<T, B, L>
 where
     T: Serialize,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeStruct;
@@ -34,7 +34,7 @@ where
 impl<'de, T, L> Deserialize<'de> for GridBuf<T, alloc::vec::Vec<T>, L>
 where
     T: Deserialize<'de> + Default + Copy,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         enum Field {
@@ -75,7 +75,7 @@ where
         impl<'de, T, L> Visitor<'de> for GridBufVisitor<T, L>
         where
             T: Deserialize<'de> + Default + Copy,
-            L: layout::Linear,
+            L: layout::LinearLayout,
         {
             type Value = GridBuf<T, alloc::vec::Vec<T>, L>;
 

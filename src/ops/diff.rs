@@ -1,6 +1,6 @@
 use crate::{
     core::{Pos, Rect},
-    ops::{ExactSizeGrid, GridRead, layout::Traversal as _},
+    ops::{ExactSizeGrid, GridRead, layout::Layout as _},
 };
 
 /// Extension trait for comparing two grids.

@@ -2,7 +2,7 @@ use crate::{
     core::{GridError, HasSize, Pos, Rect},
     ops::{
         GridBase, GridWrite,
-        layout::{self, Traversal as _},
+        layout::{self, Layout as _},
         unchecked::TrustedSizeGrid,
     },
 };
@@ -13,7 +13,7 @@ pub trait GridWriteUnchecked {
     type Element;
 
     /// The type of layout used for the grid.
-    type Layout: layout::Traversal;
+    type Layout: layout::Layout;
 
     /// Sets the element at a specified position without bounds checking.
     ///
@@ -45,11 +45,11 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// calling [`set_unchecked`](GridWriteUnchecked::set_unchecked) for each position.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     unsafe fn fill_rect_unchecked(&mut self, dst: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(dst).for_each(|pos| unsafe {
             self.set_unchecked(pos, f(pos));
@@ -76,10 +76,10 @@ pub trait GridWriteUnchecked {
     ///
     /// ## Performance
     ///
-    /// The default implementation zips the iterator with [`Traversal::iter_pos`], calling
+    /// The default implementation zips the iterator with [`Layout::iter_pos`], calling
     /// [`set_unchecked`](GridWriteUnchecked::set_unchecked) for each yielded pair.
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     unsafe fn fill_rect_iter_unchecked(
         &mut self,
         dst: Rect,

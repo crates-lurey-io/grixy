@@ -7,7 +7,7 @@ use crate::{buf::GridBuf, core::Pos, ops::layout};
 impl<T, L> GridBuf<T, alloc::vec::Vec<T>, L>
 where
     T: Clone + Default,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Resizes the grid to the new dimensions.
     ///
