@@ -1,6 +1,6 @@
 use crate::{
     core::{Pos, Rect},
-    ops::{ExactSizeGrid, GridRead, layout::Traversal as _},
+    ops::{ExactSizeGrid, GridRead, layout::Layout as _},
 };
 
 /// Describes how a single cell differs between two grids, as yielded by [`GridDiff::diff_from`].

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0-alpha.8] - 2026-07-02
 
 ### Added
 
@@ -35,6 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `GridIter` trait (folded into `GridRead`, see Changed)
+
+### Dependencies
+
+- Bumped `ixy` from `0.6.0-alpha.5` to `0.6.0-alpha.9`. Mechanical rename to follow ixy's own
+  breaking rename in that range:
+  - `layout::Traversal` → `layout::Layout`
+  - `layout::Linear` → `layout::LinearLayout`
+  - `LinearLayout::pos_to_index()`/`index_to_pos()`'s second parameter is now named `stride`
+    (was `width`); semantics unchanged
+  - No grixy-visible behavior change; `core::Size`/`core::Rect`/`HasSize` stay source-compatible
+    since ixy's new generic `Int` parameters default to `usize`, matching grixy's existing usage
 
 ## [0.6.0-alpha.6] - 2026-06-19
 

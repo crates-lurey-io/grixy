@@ -35,14 +35,14 @@ extern crate alloc;
 /// ## Layout
 ///
 /// The grid is stored in a linear buffer, with elements accessed in an order defined by
-/// [`Traversal`].
+/// [`Layout`].
 ///
-/// [`Traversal`]: layout::Traversal
+/// [`Layout`]: layout::Layout
 #[derive(Debug, Clone)]
 pub struct GridBits<T, B, L>
 where
     T: BitOps,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     buffer: B,
     width: usize,
@@ -55,7 +55,7 @@ impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Returns a grid from an existing buffer with a given width in columns.
     ///
@@ -129,7 +129,7 @@ where
 impl<T, L> GridBits<T, alloc::vec::Vec<T>, L>
 where
     T: BitOps,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Creates a new grid with the specified width, height, and layout, filled with the default value.
     ///
@@ -154,7 +154,7 @@ impl<T, B, L> AsRef<[T]> for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn as_ref(&self) -> &[T] {
         self.buffer.as_ref()
@@ -165,7 +165,7 @@ impl<T, B, L> AsMut<[T]> for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsMut<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn as_mut(&mut self) -> &mut [T] {
         self.buffer.as_mut()
@@ -176,7 +176,7 @@ impl<T, B, L> GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     /// Consumes the `GridBits`, returning the underlying buffer, width, and height.
     #[must_use]
@@ -198,7 +198,7 @@ impl<T, B, L> GridReadUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     type Element<'a>
         = bool
@@ -237,7 +237,7 @@ impl<T, B, L> GridWriteUnchecked for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsMut<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     type Element = bool;
     type Layout = L;
@@ -258,7 +258,7 @@ impl<T, B, L> GridBase for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
         let size = Size::new(self.width, self.height);
@@ -270,7 +270,7 @@ impl<T, B, L> ExactSizeGrid for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn width(&self) -> usize {
         self.width
@@ -285,7 +285,7 @@ unsafe impl<T, B, L> TrustedSizeGrid for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
 }
 
@@ -293,7 +293,7 @@ impl<T, B, L> Index<Pos> for GridBits<T, B, L>
 where
     T: BitOps,
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     type Output = bool;
 

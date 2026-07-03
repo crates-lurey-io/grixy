@@ -4,7 +4,7 @@ use crate::{
     core::{GridError, Pos, Rect},
     ops::{
         ExactSizeGrid, GridBase,
-        layout::{self, Traversal as _},
+        layout::{self, Layout as _},
     },
 };
 
@@ -29,7 +29,7 @@ pub trait GridWrite: GridBase {
     /// traversal order defined by this layout.
     ///
     /// [`RowMajor`][layout::RowMajor] is a reasonable default implementation for most grids.
-    type Layout: layout::Traversal;
+    type Layout: layout::Layout;
 
     /// Sets the element at a specified position.
     ///
@@ -88,12 +88,12 @@ pub trait GridWrite: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn clear_rect(&mut self, bounds: Rect)
     where
         Self::Element: Default,
@@ -126,12 +126,12 @@ pub trait GridWrite: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn fill_rect_with(&mut self, bounds: Rect, mut f: impl FnMut(Pos) -> Self::Element) {
         Self::Layout::iter_pos(self.trim_rect(bounds)).for_each(|pos| {
             let _ = self.set(pos, f(pos));
@@ -149,12 +149,12 @@ pub trait GridWrite: GridBase {
     ///
     /// ## Performance
     ///
-    /// The default implementation uses [`Traversal::iter_pos`] to iterate over the rectangle,
+    /// The default implementation uses [`Layout::iter_pos`] to iterate over the rectangle,
     /// involving bounds checking for each element. Other implementations may optimize this, for
     /// example by using a more efficient iteration strategy (for linear reads, reduced bounds
     /// checking, etc.).
     ///
-    /// [`Traversal::iter_pos`]: layout::Traversal::iter_pos
+    /// [`Layout::iter_pos`]: layout::Layout::iter_pos
     fn fill_rect_from_iter(&mut self, dst: Rect, iter: impl IntoIterator<Item = Self::Element>) {
         Self::Layout::iter_pos(self.trim_rect(dst))
             .zip(iter)

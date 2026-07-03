@@ -3,7 +3,7 @@ use crate::{buf::GridBuf, ops::layout};
 impl<T, B, L> AsRef<[T]> for GridBuf<T, B, L>
 where
     B: AsRef<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn as_ref(&self) -> &[T] {
         self.buffer.as_ref()
@@ -13,7 +13,7 @@ where
 impl<T, B, L> AsMut<[T]> for GridBuf<T, B, L>
 where
     B: AsMut<[T]>,
-    L: layout::Linear,
+    L: layout::LinearLayout,
 {
     fn as_mut(&mut self) -> &mut [T] {
         self.buffer.as_mut()
