@@ -171,10 +171,7 @@ mod tests {
         let grid = CheckedGridTest {
             grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         };
-        let cells = grid
-            .iter_rect(Rect::from_ltwh(3, 3, 2, 2))
-            .collect::<Vec<_>>();
-        assert!(cells.is_empty());
+        assert!(grid.iter_rect(Rect::from_ltwh(3, 3, 2, 2)).next().is_none());
     }
 
     #[test]

@@ -96,7 +96,7 @@ impl<T> GridWrite for NaiveGrid<T> {
 
 impl<T> IntoIterator for NaiveGrid<T> {
     type Item = T;
-    type IntoIter = alloc::vec::IntoIter<T>;
+    type IntoIter = vec::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.cells.into_iter()

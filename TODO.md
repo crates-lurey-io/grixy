@@ -16,10 +16,15 @@ _Nothing as of now_.
 - [x] Add an example of a grid with a custom layout (`examples/z-order.rs`)
 - [x] Benchmark heavily and adjust as needed
 
-## 0.6.0 (Stable)
+## Post-0.6.0
 
-- [ ] Implement some nice debug string representations/formats
+`0.6.0` shipped without these; `Display for GridBuf` already landed in alpha.6 and covers the
+most common debug-string need, so these were judged non-blocking for the stable tag.
+
+- [ ] Implement some nice debug string representations/formats (beyond the existing `Display`)
 - [ ] Test coverage back to 100%, fix bugs as they come up
+- [ ] `cargo-hack --feature-powerset` in CI/Justfile - non-default feature combinations aren't
+  currently built/tested (see 0.6.0 CHANGELOG's "Known follow-up")
 
 ## Future
 

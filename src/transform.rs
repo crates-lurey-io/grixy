@@ -206,8 +206,7 @@ pub trait GridConvertExt: GridRead {
     where
         B: FromIterator<Self::Element<'a>> + AsRef<[Self::Element<'a>]>,
         L: layout::LinearLayout,
-        Self: Sized,
-        Self: ExactSizeGrid,
+        Self: Sized + ExactSizeGrid,
         Self::Element<'a>: Copy,
     {
         use crate::core::Rect;
@@ -235,7 +234,7 @@ pub trait GridConvertExt: GridRead {
     /// ```
     fn blend<F>(&mut self, blend_fn: F) -> Blended<'_, Self, F>
     where
-        Self: Sized + GridRead + GridWrite,
+        Self: Sized + GridWrite,
         F: Fn(
             <Self as GridRead>::Element<'_>,
             <Self as GridWrite>::Element,
@@ -250,7 +249,11 @@ pub trait GridConvertExt: GridRead {
 
 impl<T> GridConvertExt for T where T: GridRead {}
 
-#[cfg(test)]
+// The whole module exercises `GridBuf` (requires `buffer`) and `alloc::{rc, sync}` (requires
+// `alloc`), so gate it accordingly rather than assuming `--all-features` like the rest of the
+// crate's tests happen to (this is what let a `--no-default-features`/partial-feature build
+// silently fail to compile its own test suite).
+#[cfg(all(test, feature = "buffer", feature = "alloc"))]
 mod tests {
     extern crate alloc;
 

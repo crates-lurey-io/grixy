@@ -17,7 +17,7 @@ impl<G> GridBase for Viewed<G>
 where
     G: GridBase,
 {
-    fn size_hint(&self) -> (Size, Option<crate::core::Size>) {
+    fn size_hint(&self) -> (Size, Option<Size>) {
         let size = Size::new(self.bounds.width(), self.bounds.height());
         (size, Some(size))
     }
