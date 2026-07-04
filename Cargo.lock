@@ -409,9 +409,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "ixy"
-version = "0.6.0-alpha.9"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf5db685a29892d524bda3513508e53a4949e452ad4112e9ee5bb13794337b59"
+checksum = "feac696feeae45437701a855926f1774028ce7acbf2ba8af2792debe64e866d9"
 dependencies = [
  "serde",
 ]
