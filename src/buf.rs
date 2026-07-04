@@ -43,7 +43,7 @@ mod impl_slice;
 /// [`Layout`].
 ///
 /// [`Layout`]: layout::Layout
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GridBuf<T, B, L> {
     buffer: B,
     width: usize,
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn rect_iter_unchecked() {
         #[rustfmt::skip]
-        let buffer = GridBuf::<_, _, layout::RowMajor>::from_buffer(vec![
+        let buffer = GridBuf::<_, _, RowMajor>::from_buffer(vec![
             1, 2, 3,
             4, 5, 6,
             7, 8, 9,

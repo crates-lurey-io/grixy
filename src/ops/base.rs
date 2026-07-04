@@ -41,11 +41,9 @@ pub trait GridBase {
     /// The default implementation intersects the rectangle with the upper bound of `size_hint()`.
     fn trim_rect(&self, rect: Rect) -> Rect {
         let (_, max) = self.size_hint();
-        if let Some(max) = max {
+        max.map_or(rect, |max| {
             rect.intersect(Rect::from_tl_size(Pos::ORIGIN, max))
-        } else {
-            rect
-        }
+        })
     }
 }
 

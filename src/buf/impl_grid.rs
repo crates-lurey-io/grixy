@@ -12,7 +12,7 @@ impl<T, B, L> GridBase for GridBuf<T, B, L>
 where
     L: layout::LinearLayout,
 {
-    fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
+    fn size_hint(&self) -> (Size, Option<Size>) {
         let size = Size::new(self.width, self.height);
         (size, Some(size))
     }
@@ -60,22 +60,25 @@ where
         &self,
         bounds: crate::core::Rect,
     ) -> impl Iterator<Item = Self::Element<'_>> {
-        if let Some(aligned) = L::slice_rect_aligned(self.as_ref(), self.size(), bounds) {
-            // SAFETY: `slice_rect_aligned` returns `None` when the bounds are not contiguous in
-            // the layout's storage order. When it returns `Some`, the returned slice covers
-            // exactly the positions in `bounds`. The caller guarantees every position is valid,
-            // so the slice is within the allocated buffer.
-            internal::IterRect::Aligned(aligned.iter())
-        } else {
-            // SAFETY: For non-contiguous rects, iterate position-by-position. Each
-            // `self.get_unchecked(pos)` call is sound because the caller guarantees all
-            // positions in `bounds` are valid.
-            let iter = {
-                let pos = L::iter_pos(bounds);
-                pos.map(move |pos| unsafe { self.get_unchecked(pos) })
-            };
-            internal::IterRect::Unaligned(iter)
-        }
+        L::slice_rect_aligned(self.as_ref(), self.size(), bounds).map_or_else(
+            || {
+                // SAFETY: For non-contiguous rects, iterate position-by-position. Each
+                // `self.get_unchecked(pos)` call is sound because the caller guarantees all
+                // positions in `bounds` are valid.
+                let iter = {
+                    let pos = L::iter_pos(bounds);
+                    pos.map(move |pos| unsafe { self.get_unchecked(pos) })
+                };
+                internal::IterRect::Unaligned(iter)
+            },
+            |aligned| {
+                // SAFETY: `slice_rect_aligned` returns `None` when the bounds are not contiguous in
+                // the layout's storage order. When it returns `Some`, the returned slice covers
+                // exactly the positions in `bounds`. The caller guarantees every position is valid,
+                // so the slice is within the allocated buffer.
+                internal::IterRect::Aligned(aligned.iter())
+            },
+        )
     }
 }
 

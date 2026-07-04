@@ -1,6 +1,5 @@
 use core::{
     fmt::Debug,
-    mem,
     ops::{BitAnd, BitAndAssign, BitOrAssign, Not},
 };
 
@@ -18,7 +17,7 @@ pub trait BitOps:
     + Not<Output = Self>
 {
     /// The maximum width that can be represented by this type.
-    const MAX_WIDTH: usize = mem::size_of::<Self>() * 8;
+    const MAX_WIDTH: usize = size_of::<Self>() * 8;
 
     /// Converts a `usize` into this type.
     ///

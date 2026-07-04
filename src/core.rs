@@ -34,7 +34,7 @@ pub enum GridError {
 impl Display for GridError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            GridError::OutOfBounds { pos } => write!(f, "Position out of bounds: {pos}"),
+            Self::OutOfBounds { pos } => write!(f, "Position out of bounds: {pos}"),
         }
     }
 }

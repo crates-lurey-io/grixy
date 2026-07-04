@@ -68,8 +68,7 @@ mod tests {
     fn diff_same_grid() {
         let a = GridBuf::new_filled(3, 3, 0u8);
         let b = GridBuf::new_filled(3, 3, 0u8);
-        let changed: Vec<_> = a.diff(&b).collect();
-        assert!(changed.is_empty());
+        assert!(a.diff(&b).next().is_none());
     }
 
     #[test]
@@ -98,7 +97,6 @@ mod tests {
         let b = GridBuf::new_filled(3, 3, 0u8);
 
         // All positions in self (2x2) are considered changed
-        let changed: Vec<_> = a.diff(&b).collect();
-        assert_eq!(changed.len(), 4);
+        assert_eq!(a.diff(&b).count(), 4);
     }
 }

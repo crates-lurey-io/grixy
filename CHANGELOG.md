@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-07-04
+
+Pre-1.0 stable release. No API breaking changes vs. alpha.8.
+
+### Dependencies
+
+- Bumped `ixy` from the exact-pinned prerelease `=0.6.0-alpha.9` to the published stable
+  `=0.6.1`. No source changes needed; ixy's `0.6.0`/`0.6.1` releases were lint/doc/Justfile
+  polish plus a docs.rs build fix (`doc_auto_cfg` removed upstream).
+
+### Added
+
+- `PartialEq`/`Eq` derives on `GridBuf<T, B, L>` (bounded on `T: PartialEq`/`Eq`, `B: PartialEq`/
+  `Eq`), so grids can be compared directly instead of manually iterating - matches what a stable
+  owning container is expected to support.
+
+### Fixed
+
+- Doc examples for `GridWrite::set()` in `ops.rs` and `prelude.rs` ignored the returned
+  `Result<(), GridError>`; they now `.unwrap()` it so the published docs model correct usage.
+- `transform` module's test suite (`Rc`/`Arc`/`GridBuf`-based) was not feature-gated and failed to
+  compile under `--no-default-features` or partial feature combinations (e.g. `--features cell`
+  alone); now gated on `feature = "buffer"` and `feature = "alloc"`, which is what it actually
+  exercises.
+
+### Chores (pre-stable pass)
+
+- Lint config aligned with the rest of the ecosystem (ixy/gem/hexal/framepace): `[lints.rust]`
+  now denies `missing_docs`/`unreachable_pub`/`unused_qualifications` (previously only
+  `missing_docs = "warn"`), and `[lints.clippy]` now denies `all`/`nursery`/`must_use_candidate`/
+  `missing_errors_doc`/`missing_panics_doc` in addition to `pedantic`. (`unsafe_code` is not
+  forbidden here, unlike sibling crates, since `grixy` legitimately uses `unsafe` for its
+  `*_unchecked` accessors.) Turning these on surfaced and fixed ~20 real findings: unnecessary
+  qualifications, `if let`/`else` that should be `Option::map_or(_else)`, redundant trait bounds,
+  `needless_collect` in tests, and one visibility lint conflict (`redundant_pub_crate` vs.
+  `unreachable_pub` disagreeing on `internal::IterRect`'s visibility - kept `pub(crate)` since
+  that's the true reachability, with a scoped `#[allow]` and comment explaining why).
+
+### Known follow-up (not blocking this release)
+
+- Non-default feature combinations still don't fully build/test cleanly beyond the one fix above
+  (e.g. `--features buffer` alone hits missing `GridBuf::new_filled` in test code elsewhere). CI
+  and this crate's own `Justfile` have only ever exercised `--all-features`, so this is pre-existing
+  and undetected, not a regression. Worth a `cargo-hack --feature-powerset` pass in a follow-up.
+
 ## [0.6.0-alpha.8] - 2026-07-03
 
 ### Dependencies

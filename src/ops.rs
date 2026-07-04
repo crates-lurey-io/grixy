@@ -51,7 +51,7 @@
 //!   width: 10,
 //! };
 //!
-//! my_grid.set(Pos::new(5, 5), 42);
+//! my_grid.set(Pos::new(5, 5), 42).unwrap();
 //! assert_eq!(my_grid.grid[55], 42);
 //! ```
 

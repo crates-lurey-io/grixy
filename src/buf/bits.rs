@@ -218,18 +218,21 @@ where
         &self,
         bounds: crate::prelude::Rect,
     ) -> impl Iterator<Item = Self::Element<'_>> {
-        if let Some(aligned) = L::slice_rect_aligned(self.as_ref(), self.size(), bounds) {
-            let iter = aligned.iter().flat_map(|byte| {
-                (0..T::MAX_WIDTH).map(move |bit_index| (byte.to_usize() >> bit_index) & 1 != 0)
-            });
-            internal::IterRect::Aligned(iter)
-        } else {
-            let iter = {
-                let pos = Self::Layout::iter_pos(bounds);
-                pos.map(move |pos| unsafe { self.get_unchecked(pos) })
-            };
-            internal::IterRect::Unaligned(iter)
-        }
+        L::slice_rect_aligned(self.as_ref(), self.size(), bounds).map_or_else(
+            || {
+                let iter = {
+                    let pos = Self::Layout::iter_pos(bounds);
+                    pos.map(move |pos| unsafe { self.get_unchecked(pos) })
+                };
+                internal::IterRect::Unaligned(iter)
+            },
+            |aligned| {
+                let iter = aligned.iter().flat_map(|byte| {
+                    (0..T::MAX_WIDTH).map(move |bit_index| (byte.to_usize() >> bit_index) & 1 != 0)
+                });
+                internal::IterRect::Aligned(iter)
+            },
+        )
     }
 }
 
@@ -260,7 +263,7 @@ where
     B: AsRef<[T]>,
     L: layout::LinearLayout,
 {
-    fn size_hint(&self) -> (crate::prelude::Size, Option<crate::prelude::Size>) {
+    fn size_hint(&self) -> (Size, Option<Size>) {
         let size = Size::new(self.width, self.height);
         (size, Some(size))
     }
