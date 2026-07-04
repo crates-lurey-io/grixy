@@ -23,6 +23,13 @@ Pre-1.0 stable release. No API breaking changes vs. alpha.8.
 
 ### Fixed
 
+- `cargo publish`'s own verification build (default features) failed to compile:
+  `internal::Sealed` was unconditionally `pub`, but it's only reachable from the public API
+  surface (as a supertrait bound on `buf::bits::ops::BitOps`) when the `buffer` feature is
+  enabled, so `unreachable_pub` fired under the default feature set. Fixed by defining `Sealed`
+  at the visibility each feature configuration actually needs (`pub` under `buffer`, `pub(crate)`
+  otherwise) instead of picking one and living with a lint conflict. Verified with `cargo package`
+  (what `cargo publish` runs for verification), not just `cargo build --all-features`.
 - Doc examples for `GridWrite::set()` in `ops.rs` and `prelude.rs` ignored the returned
   `Result<(), GridError>`; they now `.unwrap()` it so the published docs model correct usage.
 - `transform` module's test suite (`Rc`/`Arc`/`GridBuf`-based) was not feature-gated and failed to

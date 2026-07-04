@@ -1,6 +1,21 @@
 /// Prevents a trait from being implemented outside this crate.
+///
+/// Its required visibility is feature-conditional: `buf::bits::ops::BitOps` (a `pub` trait) uses
+/// `Sealed` as a supertrait bound only when the `buffer` feature is enabled, which requires
+/// `Sealed` to be at least `pub` too (`private_bounds`). Without `buffer`, nothing in the public
+/// API surface reaches `Sealed` at all, so a plain `pub` trips `unreachable_pub` instead. Define
+/// it at the visibility each configuration actually needs rather than picking one and allowing
+/// the other lint.
+#[cfg(feature = "buffer")]
 #[allow(dead_code)]
 pub trait Sealed {}
+
+#[cfg(not(feature = "buffer"))]
+#[allow(dead_code)]
+// See the redundant_pub_crate/unreachable_pub conflict note on `IterRect` below - same conflict,
+// same resolution.
+#[allow(clippy::redundant_pub_crate)]
+pub(crate) trait Sealed {}
 
 /// The result of iterating over a rectangular region of a grid.
 #[allow(dead_code)]
