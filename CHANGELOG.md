@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-07-04
+
+### Dependencies
+
+- Relaxed `ixy` from an exact `=0.6.1` pin to a normal caret requirement (`"0.6.1"`). The exact
+  pin was a necessary workaround while `ixy` was still on its `0.6.0-alpha.N` prerelease track,
+  where Cargo's caret matching against prereleases is unsafe (a caret pinned to one prerelease can
+  silently resolve to a later, breaking prerelease of the same version). Now that `ixy` has a real
+  stable release, normal Cargo `0.y.z` caret semantics apply and are already safe: caret only
+  floats the patch (`z`) component, never the `y`, so it can't silently jump to a breaking `0.7.0`.
+  Keeping the exact pin post-stabilization only costs: every future `ixy` patch (like `0.6.1`'s
+  docs.rs fix) would force a synchronized `grixy` republish, and it risks unresolvable
+  version-unification failures for any consumer that depends on both `ixy` and `grixy` directly
+  with even slightly different exact pins.
+
 ## [0.6.0] - 2026-07-04
 
 Pre-1.0 stable release. No API breaking changes vs. alpha.8.
