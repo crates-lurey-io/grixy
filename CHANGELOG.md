@@ -12,7 +12,8 @@ Pre-1.0 stable release. No API breaking changes vs. alpha.8.
 ### Dependencies
 
 - Bumped `ixy` from the exact-pinned prerelease `=0.6.0-alpha.9` to the published stable
-  `=0.6.0`. No source changes needed; ixy's own `0.6.0` release was lint/doc/Justfile polish only.
+  `=0.6.1`. No source changes needed; ixy's `0.6.0`/`0.6.1` releases were lint/doc/Justfile
+  polish plus a docs.rs build fix (`doc_auto_cfg` removed upstream).
 
 ### Added
 
