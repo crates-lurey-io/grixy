@@ -14,6 +14,7 @@ pub use crate::buf::{GridBuf, bits::GridBits};
 pub use crate::core::{GridError, HasSize as _, Pos, Rect, Size};
 pub use crate::ops::{
     ExactSizeGrid as _, GridBase, GridDiff as _, GridIter as _, GridRead, GridWrite, copy_rect,
+    copy_rect_clamped,
     layout::{Block, ColumnMajor, Layout as _, LinearLayout as _, RowMajor},
 };
 pub use crate::transform::GridConvertExt as _;

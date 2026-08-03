@@ -9,7 +9,7 @@ use alloc::{vec, vec::Vec};
 use crate::{
     core::{GridError, Size},
     ops::{
-        GridBase, GridRead, GridWrite,
+        ExactSizeGrid, GridBase, GridRead, GridWrite,
         layout::{self, Layout as _},
     },
 };
@@ -56,6 +56,16 @@ impl<T> GridBase for NaiveGrid<T> {
     fn size_hint(&self) -> (Size, Option<Size>) {
         let size = Size::new(self.width, self.height);
         (size, Some(size))
+    }
+}
+
+impl<T> ExactSizeGrid for NaiveGrid<T> {
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn height(&self) -> usize {
+        self.height
     }
 }
 

@@ -77,7 +77,7 @@ fn blit_grid(pixels: Vec<u32>) -> Vec<u32> {
 
     // Read each glyph from the font and copy it to the canvas in reverse order.
     for i in (0..256).rev() {
-        copy_rect(
+        copy_rect_clamped(
             &src,
             &mut dst,
             Rect::from_ltwh(0, i * 8, 8, 8),

@@ -342,6 +342,60 @@ mod tests {
     }
 
     #[test]
+    fn grid_view_get_with_offset_bounds() {
+        // Regression test for https://github.com/crates-lurey-io/grixy/issues/16: `Viewed::get`
+        // used to double-offset `pos` (and underflow-panic near the origin) whenever
+        // `bounds.top_left() != Pos::ORIGIN`. Every other `view` test above only exercises
+        // origin-aligned bounds, where subtracting or adding the (zero) offset is indistinguishable.
+        #[rustfmt::skip]
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9,
+        ], 3);
+        let view = grid.view(Rect::from_ltwh(1, 1, 2, 2));
+
+        // View-local (0, 0) is the view's own top-left, i.e. source (1, 1) = 5. Used to panic
+        // with "attempt to subtract with overflow".
+        assert_eq!(view.get(Pos::new(0, 0)), Some(&5));
+        // View-local (1, 1) is the view's own bottom-right, i.e. source (2, 2) = 9.
+        assert_eq!(view.get(Pos::new(1, 1)), Some(&9));
+        // Out of the view's own 2x2 bounds, even though it's a valid position in `grid`.
+        assert_eq!(view.get(Pos::new(2, 2)), None);
+    }
+
+    #[test]
+    fn grid_view_iter_rect_with_offset_bounds() {
+        #[rustfmt::skip]
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9,
+        ], 3);
+        let view = grid.view(Rect::from_ltwh(1, 1, 2, 2));
+
+        // Used to underflow-panic translating (0, 0, 2, 2) by `bounds.top_left()` in the wrong
+        // direction.
+        let elements: Vec<_> = view.iter_rect(Rect::from_ltwh(0, 0, 2, 2)).collect();
+        assert_eq!(elements, &[&5, &6, &8, &9]);
+    }
+
+    #[test]
+    fn grid_view_iter_rect_clamps_oversized_query_to_view_bounds() {
+        #[rustfmt::skip]
+        let grid = GridBuf::<_, _, RowMajor>::from_buffer(vec![
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9,
+        ], 3);
+        let view = grid.view(Rect::from_ltwh(1, 1, 2, 2));
+
+        // A query larger than the view's own 2x2 size must not leak cells from outside `bounds`.
+        let elements: Vec<_> = view.iter_rect(Rect::from_ltwh(0, 0, 10, 10)).collect();
+        assert_eq!(elements, &[&5, &6, &8, &9]);
+    }
+
+    #[test]
     fn grid_scaled_size() {
         let grid = GridBuf::<u8, _, _>::new(10, 10);
         let scaled = grid.scale(2);
