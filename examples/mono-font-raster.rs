@@ -28,7 +28,7 @@ fn main() {
         let y = (i / 16) * 8 * scale;
 
         // Draws the glyph onto the canvas at the specified position.
-        copy_rect(
+        copy_rect_clamped(
             &font,
             &mut canvas,
             Rect::from_ltwh(0, i * 8 * scale, 8 * scale, 8 * scale),
