@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-08-02
+
+### Fixed
+
+- `ops::draw::copy_rect` misaligned rows whenever either the source or the destination rectangle
+  clipped. The implementation zipped a lazily filter-mapped source value stream against a
+  separately computed destination position stream; when either side dropped a cell (because it
+  was out of bounds), the two streams desynced and every subsequent cell in the zip shifted by
+  one, corrupting the rest of the copy instead of just skipping the clipped cell. Fixed by pairing
+  each source position with its destination position by a fixed offset and copying them one at a
+  time via `get`/`set`, so an out-of-bounds cell on either side is skipped in place - matching what
+  the function's own docs already claimed ("those individual cells are ignored"). No API change;
+  `trim_rect` is still used to narrow the candidate area as an optimization where a grid's
+  `size_hint` supports it, but correctness no longer depends on it.
+
 ## [0.6.1] - 2026-07-04
 
 ### Dependencies
