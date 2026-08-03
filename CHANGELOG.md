@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.2] - 2026-08-02
 
+### Added
+
+- `ops::draw::copy_rect_clamped`, a variant of `copy_rect` bounded on `ExactSizeGrid` (in addition
+  to `GridRead`/`GridWrite`). `from` is clamped to the source grid's bounds, the equivalent
+  destination rectangle is translated from that clamp and clamped again to the destination grid's
+  bounds, and the resulting equal-sized rectangles are copied position-for-position. Because both
+  clamps use the grid's authoritative size instead of `GridBase::trim_rect`'s best-effort hint, the
+  copy is always bounded to the actual overlapping region - useful when `from` may be much larger
+  than the source's real bounds and the source has no accurate `size_hint`. Exported from `ops` and
+  the prelude alongside `copy_rect`.
+
 ### Fixed
 
 - `ops::draw::copy_rect` misaligned rows whenever either the source or the destination rectangle
@@ -19,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the function's own docs already claimed ("those individual cells are ignored"). No API change;
   `trim_rect` is still used to narrow the candidate area as an optimization where a grid's
   `size_hint` supports it, but correctness no longer depends on it.
+- `transform::Viewed::get` double-offset `pos`: it translated `pos` by subtracting
+  `bounds.top_left()` and then checked the *already-translated* position against the
+  *untranslated* `bounds`, which only happened to work when `bounds.top_left() == Pos::ORIGIN`
+  (the only case the crate's own tests covered) and underflow-panicked for any `pos` smaller than
+  `bounds.top_left()`. `Viewed::iter_rect` had the same directional bug (translating by
+  subtracting instead of adding) plus no clamping, so it could both panic and leak cells from
+  outside the view. Fixed by treating the incoming position/rect as view-local (checking it
+  against the view's own zero-based size, or clamping via `trim_rect`, before adding
+  `bounds.top_left()` to reach the source's coordinate space).
 
 ## [0.6.1] - 2026-07-04
 
