@@ -48,15 +48,21 @@ where
     type Layout = G::Layout;
 
     fn get(&self, pos: Pos) -> Option<Self::Element<'_>> {
-        let pos = pos - self.bounds.top_left();
-        if !self.bounds.contains_pos(pos) {
+        // `pos` is in view-local coordinates (0..width, 0..height); check it against the view's
+        // own (zero-based) size *before* translating, then add `bounds.top_left()` to reach the
+        // source's coordinate space. Checking the already-translated `pos` against `self.bounds`
+        // (which is itself in source coordinates) double-offsets, and for a `pos` smaller than
+        // `bounds.top_left()` underflows.
+        if pos.x >= self.bounds.width() || pos.y >= self.bounds.height() {
             return None;
         }
-        self.source.get(pos)
+        self.source.get(pos + self.bounds.top_left())
     }
 
     fn iter_rect(&self, bounds: Rect) -> impl Iterator<Item = Self::Element<'_>> {
-        let bounds = bounds - self.bounds.top_left();
+        // Clamp the (view-local) query to the view's own size first, so an oversized `bounds`
+        // can't leak cells from outside the view, then translate into source coordinates.
+        let bounds = self.trim_rect(bounds) + self.bounds.top_left();
         self.source.iter_rect(bounds)
     }
 }
