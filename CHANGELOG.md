@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-08-03
+
+### Dependencies
+
+- Bumped `ixy` from `0.6.1` to `0.7.0`. All of `0.7.0`'s changes are additive (`Rect::clamp_within`/
+  `centered_in`, `Rect::inset`/`outset`, `Size` parity with `Pos`, `Rect * Size`, plus a fix so
+  `Rect::row_rect`/`col_rect` actually clamp as documented) and grixy doesn't use `row_rect`/
+  `col_rect`, so no source changes were needed here. Bumped as a minor (not patch) release
+  regardless: `grixy::core::{Pos, Rect, Size}` are type aliases directly onto `ixy`'s types, so any
+  consumer that also depends on `ixy` directly (not just through grixy) and passes its own
+  `ixy 0.6.x`-typed values into grixy's API would fail to compile against a plain patch bump - a
+  new major/minor of a re-exported public dependency is a breaking change for grixy's own API
+  surface even though `ixy` itself only added things. This is exactly the failure a downstream
+  consumer (retroglyph) hit trying to move to `ixy 0.7.0` while grixy was still pinned to `^0.6.1`.
+
 ## [0.6.2] - 2026-08-02
 
 ### Added
